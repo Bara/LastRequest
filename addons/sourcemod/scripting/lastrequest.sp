@@ -124,6 +124,9 @@ public void OnConfigsExecuted()
 		RegConsoleCmd(sBuffer, Command_LastRequestList);
 		LogMessage("[%s] Register Command: %s Full: %s", PLUGIN_NAME, sLRSCommandsList[i], sBuffer);
 	}
+	
+	PrecacheAvailableSounds();
+	PrecacheCountdownSounds();
 }
 
 public Action Event_PlayerDeath(Event event, const char[] name, bool dontBroadcast)
@@ -204,6 +207,19 @@ void CheckTeams()
 		Call_StartForward(g_hOnLRAvailable);
 		Call_PushCell(client);
 		Call_Finish();
+	}
+}
+
+void PrecacheAvailableSounds()
+{
+	char sFile[PLATFORM_MAX_PATH + 1], sid[2];
+	g_cAvailablePath.GetString(sFile, sizeof(sFile));
+	
+	for (int i = 1; i <= g_cAvailableSounds.IntValue; i++)
+	{
+		IntToString(i, sid, sizeof(sid));
+		ReplaceString(sFile, sizeof(sFile), "X", sid, true);
+		PrecacheSoundAny(sFile);
 	}
 }
 
@@ -571,6 +587,19 @@ public Action Timer_Countdown(Handle timer, any pack)
 	}
 
 	return Plugin_Stop;
+}
+
+void PrecacheCountdownSounds()
+{
+	char sFile[PLATFORM_MAX_PATH + 1], sid[2];
+	g_cCountdownPath.GetString(sFile, sizeof(sFile));
+	
+	for (int i = 0; i <= 3; i++)
+	{
+		IntToString(i, sid, sizeof(sid));
+		ReplaceString(sFile, sizeof(sFile), "X", sid, true);
+		PrecacheSoundAny(sFile);
+	}
 }
 
 void PlayCountdownSounds(int seconds)
