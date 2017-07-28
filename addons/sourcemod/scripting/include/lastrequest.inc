@@ -3,6 +3,8 @@
 #endif
 #define _lr_included
 
+#define LR_LoopClients(%1) for(int %1 = 1; %1 <= MaxClients; %1++) if(LR_IsClientValid(%1))
+
 #include <cstrike>
 
 forward void LR_OnLastRequestChoosen(int client, int target, const char[] name);
@@ -23,6 +25,17 @@ stock bool IsLastRequestAvailable()
 	}
 }
 
+stock bool LR_IsClientValid(int client)
+{
+	if (client > 0 && client <= MaxClients)
+	{
+		if(IsClientInGame(client) && !IsFakeClient(client) && !IsClientSourceTV(client))
+		{
+			return true;
+		}
+	}
+	return false;
+}
 
 stock void LR_StripAllWeapons(int client)
 {

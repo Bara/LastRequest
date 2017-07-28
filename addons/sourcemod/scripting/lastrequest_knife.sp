@@ -93,7 +93,7 @@ public Action OnTraceAttack(int victim, int &attacker, int &inflictor, float &da
 		return Plugin_Continue;
 	}
 	
-	if(attacker > 0 && victim > 0 && !LR_IsClientInLastRequest(attacker) || !LR_IsClientInLastRequest(victim))
+	if(LR_IsClientValid(attacker) && LR_IsClientValid(victim) && !LR_IsClientInLastRequest(attacker) || !LR_IsClientInLastRequest(victim))
 	{
 		return Plugin_Handled;
 	}

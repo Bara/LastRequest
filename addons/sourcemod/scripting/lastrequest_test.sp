@@ -7,7 +7,7 @@
 #include <lastrequest>
 
 #define LR_NAME "Test"
-#define PLUGIN_NAME "LastRequest - " ... LR_NAME
+#define PLUGIN_NAME "Last Request - " ... LR_NAME
 
 public Plugin myinfo =
 {
