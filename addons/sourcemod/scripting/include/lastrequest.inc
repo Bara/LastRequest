@@ -3,6 +3,8 @@
 #endif
 #define _lr_included
 
+#include <cstrike>
+
 forward void LR_OnLastRequestChoosen(int client, int target, const char[] name);
 forward bool LR_OnLastRequestAvailable(int lastT);
 forward void LR_OnLastRequestEnd(int client, int target);
@@ -19,6 +21,61 @@ stock bool IsLastRequestAvailable()
 	{
 		return SetFailState("Last Request is not loaded!");
 	}
+}
+
+
+stock void LR_StripAllWeapons(int client)
+{
+	for(int i = CS_SLOT_PRIMARY; i <= CS_SLOT_C4; i++)
+	{
+		int index = -1;
+		while((index = GetPlayerWeaponSlot(client, i)) != -1)
+		{
+			LR_SafeRemoveWeapon(client, index);
+		}
+	}
+}
+
+stock bool LR_SafeRemoveWeapon(int client, int weapon)
+{
+	if (!IsValidEntity(weapon) || !IsValidEdict(weapon))
+	{
+		return false;
+	}
+	
+	if (!HasEntProp(weapon, Prop_Send, "m_hOwnerEntity"))
+	{
+		return false;
+	}
+	
+	int iOwner = GetEntPropEnt(weapon, Prop_Send, "m_hOwnerEntity");
+	
+	if (iOwner != client)
+	{
+		SetEntPropEnt(weapon, Prop_Send, "m_hOwnerEntity", client);
+	}
+	
+	CS_DropWeapon(client, weapon, false);
+	
+	if (HasEntProp(weapon, Prop_Send, "m_hWeaponWorldModel"))
+	{
+		int iWorldModel = GetEntPropEnt(weapon, Prop_Send, "m_hWeaponWorldModel");
+		
+		if (IsValidEdict(iWorldModel) && IsValidEntity(iWorldModel))
+		{
+			if (!AcceptEntityInput(iWorldModel, "Kill"))
+			{
+				return false;
+			}
+		}
+	}
+	
+	if (!AcceptEntityInput(weapon, "Kill"))
+	{
+		return false;
+	}
+	
+	return true;
 }
 
 public SharedPlugin __pl_lr = 
