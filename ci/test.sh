@@ -8,7 +8,7 @@ echo -e "Give compiler rights for compile\n"
 chmod +x addons/sourcemod/scripting/spcomp
 
 echo -e "Compile last request plugins\n"
-for file in addons/sourcemod/scripting/*.sp
+for file in addons/sourcemod/scripting/lastrequest*.sp
 do
   echo -e "\nCompiling $file..." 
   addons/sourcemod/scripting/spcomp -E -v0 $file
