@@ -75,7 +75,7 @@ public void OnPluginStart()
 		g_aGames.Clear();
 	}
 	
-	g_aGames = new ArrayList(sizeof(g_lrGames));
+	g_aGames = new ArrayList(sizeof(Games));
 	
 	g_cMenuTime = CreateConVar("lastrequest_menu_time", "30", "Time in seconds to choose a last request");
 	g_cOpenMenu = CreateConVar("lastrequest_open_menu", "1", "Open last request menu for the last player?", _, true, 0.0, true, 1.0);
