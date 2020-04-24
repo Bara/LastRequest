@@ -39,7 +39,6 @@ enum struct Games
 	char Translation[LR_MAX_TRANSLATIONS_LENGTH];
 }
 
-Games g_lrGames;
 ArrayList g_aGames = null;
 
 public Plugin myinfo =
