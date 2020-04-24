@@ -106,6 +106,10 @@ public SharedPlugin __pl_lr =
 
 public __pl_lr_SetNTVOptional()
 {
-	// MarkNativeAsOptional("");
+	MarkNativeAsOptional("LR_RegisterGame");
+	MarkNativeAsOptional("LR_IsClientInLastRequest");
+	MarkNativeAsOptional("LR_IsLastRequestAvailable");
+	MarkNativeAsOptional("LR_SetLastRequestStatus");
+	MarkNativeAsOptional("LR_StopLastRequest");
 }
 #endif

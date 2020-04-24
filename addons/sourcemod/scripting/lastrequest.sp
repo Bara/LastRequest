@@ -25,9 +25,9 @@ ConVar g_cCountdownPath = null;
 ConVar g_cLRCommands = null;
 ConVar g_cLRListCommands = null;
 
-Handle g_hOnLRChoosen;
-Handle g_hOnLRAvailable;
-Handle g_hOnLREnd;
+GlobalForward g_hOnLRChoosen;
+GlobalForward g_hOnLRAvailable;
+GlobalForward g_hOnLREnd;
 
 char g_sLRGame[MAXPLAYERS + 1][128];
 int g_iLRTarget[MAXPLAYERS + 1] =  { 0, ... };
@@ -59,9 +59,9 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	CreateNative("LR_SetLastRequestStatus", Native_SetLastRequestStatus);
 	CreateNative("LR_StopLastRequest", Native_StopLastRequest);
 	
-	g_hOnLRChoosen = CreateGlobalForward("LR_OnLastRequestChoosen", ET_Ignore, Param_Cell, Param_Cell, Param_String);
-	g_hOnLRAvailable = CreateGlobalForward("LR_OnLastRequestAvailable", ET_Ignore, Param_Cell);
-	g_hOnLREnd = CreateGlobalForward("LR_OnLastRequestEnd", ET_Ignore, Param_Cell, Param_Cell);
+	g_hOnLRChoosen = new GlobalForward("LR_OnLastRequestChoosen", ET_Ignore, Param_Cell, Param_Cell, Param_String);
+	g_hOnLRAvailable = new GlobalForward("LR_OnLastRequestAvailable", ET_Ignore, Param_Cell);
+	g_hOnLREnd = new GlobalForward("LR_OnLastRequestEnd", ET_Ignore, Param_Cell, Param_Cell);
 	
 	RegPluginLibrary("lastrequest");
 	
@@ -86,7 +86,7 @@ public void OnPluginStart()
 	g_cLRCommands = CreateConVar("lastrequest_commands", "lr;lastrequest", "Commands to open last request menu");
 	g_cLRListCommands = CreateConVar("lastrequest_list_commands", "lrs;lastrequests", "Commands to open a list of all last requests");
 	
-	RegAdminCmd("sm_lrdebug", LRDebug, ADMFLAG_ROOT);
+	RegAdminCmd("sm_lrdebug", Command_LRDebug, ADMFLAG_ROOT);
 	
 	CreateTimer(3.0, Timer_CheckTeams, _, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
 	
@@ -98,11 +98,12 @@ public void OnConfigsExecuted()
 {
 	char sLRCommands[128];
 	g_cLRCommands.GetString(sLRCommands, sizeof(sLRCommands));
+	
 	int iLRCommands;
 	char sLRCommandsList[8][32];
 	iLRCommands = ExplodeString(sLRCommands, ";", sLRCommandsList, sizeof(sLRCommandsList), sizeof(sLRCommandsList[]));
 	
-	
+
 	for(int i = 0; i < iLRCommands; i++)
 	{
 		char sBuffer[32];
@@ -155,7 +156,7 @@ public Action Timer_CheckTeams(Handle timer)
 		int CT = 0;
 		LR_LoopClients(i)
 		{
-			if(IsClientInGame(i) && IsPlayerAlive(i))
+			if(IsPlayerAlive(i))
 			{
 				if(GetClientTeam(i) == CS_TEAM_T)
 				{
@@ -182,7 +183,7 @@ void CheckTeams()
 	
 	LR_LoopClients(i)
 	{
-		if(IsClientInGame(i) && GetClientTeam(i) == CS_TEAM_T && IsPlayerAlive(i))
+		if(GetClientTeam(i) == CS_TEAM_T && IsPlayerAlive(i))
 		{
 			iCount++;
 			lastT[iCount] = i;
@@ -249,7 +250,7 @@ public Action Event_RoundPreStart(Event event, const char[] name, bool dontBroad
 	g_bLastRequestRound = true;
 }
 
-public Action LRDebug(int client, int args)
+public Action Command_LRDebug(int client, int args)
 {
 	for (int i = 0; i < g_aGames.Length; i++)
 	{
@@ -360,7 +361,7 @@ public int Menu_LastRequest(Menu menu, MenuAction action, int client, int param)
 		
 		LR_LoopClients(i)
 		{
-			if(IsClientInGame(i) && GetClientTeam(i) == CS_TEAM_CT && IsPlayerAlive(i) && !g_bInLR[i])
+			if(GetClientTeam(i) == CS_TEAM_CT && IsPlayerAlive(i) && !g_bInLR[i])
 			{
 				char sIndex[12], sName[MAX_NAME_LENGTH];
 				IntToString(i, sIndex, sizeof(sIndex));
@@ -473,39 +474,33 @@ public int Native_StopLastRequest(Handle plugin, int numParams)
 {
 	LR_LoopClients(i)
 	{
-		if(LR_IsClientValid(i))
+		if(GetClientTeam(i) == CS_TEAM_T && g_iLRTarget[i] > 0)
 		{
-			if(GetClientTeam(i) == CS_TEAM_T && g_iLRTarget[i] > 0)
-			{
-				Call_StartForward(g_hOnLREnd);
-				Call_PushCell(i);
-				Call_PushCell(g_iLRTarget[i]);
-				Call_Finish();
-			}
+			Call_StartForward(g_hOnLREnd);
+			Call_PushCell(i);
+			Call_PushCell(g_iLRTarget[i]);
+			Call_Finish();
 		}
 	}
 	
 	LR_LoopClients(i)
 	{
-		if(LR_IsClientValid(i))
+		if(g_bInLR[i])
 		{
-			if(g_bInLR[i])
+			g_bInLR[i] = false;
+		}
+		
+		if(GetClientTeam(i) == CS_TEAM_T && g_iLRTarget[i] > 0)
+		{
+			LR_LoopClients(j)
 			{
-				g_bInLR[i] = false;
-			}
-			
-			if(GetClientTeam(i) == CS_TEAM_T && g_iLRTarget[i] > 0)
-			{
-				LR_LoopClients(j)
+				if(LR_IsClientValid(j))
 				{
-					if(LR_IsClientValid(j))
-					{
-						PrintToChat(j, "Last request was ended ( Game: %s, Player: %N, Opponent: %N )", g_sLRGame[i], i, g_iLRTarget[i]); // TODO: Add translation
-					}
+					PrintToChat(j, "Last request was ended ( Game: %s, Player: %N, Opponent: %N )", g_sLRGame[i], i, g_iLRTarget[i]); // TODO: Add translation
 				}
-				g_iLRTarget[i] = 0;
-				g_sLRGame[i] = "";
 			}
+			g_iLRTarget[i] = 0;
+			g_sLRGame[i] = "";
 		}
 	}
 	
@@ -552,26 +547,23 @@ public Action Timer_Countdown(Handle timer, DataPack pack)
 	{
 		LR_LoopClients(i)
 		{
-			if(LR_IsClientValid(i))
+			if(seconds == 1)
 			{
-				if(seconds == 1)
-				{
-					PrintToChat(i, "Last request started in %d second ( Game: %s, Player: %N, Opponent: %N)", seconds, g_sLRGame[client], i, g_iLRTarget[client]); // TODO: Add translation
-				}
-				else if(seconds == 0)
-				{
-					PrintToChat(i, "Go! ( Game: %s, Player: %N, Opponent: %N)", g_sLRGame[client], i, g_iLRTarget[client]); // TODO: Add translation
-					StartLastRequest(client);
-				}
-				else
-				{
-					PrintToChat(i, "Last request started in %d seconds ( Game: %s, Player: %N, Opponent: %N)", seconds, g_sLRGame[client], i, g_iLRTarget[client]); // TODO: Add translation
-				}
-				
-				if(g_cPlayCountdownSounds.BoolValue)
-				{
-					PlayCountdownSounds(seconds);
-				}
+				PrintToChat(i, "Last request started in %d second ( Game: %s, Player: %N, Opponent: %N)", seconds, g_sLRGame[client], i, g_iLRTarget[client]); // TODO: Add translation
+			}
+			else if(seconds == 0)
+			{
+				PrintToChat(i, "Go! ( Game: %s, Player: %N, Opponent: %N)", g_sLRGame[client], i, g_iLRTarget[client]); // TODO: Add translation
+				StartLastRequest(client);
+			}
+			else
+			{
+				PrintToChat(i, "Last request started in %d seconds ( Game: %s, Player: %N, Opponent: %N)", seconds, g_sLRGame[client], i, g_iLRTarget[client]); // TODO: Add translation
+			}
+			
+			if(g_cPlayCountdownSounds.BoolValue)
+			{
+				PlayCountdownSounds(seconds);
 			}
 		}
 	}
@@ -620,10 +612,7 @@ void StartLastRequest(int client)
 	{
 		LR_LoopClients(i)
 		{
-			if(LR_IsClientValid(i))
-			{
-				PrintToChat(i, "Last request aborted! Client invalid"); // TODO: Add translation
-			}
+			PrintToChat(i, "Last request aborted! Client invalid"); // TODO: Add translation
 		}
 	}
 	
