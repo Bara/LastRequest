@@ -24,17 +24,17 @@ public Plugin myinfo =
 	author = "Bara",
 	description = "",
 	version = "1.0.0",
-	url = "github.com/Bara20"
+	url = "github.com/Bara"
 };
 
 public void OnAllPluginsLoaded()
 {
-	if (LR_RegisterLRGame(KNORMAL, "KnifeNormal"))
+	if (LR_RegisterGame(KNORMAL, "KnifeNormal"))
 	{
 		SetFailState("Can't register last request: %s", KNORMAL);
 	}
 	
-	if (LR_RegisterLRGame(BACKSTAB, "KnifeAntiBackstab"))
+	if (LR_RegisterGame(BACKSTAB, "KnifeAntiBackstab"))
 	{
 		SetFailState("Can't register last request: %s", BACKSTAB);
 	}

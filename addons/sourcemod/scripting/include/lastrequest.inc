@@ -11,7 +11,7 @@ forward void LR_OnLastRequestChoosen(int client, int target, const char[] name);
 forward bool LR_OnLastRequestAvailable(int lastT);
 forward void LR_OnLastRequestEnd(int client, int target);
 
-native bool LR_RegisterLRGame(const char[] name, const char[] translations); // TODO translations?
+native bool LR_RegisterGame(const char[] name, const char[] translations); // TODO translations?
 native bool LR_IsClientInLastRequest(int client);
 native bool LR_IsLastRequestAvailable();
 native bool LR_SetLastRequestStatus(bool status);

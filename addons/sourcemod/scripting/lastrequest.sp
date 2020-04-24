@@ -32,15 +32,15 @@ Handle g_hOnLREnd;
 char g_sLRGame[MAXPLAYERS + 1][128];
 int g_iLRTarget[MAXPLAYERS + 1] =  { 0, ... };
 
-enum lrCache
+enum struct Games
 {
-	lrId,
-	String:lrName[LR_MAX_NAME_LENGTH],
-	String:lrTranslation[LR_MAX_TRANSLATIONS_LENGTH]
-};
+	int ID;
+	char Name[LR_MAX_NAME_LENGTH];
+	char Translation[LR_MAX_TRANSLATIONS_LENGTH];
+}
 
-int g_iLRGames[lrCache];
-ArrayList g_aLRGames = null;
+Games g_lrGames;
+ArrayList g_aGames = null;
 
 public Plugin myinfo =
 {
@@ -48,12 +48,12 @@ public Plugin myinfo =
 	author = "Bara",
 	description = "",
 	version = "1.0.0",
-	url = "github.com/Bara20"
+	url = "github.com/Bara"
 };
 
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
-	CreateNative("LR_RegisterLRGame", Native_RegisterLRGame);
+	CreateNative("LR_RegisterGame", Native_RegisterLRGame);
 	CreateNative("LR_IsLastRequestAvailable", Native_IsLastRequestAvailable);
 	CreateNative("LR_IsClientInLastRequest", Native_IsClientInLastRequest);
 	CreateNative("LR_SetLastRequestStatus", Native_SetLastRequestStatus);
@@ -70,10 +70,12 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 
 public void OnPluginStart()
 {
-	if(g_aLRGames != null)
+	if(g_aGames != null)
 	{
-		g_aLRGames.Clear();
+		g_aGames.Clear();
 	}
+	
+	g_aGames = new ArrayList(sizeof(g_lrGames));
 	
 	g_cMenuTime = CreateConVar("lastrequest_menu_time", "30", "Time in seconds to choose a last request");
 	g_cOpenMenu = CreateConVar("lastrequest_open_menu", "1", "Open last request menu for the last player?", _, true, 0.0, true, 1.0);
@@ -87,8 +89,6 @@ public void OnPluginStart()
 	RegAdminCmd("sm_lrdebug", LRDebug, ADMFLAG_ROOT);
 	
 	CreateTimer(3.0, Timer_CheckTeams, _, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
-	
-	g_aLRGames = new ArrayList(sizeof(g_iLRGames));
 	
 	HookEvent("round_prestart", Event_RoundPreStart, EventHookMode_PostNoCopy);
 	HookEvent("player_death", Event_PlayerDeath, EventHookMode_Post);
@@ -251,12 +251,12 @@ public Action Event_RoundPreStart(Event event, const char[] name, bool dontBroad
 
 public Action LRDebug(int client, int args)
 {
-	for (int i = 0; i < g_aLRGames.Length; i++)
+	for (int i = 0; i < g_aGames.Length; i++)
 	{
-		int iGang[lrCache];
-		g_aLRGames.GetArray(i, iGang[0]);
+		Games games;
+		g_aGames.GetArray(i, games, sizeof(Games));
 
-		PrintToServer("[%s]: %s", PLUGIN_NAME, iGang[lrName]);
+		PrintToServer("[%s]: %s", PLUGIN_NAME, games.Name);
 	}
 	
 	CreateCountdown(3, client);
@@ -315,12 +315,12 @@ void ShowLastRequestList(int client)
 	Menu menu = new Menu(Menu_Empty); // TODO: As panel
 	menu.SetTitle("Last requests:"); // TODO: Add translation
 	
-	for (int i = 0; i < g_aLRGames.Length; i++)
+	for (int i = 0; i < g_aGames.Length; i++)
 	{
-		int iGang[lrCache];
-		g_aLRGames.GetArray(i, iGang[0]);
+		Games games;
+		g_aGames.GetArray(i, games, sizeof(Games));
 
-		menu.AddItem(iGang[lrTranslation], iGang[lrTranslation], ITEMDRAW_DISABLED); // TODO: Add translation
+		menu.AddItem(games.Translation, games.Translation, ITEMDRAW_DISABLED); // TODO: Add translation
 	}
 	
 	menu.ExitButton = true;
@@ -332,12 +332,12 @@ void ShowLastRequestMenu(int client)
 	Menu menu = new Menu(Menu_LastRequest);
 	menu.SetTitle("Choose a last request:"); // TODO: Add translation
 	
-	for (int i = 0; i < g_aLRGames.Length; i++)
+	for (int i = 0; i < g_aGames.Length; i++)
 	{
-		int iGang[lrCache];
-		g_aLRGames.GetArray(i, iGang[0]);
+		Games games;
+		g_aGames.GetArray(i, games, sizeof(Games));
 
-		menu.AddItem(iGang[lrTranslation], iGang[lrTranslation]); // TODO: Add translation
+		menu.AddItem(games.Translation, games.Translation); // TODO: Add translation
 	}
 	
 	menu.ExitButton = true;
@@ -442,15 +442,15 @@ public int Native_RegisterLRGame(Handle plugin, int numParams)
 	
 	CheckExistsLRGames(name);
 	
-	int iCache[lrCache];
+	Games games;
 	
-	iCache[lrId] = g_aLRGames.Length + 1;
-	strcopy(iCache[lrName], sizeof(name), name);
-	strcopy(iCache[lrTranslation], sizeof(translations), translations);
+	games.ID = g_aGames.Length + 1;
+	strcopy(games.Name, sizeof(Games::Name), name);
+	strcopy(games.Translation, sizeof(Games::Translation), translations);
 
-	LogMessage("[%s] ID: %d - Name: %s - Translations: %s", PLUGIN_NAME, iCache[lrId], iCache[lrName], iCache[lrTranslation]);
+	LogMessage("[%s] ID: %d - Name: %s - Translations: %s", PLUGIN_NAME, games.ID, games.Name, games.Translation);
 
-	g_aLRGames.PushArray(iCache[0]);
+	g_aGames.PushArray(games, sizeof(Games));
 	
 	CheckExistsLRGames(name);
 	
@@ -519,12 +519,12 @@ public int Native_IsLastRequestAvailable(Handle plugin, int numParams)
 
 bool CheckExistsLRGames(const char[] name)
 {
-	for (int i = 0; i < g_aLRGames.Length; i++)
+	for (int i = 0; i < g_aGames.Length; i++)
 	{
-		int iGang[lrCache];
-		g_aLRGames.GetArray(i, iGang[0]);
+		Games games;
+		g_aGames.GetArray(i, games, sizeof(Games));
 
-		if(StrEqual(iGang[lrName], name, false))
+		if(StrEqual(games.Name, name, false))
 		{
 			return true;
 		}
@@ -535,18 +535,18 @@ bool CheckExistsLRGames(const char[] name)
 
 stock void CreateCountdown(int seconds, int client)
 {
-	Handle pack = CreateDataPack();
-	WritePackCell(pack, seconds);
-	WritePackCell(pack, GetClientUserId(client));
+	DataPack pack = new DataPack();
+	pack.WriteCell(seconds);
+	pack.WriteCell(GetClientUserId(client));
 	CreateTimer(0.0, Timer_Countdown, pack);
 }
 
-public Action Timer_Countdown(Handle timer, any pack)
+public Action Timer_Countdown(Handle timer, DataPack pack)
 {
-	ResetPack(pack, false);
+	pack.Reset();
 	int seconds = ReadPackCell(pack);
 	int client = GetClientOfUserId(ReadPackCell(pack));
-	CloseHandle(pack);
+	delete pack;
 	
 	if(LR_IsClientValid(client) && LR_IsClientValid(g_iLRTarget[client]))
 	{
@@ -580,10 +580,10 @@ public Action Timer_Countdown(Handle timer, any pack)
 
 	if(seconds >= 0)
 	{
-		Handle hPack = CreateDataPack();
-		WritePackCell(hPack, seconds);
-		WritePackCell(hPack, GetClientUserId(client));
-		CreateTimer(1.0, Timer_Countdown, hPack);
+		pack = new DataPack();
+		pack.WriteCell(seconds);
+		pack.WriteCell(GetClientUserId(client));
+		CreateTimer(1.0, Timer_Countdown, pack);
 	}
 
 	return Plugin_Stop;
@@ -633,14 +633,14 @@ void StartLastRequest(int client)
 	Call_StartForward(g_hOnLRChoosen);
 	Call_PushCell(client);
 	Call_PushCell(g_iLRTarget[client]);
-	for (int i = 0; i < g_aLRGames.Length; i++)
+	for (int i = 0; i < g_aGames.Length; i++)
 	{
-		int iGang[lrCache];
-		g_aLRGames.GetArray(i, iGang[0]);
+		Games games;
+		g_aGames.GetArray(i, games, sizeof(Games));
 
-		if(StrEqual(iGang[lrTranslation], g_sLRGame[client], false))
+		if(StrEqual(games.Translation, g_sLRGame[client], false))
 		{
-			Call_PushString(iGang[lrName]);
+			Call_PushString(games.Name);
 		}
 	}
 	Call_Finish();

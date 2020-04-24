@@ -15,12 +15,12 @@ public Plugin myinfo =
 	author = "Bara",
 	description = "",
 	version = "1.0.0",
-	url = "github.com/Bara20"
+	url = "github.com/Bara"
 };
 
 public void OnAllPluginsLoaded()
 {
-	if (LR_RegisterLRGame(LR_NAME, "example"))
+	if (LR_RegisterGame(LR_NAME, "example"))
 	{
 		SetFailState("Can't register last request: %s", LR_NAME);
 	}
