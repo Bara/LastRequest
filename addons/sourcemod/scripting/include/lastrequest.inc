@@ -3,20 +3,63 @@
 #endif
 #define _lr_included
 
-#define LR_MAX_SHORTNAME_LENGTH 32
-#define LR_MAX_FULLNAME_LENGTH 64
-
-#define LR_LoopClients(%1) for(int %1 = 1; %1 <= MaxClients; %1++) if(LR_IsClientValid(%1))
-
 #include <cstrike>
 
-forward void LR_OnOpenMenu(Menu menu);
-forward bool LR_OnLastRequestAvailable(int lastT);
+#define LR_MAX_SHORTNAME_LENGTH 32
+#define LR_MAX_FULLNAME_LENGTH 64
+#define LR_LoopClients(%1) for(int %1 = 1; %1 <= MaxClients; %1++) if(LR_IsClientValid(%1))
 
-native bool LR_RegisterGame(const char[] name);
+/*
+ * Requester is mostly the last T and opponent is the choosed CT by the T.
+ * Short Name will be required for games with subgames like knife fight with different modes.
+ */
+typedef LRStartCB = function void (int requester, int opponent, const char[] shortname);
+typedef LREndCB = function void (int winner, int loser);
+
+/*
+ * This forward will called, when someone opens the LR games list or wants to start a lr.
+ * With this forward you must add your games like: "menu.AddItem(shortname, name);"
+ * Name is the displayed name on the menu.
+
+ * @param menu            Handle of the menu
+ */
+forward void LR_OnOpenMenu(Menu menu);
+
+/*
+ * Forward will fired when the penultimate t dies.
+ *
+ * @param client          Client index of the last t
+ */
+forward bool LR_OnLastRequestAvailable(int client);
+
+/*
+ * Register lr game.
+ *
+ * @param shortname        Short name of LR game
+ *
+ * @return                 True, if register was successful otherwise false
+ */
+native bool LR_RegisterGame(const char[] shortname);
+
+/*
+ * Check if the specific client is in a LR or not.
+ *
+ * @param client          Client index
+ *
+ * @return                True, if the client is in a LR, otherwise false
+ */
 native bool LR_IsClientInLastRequest(int client);
+
+/*
+ * Check if is LR is available.
+ *
+ * @return                True, if LR is available otherwise false.
+ */
 native bool LR_IsLastRequestAvailable();
-native bool LR_SetLastRequestStatus(bool status);
+
+/*
+ * Stops the active LR immediately.
+ */
 native void LR_StopLastRequest();
 
 stock bool IsLastRequestAvailable()

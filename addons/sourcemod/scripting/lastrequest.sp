@@ -11,7 +11,6 @@
 #define PLUGIN_NAME "Last Request"
 
 bool g_bLastRequest = false;
-bool g_bLastRequestRound = false;
 bool g_bInLR[MAXPLAYERS + 1] =  { false, ... };
 
 ConVar g_cMenuTime = null;
@@ -51,7 +50,6 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	CreateNative("LR_RegisterGame", Native_RegisterLRGame);
 	CreateNative("LR_IsLastRequestAvailable", Native_IsLastRequestAvailable);
 	CreateNative("LR_IsClientInLastRequest", Native_IsClientInLastRequest);
-	CreateNative("LR_SetLastRequestStatus", Native_SetLastRequestStatus);
 	CreateNative("LR_StopLastRequest", Native_StopLastRequest);
 	
 	g_hOnMenu = new GlobalForward("LR_OnOpenMenu", ET_Ignore, Param_Cell);
@@ -237,7 +235,6 @@ void PlayAvailableSound()
 public Action Event_RoundPreStart(Event event, const char[] name, bool dontBroadcast)
 {
 	g_bLastRequest = false;
-	g_bLastRequestRound = true;
 }
 
 public Action Command_LRDebug(int client, int args)
@@ -440,12 +437,6 @@ public int Native_IsClientInLastRequest(Handle plugin, int numParams)
 {
 	int client = GetNativeCell(1);
 	return g_bInLR[client];
-}
-
-public int Native_SetLastRequestStatus(Handle plugin, int numParams)
-{
-	g_bLastRequestRound = GetNativeCell(1);
-	return g_bLastRequestRound;
 }
 
 public int Native_StopLastRequest(Handle plugin, int numParams)
