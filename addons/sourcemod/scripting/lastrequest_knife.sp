@@ -29,12 +29,12 @@ public Plugin myinfo =
 
 public void OnAllPluginsLoaded()
 {
-	if (LR_RegisterGame(LR_SHORT_KNORMAL))
+	if (LR_RegisterGame(LR_SHORT_KNORMAL, OnGameStart, OnGameEnd))
 	{
 		SetFailState("Can't register last request: %s", LR_SHORT_KNORMAL);
 	}
 	
-	if (LR_RegisterGame(LR_SHORT_BACKSTAB))
+	if (LR_RegisterGame(LR_SHORT_BACKSTAB, OnGameStart, OnGameEnd))
 	{
 		SetFailState("Can't register last request: %s", LR_SHORT_BACKSTAB);
 	}
@@ -46,15 +46,15 @@ public void LR_OnOpenMenu(Menu menu)
 	menu.AddItem(LR_SHORT_KNORMAL, "Knife Fight - Backstab"); // TODO: Add translation
 }
 
-/* public void LR_OnLastRequestChoosen(int client, int target, const char[] name)
+public void OnGameStart(int client, int target, const char[] name)
 {
-	if(StrEqual(name, KNORMAL, false))
+	if(StrEqual(name, LR_SHORT_KNORMAL, false))
 	{
 		PrintToChatAll("%s", name);
 		g_bKnife = true;
 		g_bNormal = true;
 	}
-	else if(StrEqual(name, BACKSTAB, false))
+	else if(StrEqual(name, LR_SHORT_BACKSTAB, false))
 	{
 		PrintToChatAll("%s", name);
 		g_bKnife = true;
@@ -77,15 +77,15 @@ public void LR_OnOpenMenu(Menu menu)
 	EquipPlayerWeapon(target, iKnife2);
 }
 
-public void LR_OnLastRequestEnd(int client, int target)
+public void OnGameEnd(int winner, int loser)
 {
-	SDKUnhook(client, SDKHook_TraceAttack, OnTraceAttack);
-	SDKUnhook(target, SDKHook_TraceAttack, OnTraceAttack);
+	SDKUnhook(winner, SDKHook_TraceAttack, OnTraceAttack);
+	SDKUnhook(loser, SDKHook_TraceAttack, OnTraceAttack);
 	
 	g_bKnife = false;
 	g_bNormal = false;
 	g_bBackstab = false;
-} */
+}
 
 public Action OnTraceAttack(int victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &ammotype, int hitbox, int hitgroup)
 {
