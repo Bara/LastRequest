@@ -11,7 +11,6 @@
 #define PLUGIN_NAME "Last Request"
 
 bool g_bLastRequest = false;
-bool g_bInLR[MAXPLAYERS + 1] =  { false, ... };
 
 ConVar g_cMenuTime = null;
 ConVar g_cOpenMenu = null;
@@ -25,16 +24,24 @@ ConVar g_cLRListCommands = null;
 GlobalForward g_hOnMenu;
 GlobalForward g_hOnLRAvailable;
 
-char g_sLRGame[MAXPLAYERS + 1][128];
-int g_iLRTarget[MAXPLAYERS + 1] =  { 0, ... };
-
 enum struct Games
 {
 	int ID;
 	char Name[LR_MAX_SHORTNAME_LENGTH];
+	Handle plugin;
+	Function StartCB;
+	Function EndCB;
+}
+
+enum struct PlayerData
+{
+	bool InLR;
+	int Target;
+	Games Game;
 }
 
 ArrayList g_aGames = null;
+PlayerData g_iPlayer[MAXPLAYERS + 1];
 
 public Plugin myinfo =
 {
@@ -122,7 +129,7 @@ public Action Event_PlayerDeath(Event event, const char[] name, bool dontBroadca
 {
 	int client = GetClientOfUserId(event.GetInt("userid"));
 	
-	if(LR_IsClientValid(client) && g_bInLR[client])
+	if(LR_IsClientValid(client) && g_iPlayer[client].InLR)
 	{
 		LR_StopLastRequest();
 		return;
@@ -249,7 +256,7 @@ public Action Command_LRDebug(int client, int args)
 	
 	CreateCountdown(3, client);
 	
-	if(g_bInLR[client])
+	if(g_iPlayer[client].InLR)
 	{
 		PrintToChat(client, "You're in a last request!");
 	}
@@ -281,14 +288,14 @@ public Action Command_LastRequest(int client, int args)
 		return Plugin_Handled;
 	}
 	
-	PrintToChat(client, "LR_IsLastRequestAvailable: %d, g_bInLR: %d", g_bLastRequest, g_bInLR[client]);
+	PrintToChat(client, "LR_IsLastRequestAvailable: %d, g_bInLR: %d", g_bLastRequest, g_iPlayer[client].InLR);
 	
 	if(g_bLastRequest) // TODO: Add message
 	{
 		return Plugin_Handled;
 	}
 	
-	if(g_bInLR[client]) // TODO: Add message
+	if(g_iPlayer[client].InLR) // TODO: Add message
 	{
 		return Plugin_Handled;
 	}
@@ -314,7 +321,7 @@ void ShowLastRequestList(int client)
 void ShowLastRequestMenu(int client)
 {
 	Menu menu = new Menu(Menu_LastRequest);
-	menu.SetTitle("Choose a last request:"); // TODO: Add translation
+	menu.SetTitle("Choose a game:"); // TODO: Add translation
 	
 	Call_StartForward(g_hOnMenu);
 	Call_PushCell(menu);
@@ -333,14 +340,25 @@ public int Menu_LastRequest(Menu menu, MenuAction action, int client, int param)
 		GetMenuItem(menu, param, sParam, sizeof(sParam));
 		
 		PrintToChat(client, "LR: %s", sParam);
-		strcopy(g_sLRGame[client], sizeof(g_sLRGame[]), sParam);
+		
+		for (int i = 0; g_aGames.Length; i++)
+		{
+			Games game;
+			g_aGames.GetArray(i, game, sizeof(Games));
+
+			if (StrEqual(game.Name, sParam, true))
+			{
+				g_iPlayer[client].Game = game;
+				break;
+			}
+		}
 		
 		Menu tMenu = new Menu(Menu_TMenu);
 		tMenu.SetTitle("Choose your opponent:");
 		
 		LR_LoopClients(i)
 		{
-			if(GetClientTeam(i) == CS_TEAM_CT && IsPlayerAlive(i) && !g_bInLR[i])
+			if(GetClientTeam(i) == CS_TEAM_CT && IsPlayerAlive(i) && !g_iPlayer[i].InLR)
 			{
 				char sIndex[12], sName[MAX_NAME_LENGTH];
 				IntToString(i, sIndex, sizeof(sIndex));
@@ -377,9 +395,9 @@ public int Menu_TMenu(Menu menu, MenuAction action, int client, int param)
 		GetMenuItem(menu, param, sParam, sizeof(sParam));
 		
 		int target = StringToInt(sParam);
-		g_iLRTarget[client] = target;
+		g_iPlayer[client].Target = target;
 		
-		PrintToChat(client, "LR: %s - Opponent: %N", g_sLRGame[client], target);
+		PrintToChat(client, "LR: %s - Opponent: %N", g_iPlayer[client].Game.Name, target);
 		
 		CreateCountdown(3, client);
 	}
@@ -418,12 +436,16 @@ public int Native_RegisterLRGame(Handle plugin, int numParams)
 	
 	GetNativeString(1, name, sizeof(name));
 	
-	if (CheckExistsLRGames(name))
+	if (!CheckLRShortName(name))
 	{
 		Games games;
 
 		games.ID = g_aGames.Length + 1;
 		strcopy(games.Name, sizeof(Games::Name), name);
+
+		games.plugin = plugin;
+		games.StartCB = GetNativeFunction(2);
+		games.EndCB = GetNativeFunction(3);
 
 		LogMessage("[%s] ID: %d - Name: %s", PLUGIN_NAME, games.ID, games.Name);
 
@@ -436,37 +458,39 @@ public int Native_RegisterLRGame(Handle plugin, int numParams)
 public int Native_IsClientInLastRequest(Handle plugin, int numParams)
 {
 	int client = GetNativeCell(1);
-	return g_bInLR[client];
+	return g_iPlayer[client].InLR;
 }
 
 public int Native_StopLastRequest(Handle plugin, int numParams)
 {
 	LR_LoopClients(i)
 	{
-		if(GetClientTeam(i) == CS_TEAM_T && g_iLRTarget[i] > 0)
+		if(GetClientTeam(i) == CS_TEAM_T && g_iPlayer[i].Target > 0)
 		{
-			// TODO: Add function
+			Call_StartFunction(g_iPlayer[i].Game.plugin, g_iPlayer[i].Game.EndCB);
+			Call_PushCell(i);
+			Call_PushCell(-1);
+			Call_Finish();
 		}
 	}
 	
 	LR_LoopClients(i)
 	{
-		if(g_bInLR[i])
+		if(g_iPlayer[i].InLR)
 		{
-			g_bInLR[i] = false;
+			g_iPlayer[i].InLR = false;
 		}
 		
-		if(GetClientTeam(i) == CS_TEAM_T && g_iLRTarget[i] > 0)
+		if(GetClientTeam(i) == CS_TEAM_T && g_iPlayer[i].Target > 0)
 		{
 			LR_LoopClients(j)
 			{
 				if(LR_IsClientValid(j))
 				{
-					PrintToChat(j, "Last request was ended ( Game: %s, Player: %N, Opponent: %N )", g_sLRGame[i], i, g_iLRTarget[i]); // TODO: Add translation
+					PrintToChat(j, "Last request was ended ( Game: %s, Player: %N, Opponent: %N )", g_iPlayer[i].Game.Name, i, g_iPlayer[i].Target); // TODO: Add translation
 				}
 			}
-			g_iLRTarget[i] = 0;
-			g_sLRGame[i] = "";
+			g_iPlayer[i].Target = 0;
 		}
 	}
 	
@@ -478,7 +502,7 @@ public int Native_IsLastRequestAvailable(Handle plugin, int numParams)
 	return g_bLastRequest;
 }
 
-bool CheckExistsLRGames(const char[] name)
+bool CheckLRShortName(const char[] name)
 {
 	for (int i = 0; i < g_aGames.Length; i++)
 	{
@@ -509,22 +533,22 @@ public Action Timer_Countdown(Handle timer, DataPack pack)
 	int client = GetClientOfUserId(ReadPackCell(pack));
 	delete pack;
 	
-	if(LR_IsClientValid(client) && LR_IsClientValid(g_iLRTarget[client]))
+	if(LR_IsClientValid(client) && LR_IsClientValid(g_iPlayer[client].Target))
 	{
 		LR_LoopClients(i)
 		{
 			if(seconds == 1)
 			{
-				PrintToChat(i, "Last request started in %d second ( Game: %s, Player: %N, Opponent: %N)", seconds, g_sLRGame[client], i, g_iLRTarget[client]); // TODO: Add translation
+				PrintToChat(i, "Last request started in %d second ( Game: %s, Player: %N, Opponent: %N)", seconds, g_iPlayer[client].Game.Name, i, g_iPlayer[client].Target); // TODO: Add translation
 			}
 			else if(seconds == 0)
 			{
-				PrintToChat(i, "Go! ( Game: %s, Player: %N, Opponent: %N)", g_sLRGame[client], i, g_iLRTarget[client]); // TODO: Add translation
+				PrintToChat(i, "Go! ( Game: %s, Player: %N, Opponent: %N)", g_iPlayer[client].Game.Name, i, g_iPlayer[client].Target); // TODO: Add translation
 				StartLastRequest(client);
 			}
 			else
 			{
-				PrintToChat(i, "Last request started in %d seconds ( Game: %s, Player: %N, Opponent: %N)", seconds, g_sLRGame[client], i, g_iLRTarget[client]); // TODO: Add translation
+				PrintToChat(i, "Last request started in %d seconds ( Game: %s, Player: %N, Opponent: %N)", seconds, g_iPlayer[client].Game.Name, i, g_iPlayer[client].Target); // TODO: Add translation
 			}
 			
 			if(g_cPlayCountdownSounds.BoolValue)
@@ -574,7 +598,7 @@ void PlayCountdownSounds(int seconds)
 
 void StartLastRequest(int client)
 {
-	if(!LR_IsClientValid(client) || !LR_IsClientValid(g_iLRTarget[client]))
+	if(!LR_IsClientValid(client) || !LR_IsClientValid(g_iPlayer[client].Target))
 	{
 		LR_LoopClients(i)
 		{
@@ -583,7 +607,11 @@ void StartLastRequest(int client)
 	}
 	
 	g_bLastRequest = false;
-	g_bInLR[g_iLRTarget[client]] = true;
+	g_iPlayer[g_iPlayer[client].Target].InLR = true;
 	
-	// TODO: Add function
+	Call_StartFunction(g_iPlayer[client].Game.plugin, g_iPlayer[client].Game.StartCB);
+	Call_PushCell(client);
+	Call_PushCell(g_iPlayer[client].Target);
+	Call_PushString(g_iPlayer[client].Game.Name);
+	Call_Finish();
 }
