@@ -9,8 +9,6 @@
 #include <lastrequest>
 
 #define PLUGIN_NAME "Last Request"
-#define LR_MAX_SHORTNAME_LENGTH 32
-#define LR_MAX_FULLNAME_LENGTH 64
 
 bool g_bLastRequest = false;
 bool g_bLastRequestRound = false;

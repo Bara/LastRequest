@@ -11,8 +11,8 @@
 #define LR_NAME "Knife Fight"
 #define PLUGIN_NAME "Last Request - " ... LR_NAME
 
-#define KNORMAL  LR_NAME ... " - Normal"
-#define BACKSTAB LR_NAME ... " - Backstab"
+#define LR_SHORT_KNORMAL  "knifeFight_Normal"
+#define LR_SHORT_BACKSTAB "knifeFight_Backstab"
 
 bool g_bKnife = false;
 bool g_bNormal = false;
@@ -29,18 +29,24 @@ public Plugin myinfo =
 
 public void OnAllPluginsLoaded()
 {
-	if (LR_RegisterGame(KNORMAL, "KnifeNormal"))
+	if (LR_RegisterGame(LR_SHORT_KNORMAL))
 	{
-		SetFailState("Can't register last request: %s", KNORMAL);
+		SetFailState("Can't register last request: %s", LR_SHORT_KNORMAL);
 	}
 	
-	if (LR_RegisterGame(BACKSTAB, "KnifeAntiBackstab"))
+	if (LR_RegisterGame(LR_SHORT_BACKSTAB))
 	{
-		SetFailState("Can't register last request: %s", BACKSTAB);
+		SetFailState("Can't register last request: %s", LR_SHORT_BACKSTAB);
 	}
 }
 
-public void LR_OnLastRequestChoosen(int client, int target, const char[] name)
+public void LR_OnOpenMenu(Menu menu)
+{
+	menu.AddItem(LR_SHORT_KNORMAL, "Knife Fight - Normal"); // TODO: Add translation
+	menu.AddItem(LR_SHORT_KNORMAL, "Knife Fight - Backstab"); // TODO: Add translation
+}
+
+/* public void LR_OnLastRequestChoosen(int client, int target, const char[] name)
 {
 	if(StrEqual(name, KNORMAL, false))
 	{
@@ -79,7 +85,7 @@ public void LR_OnLastRequestEnd(int client, int target)
 	g_bKnife = false;
 	g_bNormal = false;
 	g_bBackstab = false;
-}
+} */
 
 public Action OnTraceAttack(int victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &ammotype, int hitbox, int hitgroup)
 {

@@ -6,8 +6,8 @@
 
 #include <lastrequest>
 
-#define LR_NAME "Test"
-#define PLUGIN_NAME "Last Request - " ... LR_NAME
+#define LR_SHORTNAME "Test"
+#define PLUGIN_NAME "Last Request - " ... LR_SHORTNAME
 
 public Plugin myinfo =
 {
@@ -20,16 +20,17 @@ public Plugin myinfo =
 
 public void OnAllPluginsLoaded()
 {
-	if (LR_RegisterGame(LR_NAME, "example"))
+	if (LR_RegisterGame(LR_SHORTNAME))
 	{
-		SetFailState("Can't register last request: %s", LR_NAME);
+		SetFailState("Can't register last request: %s", LR_SHORTNAME);
 	}
 }
 
-public void LR_OnLastRequestChoosen(int client, int target, const char[] name)
+public void LR_OnOpenMenu(Menu menu)
 {
-	PrintToChatAll("(LR_OnLastRequestChoosen) called!");
-	PrintToChatAll("Game: %s", name);
+	PrintToChatAll("(LR_OnOpenMenu) called!");
+	
+	menu.AddItem(LR_SHORTNAME, "Test");
 }
 
 public bool Hosties_OnLastRequestAvailable(int client)
@@ -40,9 +41,4 @@ public bool Hosties_OnLastRequestAvailable(int client)
 		PrintToChatAll("Last T is: %N", client);
 	}
 	PrintToChatAll("(Hosties_OnLastRequestAvailable) called!");
-}
-
-public void LR_OnLastRequestEnd(int client, int target)
-{
-	PrintToChatAll("(LR_OnLastRequestEnd) called!");
 }
