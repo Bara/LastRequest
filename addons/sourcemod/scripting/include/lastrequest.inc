@@ -7,11 +7,10 @@
 
 #include <cstrike>
 
-forward void LR_OnLastRequestChoosen(int client, int target, const char[] name);
+forward void LR_OnOpenMenu(Menu menu);
 forward bool LR_OnLastRequestAvailable(int lastT);
-forward void LR_OnLastRequestEnd(int client, int target);
 
-native bool LR_RegisterGame(const char[] name, const char[] translations); // TODO translations?
+native bool LR_RegisterGame(const char[] name);
 native bool LR_IsClientInLastRequest(int client);
 native bool LR_IsLastRequestAvailable();
 native bool LR_SetLastRequestStatus(bool status);

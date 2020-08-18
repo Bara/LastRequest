@@ -9,8 +9,8 @@
 #include <lastrequest>
 
 #define PLUGIN_NAME "Last Request"
-#define LR_MAX_NAME_LENGTH 32
-#define LR_MAX_TRANSLATIONS_LENGTH 64
+#define LR_MAX_SHORTNAME_LENGTH 32
+#define LR_MAX_FULLNAME_LENGTH 64
 
 bool g_bLastRequest = false;
 bool g_bLastRequestRound = false;
@@ -25,9 +25,8 @@ ConVar g_cCountdownPath = null;
 ConVar g_cLRCommands = null;
 ConVar g_cLRListCommands = null;
 
-GlobalForward g_hOnLRChoosen;
+GlobalForward g_hOnMenu;
 GlobalForward g_hOnLRAvailable;
-GlobalForward g_hOnLREnd;
 
 char g_sLRGame[MAXPLAYERS + 1][128];
 int g_iLRTarget[MAXPLAYERS + 1] =  { 0, ... };
@@ -35,8 +34,7 @@ int g_iLRTarget[MAXPLAYERS + 1] =  { 0, ... };
 enum struct Games
 {
 	int ID;
-	char Name[LR_MAX_NAME_LENGTH];
-	char Translation[LR_MAX_TRANSLATIONS_LENGTH];
+	char Name[LR_MAX_SHORTNAME_LENGTH];
 }
 
 ArrayList g_aGames = null;
@@ -58,9 +56,8 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	CreateNative("LR_SetLastRequestStatus", Native_SetLastRequestStatus);
 	CreateNative("LR_StopLastRequest", Native_StopLastRequest);
 	
-	g_hOnLRChoosen = new GlobalForward("LR_OnLastRequestChoosen", ET_Ignore, Param_Cell, Param_Cell, Param_String);
+	g_hOnMenu = new GlobalForward("LR_OnOpenMenu", ET_Ignore, Param_Cell);
 	g_hOnLRAvailable = new GlobalForward("LR_OnLastRequestAvailable", ET_Ignore, Param_Cell);
-	g_hOnLREnd = new GlobalForward("LR_OnLastRequestEnd", ET_Ignore, Param_Cell, Param_Cell);
 	
 	RegPluginLibrary("lastrequest");
 	
@@ -69,11 +66,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 
 public void OnPluginStart()
 {
-	if(g_aGames != null)
-	{
-		g_aGames.Clear();
-	}
-	
+	delete g_aGames;
 	g_aGames = new ArrayList(sizeof(Games));
 	
 	g_cMenuTime = CreateConVar("lastrequest_menu_time", "30", "Time in seconds to choose a last request");
@@ -315,13 +308,9 @@ void ShowLastRequestList(int client)
 	Menu menu = new Menu(Menu_Empty); // TODO: As panel
 	menu.SetTitle("Last requests:"); // TODO: Add translation
 	
-	for (int i = 0; i < g_aGames.Length; i++)
-	{
-		Games games;
-		g_aGames.GetArray(i, games, sizeof(Games));
-
-		menu.AddItem(games.Translation, games.Translation, ITEMDRAW_DISABLED); // TODO: Add translation
-	}
+	Call_StartForward(g_hOnMenu);
+	Call_PushCell(menu);
+	Call_Finish();
 	
 	menu.ExitButton = true;
 	menu.Display(client, g_cMenuTime.IntValue);
@@ -332,13 +321,9 @@ void ShowLastRequestMenu(int client)
 	Menu menu = new Menu(Menu_LastRequest);
 	menu.SetTitle("Choose a last request:"); // TODO: Add translation
 	
-	for (int i = 0; i < g_aGames.Length; i++)
-	{
-		Games games;
-		g_aGames.GetArray(i, games, sizeof(Games));
-
-		menu.AddItem(games.Translation, games.Translation); // TODO: Add translation
-	}
+	Call_StartForward(g_hOnMenu);
+	Call_PushCell(menu);
+	Call_Finish();
 	
 	menu.ExitButton = true;
 	menu.Display(client, g_cMenuTime.IntValue);
@@ -434,25 +419,21 @@ public int Menu_Empty(Menu menu, MenuAction action, int client, int param)
 
 public int Native_RegisterLRGame(Handle plugin, int numParams)
 {
-	char name[LR_MAX_NAME_LENGTH];
-	char translations[LR_MAX_TRANSLATIONS_LENGTH];
+	char name[LR_MAX_SHORTNAME_LENGTH];
 	
 	GetNativeString(1, name, sizeof(name));
-	GetNativeString(2, translations, sizeof(translations));
 	
-	CheckExistsLRGames(name);
-	
-	Games games;
-	
-	games.ID = g_aGames.Length + 1;
-	strcopy(games.Name, sizeof(Games::Name), name);
-	strcopy(games.Translation, sizeof(Games::Translation), translations);
+	if (CheckExistsLRGames(name))
+	{
+		Games games;
 
-	LogMessage("[%s] ID: %d - Name: %s - Translations: %s", PLUGIN_NAME, games.ID, games.Name, games.Translation);
+		games.ID = g_aGames.Length + 1;
+		strcopy(games.Name, sizeof(Games::Name), name);
 
-	g_aGames.PushArray(games, sizeof(Games));
-	
-	CheckExistsLRGames(name);
+		LogMessage("[%s] ID: %d - Name: %s", PLUGIN_NAME, games.ID, games.Name);
+
+		g_aGames.PushArray(games, sizeof(Games));
+	}
 	
 	return false;
 }
@@ -475,10 +456,7 @@ public int Native_StopLastRequest(Handle plugin, int numParams)
 	{
 		if(GetClientTeam(i) == CS_TEAM_T && g_iLRTarget[i] > 0)
 		{
-			Call_StartForward(g_hOnLREnd);
-			Call_PushCell(i);
-			Call_PushCell(g_iLRTarget[i]);
-			Call_Finish();
+			// TODO: Add function
 		}
 	}
 	
@@ -618,18 +596,5 @@ void StartLastRequest(int client)
 	g_bLastRequest = false;
 	g_bInLR[g_iLRTarget[client]] = true;
 	
-	Call_StartForward(g_hOnLRChoosen);
-	Call_PushCell(client);
-	Call_PushCell(g_iLRTarget[client]);
-	for (int i = 0; i < g_aGames.Length; i++)
-	{
-		Games games;
-		g_aGames.GetArray(i, games, sizeof(Games));
-
-		if(StrEqual(games.Translation, g_sLRGame[client], false))
-		{
-			Call_PushString(games.Name);
-		}
-	}
-	Call_Finish();
+	// TODO: Add function
 }
