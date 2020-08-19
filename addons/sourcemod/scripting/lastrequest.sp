@@ -78,7 +78,7 @@ public void OnPluginStart()
 	g_cPlayCountdownSounds = CreateConVar("lastrequest_play_sounds", "1", "Play countdown sounds?", _, true, 0.0, true, 1.0);
 	g_cCountdownPath = CreateConVar("lastrequest_countdown_path", "lastrequest/countdownX.mp3", "Sounds for 3...2...1...Go ( Go = 0 )");
 	g_cLRCommands = CreateConVar("lastrequest_commands", "lr;lastrequest", "Commands to open last request menu");
-	g_cLRListCommands = CreateConVar("lastrequest_list_commands", "lrs;lastrequests", "Commands to open a list of all last requests");
+	g_cLRListCommands = CreateConVar("lastrequest_list_commands", "lrs;lastrequests;lrlist", "Commands to open a list of all last requests");
 	
 	RegAdminCmd("sm_lrdebug", Command_LRDebug, ADMFLAG_ROOT);
 	
@@ -173,20 +173,20 @@ public Action Timer_CheckTeams(Handle timer)
 void CheckTeams()
 {
 	int iCount = 0;
-	int lastT[65];
+	int iT[65];
 	
 	LR_LoopClients(i)
 	{
 		if(GetClientTeam(i) == CS_TEAM_T && IsPlayerAlive(i))
 		{
 			iCount++;
-			lastT[iCount] = i;
+			iT[iCount] = i;
 		}
 	}
 	
 	if(iCount == 1)
 	{
-		int client = lastT[1];
+		int client = iT[1];
 		g_bLastRequest = true;
 		
 		if(g_cAvailableSounds.IntValue > 0)
@@ -461,24 +461,13 @@ public int Native_StopLastRequest(Handle plugin, int numParams)
 {
 	LR_LoopClients(i)
 	{
-		if(GetClientTeam(i) == CS_TEAM_T && g_iPlayer[i].Target > 0)
+		if(GetClientTeam(i) == CS_TEAM_T && g_iPlayer[i].InLR && g_iPlayer[i].Target > 0)
 		{
 			Call_StartFunction(g_iPlayer[i].Game.plugin, g_iPlayer[i].Game.EndCB);
 			Call_PushCell(i);
 			Call_PushCell(-1);
 			Call_Finish();
-		}
-	}
-	
-	LR_LoopClients(i)
-	{
-		if(g_iPlayer[i].InLR)
-		{
-			g_iPlayer[i].InLR = false;
-		}
-		
-		if(GetClientTeam(i) == CS_TEAM_T && g_iPlayer[i].Target > 0)
-		{
+
 			LR_LoopClients(j)
 			{
 				if(LR_IsClientValid(j))
@@ -487,6 +476,11 @@ public int Native_StopLastRequest(Handle plugin, int numParams)
 				}
 			}
 			g_iPlayer[i].Target = 0;
+		}
+		
+		if(g_iPlayer[i].InLR)
+		{
+			g_iPlayer[i].InLR = false;
 		}
 	}
 	
