@@ -82,8 +82,6 @@ public void OnPluginStart()
 	g_cLRListCommands = CreateConVar("lastrequest_list_commands", "lrs;lastrequests;lrlist", "Commands to open a list of all last requests");
 	g_cTimeoutPunishment = CreateConVar("lastrequest_timeout_punishment", "0", "How punish the player who didn't response to the menu? (0 - Nothing, 1 - Slay, 2 - Kick)", _, true, 0.0, true, 2.0);
 	
-	RegAdminCmd("sm_lrdebug", Command_LRDebug, ADMFLAG_ROOT);
-	
 	CreateTimer(3.0, Timer_CheckTeams, _, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
 	
 	HookEvent("round_prestart", Event_RoundPreStart, EventHookMode_PostNoCopy);
@@ -244,29 +242,6 @@ public Action Event_RoundPreStart(Event event, const char[] name, bool dontBroad
 {
 	g_bLastRequest = false;
 }
-
-public Action Command_LRDebug(int client, int args)
-{
-	StringMapSnapshot snap = g_smGames.Snapshot();
-	char sBuffer[LR_MAX_SHORTNAME_LENGTH];
-
-	for (int i = 0; i < snap.Length; i++)
-	{
-		Games games;
-		snap.GetKey(i, sBuffer, sizeof(sBuffer));
-		g_smGames.GetArray(sBuffer, games, sizeof(Games));
-
-		PrintToServer("[%s]: %s", PLUGIN_NAME, games.Name);
-	}
-	
-	CreateCountdown(3, client);
-	
-	if(g_iPlayer[client].InLR)
-	{
-		PrintToChat(client, "You're in a last request!");
-	}
-}
-
 
 public Action Command_LastRequestList(int client, int args)
 {
