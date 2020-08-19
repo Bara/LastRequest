@@ -20,6 +20,7 @@ ConVar g_cPlayCountdownSounds = null;
 ConVar g_cCountdownPath = null;
 ConVar g_cLRCommands = null;
 ConVar g_cLRListCommands = null;
+ConVar g_cTimeoutPunishment = null;
 
 GlobalForward g_hOnMenu;
 GlobalForward g_hOnLRAvailable;
@@ -79,6 +80,7 @@ public void OnPluginStart()
 	g_cCountdownPath = CreateConVar("lastrequest_countdown_path", "lastrequest/countdownX.mp3", "Sounds for 3...2...1...Go ( Go = 0 )");
 	g_cLRCommands = CreateConVar("lastrequest_commands", "lr;lastrequest", "Commands to open last request menu");
 	g_cLRListCommands = CreateConVar("lastrequest_list_commands", "lrs;lastrequests;lrlist", "Commands to open a list of all last requests");
+	g_cTimeoutPunishment = CreateConVar("lastrequest_timeout_punishment", "0", "How punish the player who didn't response to the menu? (0 - Nothing, 1 - Slay, 2 - Kick)", _, true, 0.0, true, 2.0);
 	
 	RegAdminCmd("sm_lrdebug", Command_LRDebug, ADMFLAG_ROOT);
 	
@@ -268,7 +270,7 @@ public Action Command_LRDebug(int client, int args)
 
 public Action Command_LastRequestList(int client, int args)
 {
-	if(!LR_IsClientValid(client)) // TODO: Add message
+	if(!LR_IsClientValid(client))
 	{
 		return Plugin_Handled;
 	}
@@ -278,7 +280,6 @@ public Action Command_LastRequestList(int client, int args)
 	return Plugin_Continue;
 }
 
-
 public Action Command_LastRequest(int client, int args)
 {
 	if(!LR_IsClientValid(client))
@@ -286,20 +287,23 @@ public Action Command_LastRequest(int client, int args)
 		return Plugin_Handled;
 	}
 	
-	if(GetClientTeam(client) != CS_TEAM_T) // TODO: Add message
+	if(GetClientTeam(client) != CS_TEAM_T) // TODO: Add translation
 	{
+		ReplyToCommand(client, "You must be a Terrorist to use last request!");
 		return Plugin_Handled;
 	}
 	
 	PrintToChat(client, "LR_IsLastRequestAvailable: %d, g_bInLR: %d", g_bLastRequest, g_iPlayer[client].InLR);
 	
-	if(g_bLastRequest) // TODO: Add message
+	if(g_bLastRequest) // TODO: Add translation
 	{
+		ReplyToCommand(client, "Last Request is currently not available... please wait at least 3 seconds.");
 		return Plugin_Handled;
 	}
 	
-	if(g_iPlayer[client].InLR) // TODO: Add message
+	if(g_iPlayer[client].InLR) // TODO: Add translation
 	{
+		ReplyToCommand(client, "You are already in a last request!");
 		return Plugin_Handled;
 	}
 		
@@ -371,7 +375,16 @@ public int Menu_LastRequest(Menu menu, MenuAction action, int client, int param)
 	{
 		if(param == MenuCancel_Timeout)
 		{
-			PrintToChatAll("MenuCancel_Timeout %N", client); // TODO: Add translation & function (Nothing or slay?)
+			PrintToChatAll("MenuCancel_Timeout %N", client);
+
+			if (g_cTimeoutPunishment.IntValue == 1)
+			{
+				ForcePlayerSuicide(client);
+			}
+			else if (g_cTimeoutPunishment.IntValue == 2)
+			{
+				KickClient(client, "You was kicked due afk during lr menu selection.");
+			}
 		}
 	}		
 	else if (action == MenuAction_End)
@@ -402,7 +415,16 @@ public int Menu_TMenu(Menu menu, MenuAction action, int client, int param)
 	{
 		if(param == MenuCancel_Timeout)
 		{
-			PrintToChatAll("MenuCancel_Timeout %N", client); // TODO: Add translation & function (Nothing or slay?)
+			PrintToChatAll("MenuCancel_Timeout %N", client);
+
+			if (g_cTimeoutPunishment.IntValue == 1)
+			{
+				ForcePlayerSuicide(client);
+			}
+			else if (g_cTimeoutPunishment.IntValue == 2)
+			{
+				KickClient(client, "You was kicked due afk during lr menu selection.");
+			}
 		}
 	}		
 	else if (action == MenuAction_End)
@@ -472,7 +494,7 @@ public int Native_StopLastRequest(Handle plugin, int numParams)
 			{
 				if(LR_IsClientValid(j))
 				{
-					PrintToChat(j, "Last request was ended ( Game: %s, Player: %N, Opponent: %N )", g_iPlayer[i].Game.Name, i, g_iPlayer[i].Target); // TODO: Add translation
+					PrintToChat(j, "Last request over! ( Game: %s, Player: %N, Opponent: %N )", g_iPlayer[i].Game.Name, i, g_iPlayer[i].Target); // TODO: Add translation
 				}
 			}
 			g_iPlayer[i].Target = 0;
@@ -484,7 +506,7 @@ public int Native_StopLastRequest(Handle plugin, int numParams)
 		}
 	}
 	
-	g_bLastRequest = false;
+	g_bLastRequest = true;
 }
 
 public int Native_IsLastRequestAvailable(Handle plugin, int numParams)
