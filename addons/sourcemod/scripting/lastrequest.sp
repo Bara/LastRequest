@@ -26,7 +26,6 @@ GlobalForward g_hOnLRAvailable;
 
 enum struct Games
 {
-	int ID;
 	char Name[LR_MAX_SHORTNAME_LENGTH];
 	Handle plugin;
 	Function StartCB;
@@ -40,7 +39,7 @@ enum struct PlayerData
 	Games Game;
 }
 
-ArrayList g_aGames = null;
+StringMap g_smGames = null;
 PlayerData g_iPlayer[MAXPLAYERS + 1];
 
 public Plugin myinfo =
@@ -69,8 +68,8 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 
 public void OnPluginStart()
 {
-	delete g_aGames;
-	g_aGames = new ArrayList(sizeof(Games));
+	delete g_smGames;
+	g_smGames = new StringMap();
 	
 	g_cMenuTime = CreateConVar("lastrequest_menu_time", "30", "Time in seconds to choose a last request");
 	g_cOpenMenu = CreateConVar("lastrequest_open_menu", "1", "Open last request menu for the last player?", _, true, 0.0, true, 1.0);
@@ -246,10 +245,14 @@ public Action Event_RoundPreStart(Event event, const char[] name, bool dontBroad
 
 public Action Command_LRDebug(int client, int args)
 {
-	for (int i = 0; i < g_aGames.Length; i++)
+	StringMapSnapshot snap = g_smGames.Snapshot();
+	char sBuffer[LR_MAX_SHORTNAME_LENGTH];
+
+	for (int i = 0; i < snap.Length; i++)
 	{
 		Games games;
-		g_aGames.GetArray(i, games, sizeof(Games));
+		snap.GetKey(i, sBuffer, sizeof(sBuffer));
+		g_smGames.GetArray(sBuffer, games, sizeof(Games));
 
 		PrintToServer("[%s]: %s", PLUGIN_NAME, games.Name);
 	}
@@ -341,16 +344,10 @@ public int Menu_LastRequest(Menu menu, MenuAction action, int client, int param)
 		
 		PrintToChat(client, "LR: %s", sParam);
 		
-		for (int i = 0; g_aGames.Length; i++)
+		Games game;
+		if (g_smGames.GetArray(sParam, game, sizeof(Games)))
 		{
-			Games game;
-			g_aGames.GetArray(i, game, sizeof(Games));
-
-			if (StrEqual(game.Name, sParam, true))
-			{
-				g_iPlayer[client].Game = game;
-				break;
-			}
+			g_iPlayer[client].Game = game;
 		}
 		
 		Menu tMenu = new Menu(Menu_TMenu);
@@ -440,16 +437,15 @@ public int Native_RegisterLRGame(Handle plugin, int numParams)
 	{
 		Games games;
 
-		games.ID = g_aGames.Length + 1;
 		strcopy(games.Name, sizeof(Games::Name), name);
 
 		games.plugin = plugin;
 		games.StartCB = GetNativeFunction(2);
 		games.EndCB = GetNativeFunction(3);
 
-		LogMessage("[%s] ID: %d - Name: %s", PLUGIN_NAME, games.ID, games.Name);
+		LogMessage("[%s] Name: %s", PLUGIN_NAME, games.Name);
 
-		g_aGames.PushArray(games, sizeof(Games));
+		g_smGames.SetArray(games.Name, games, sizeof(Games));
 	}
 	
 	return false;
@@ -504,17 +500,8 @@ public int Native_IsLastRequestAvailable(Handle plugin, int numParams)
 
 bool CheckLRShortName(const char[] name)
 {
-	for (int i = 0; i < g_aGames.Length; i++)
-	{
-		Games games;
-		g_aGames.GetArray(i, games, sizeof(Games));
-
-		if(StrEqual(games.Name, name, false))
-		{
-			return true;
-		}
-	}
-	return false;
+	Games game;
+	return g_smGames.GetArray(name, game, sizeof(Games));
 }
 
 
