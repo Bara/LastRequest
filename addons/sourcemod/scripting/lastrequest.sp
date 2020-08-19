@@ -484,7 +484,7 @@ public int Native_StopLastRequest(Handle plugin, int numParams)
 		}
 	}
 	
-	g_bLastRequest = true;
+	g_bLastRequest = false;
 }
 
 public int Native_IsLastRequestAvailable(Handle plugin, int numParams)
