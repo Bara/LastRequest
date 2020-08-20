@@ -29,12 +29,12 @@ public Plugin myinfo =
 
 public void OnConfigsExecuted()
 {
-	if (LR_RegisterGame(LR_SHORT_KNORMAL, OnGameStart, OnGameEnd))
+	if (!LR_RegisterGame(LR_SHORT_KNORMAL, OnGameStart, OnGameEnd))
 	{
 		SetFailState("Can't register last request: %s", LR_SHORT_KNORMAL);
 	}
 	
-	if (LR_RegisterGame(LR_SHORT_BACKSTAB, OnGameStart, OnGameEnd))
+	if (!LR_RegisterGame(LR_SHORT_BACKSTAB, OnGameStart, OnGameEnd))
 	{
 		SetFailState("Can't register last request: %s", LR_SHORT_BACKSTAB);
 	}
@@ -43,7 +43,7 @@ public void OnConfigsExecuted()
 public void LR_OnOpenMenu(Menu menu)
 {
 	menu.AddItem(LR_SHORT_KNORMAL, "Knife Fight - Normal"); // TODO: Add translation
-	menu.AddItem(LR_SHORT_KNORMAL, "Knife Fight - Backstab"); // TODO: Add translation
+	menu.AddItem(LR_SHORT_BACKSTAB, "Knife Fight - Backstab"); // TODO: Add translation
 }
 
 public void OnGameStart(int client, int target, const char[] name)
@@ -81,10 +81,20 @@ public void OnGameStart(int client, int target, const char[] name)
 
 public void OnGameEnd(int winner, int loser)
 {
-	PrintToChatAll("Knife.OnGameEnd - Winner: %N, Loser: %N", winner, loser);
+	if (winner != -1 && loser != -1)
+	{
+		PrintToChatAll("Knife.OnGameEnd - Winner: %N, Loser: %N", winner, loser);
+	}
 
-	SDKUnhook(winner, SDKHook_TraceAttack, OnTraceAttack);
-	SDKUnhook(loser, SDKHook_TraceAttack, OnTraceAttack);
+	if (winner != -1)
+	{
+		SDKUnhook(winner, SDKHook_TraceAttack, OnTraceAttack);
+	}
+
+	if (loser != -1)
+	{
+		SDKUnhook(loser, SDKHook_TraceAttack, OnTraceAttack);
+	}
 	
 	g_bKnife = false;
 	g_bNormal = false;
@@ -102,14 +112,21 @@ public Action OnTraceAttack(int victim, int &attacker, int &inflictor, float &da
 
 	PrintToChatAll("2");
 	
-	if(damagetype == DMG_FALL || damagetype == DMG_GENERIC || attacker == 0)
+	if(damagetype == DMG_FALL || attacker == 0)
 	{
 		return Plugin_Continue;
 	}
 
-	PrintToChatAll("3, ValidA: %d, ValidV: %d, InLRA: %d, InLRV: %d", LR_IsClientValid(attacker), LR_IsClientValid(victim), LR_IsClientInLastRequest(attacker), LR_IsClientInLastRequest(victim));
+	PrintToChatAll("3, ValidA: %d (%d), ValidV: %d (%d)", LR_IsClientValid(attacker), attacker, LR_IsClientValid(victim), victim);
 	
-	if(!LR_IsClientValid(attacker) || !LR_IsClientValid(victim) || !LR_IsClientInLastRequest(attacker) || !LR_IsClientInLastRequest(victim))
+	if(!LR_IsClientValid(attacker) || !LR_IsClientValid(victim))
+	{
+		return Plugin_Handled;
+	}
+
+	PrintToChatAll("4, InLRA: %d, InLRV: %d", LR_IsClientInLastRequest(attacker), LR_IsClientInLastRequest(victim));
+	
+	if(!LR_IsClientInLastRequest(attacker) || !LR_IsClientInLastRequest(victim))
 	{
 		return Plugin_Handled;
 	}

@@ -60,7 +60,7 @@ native bool LR_IsLastRequestAvailable();
 /*
  * Stops the active LR immediately.
  */
-native void LR_StopLastRequest();
+native void LR_StopLastRequest(int winner = -1, int loser = -1);
 
 stock bool IsLastRequestAvailable()
 {
