@@ -18,7 +18,7 @@ public Plugin myinfo =
 	url = "github.com/Bara"
 };
 
-public void OnAllPluginsLoaded()
+public void OnConfigsExecuted()
 {
 	if (LR_RegisterGame(LR_SHORTNAME, OnGameStart, OnGameEnd))
 	{

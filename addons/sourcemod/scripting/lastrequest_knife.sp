@@ -27,7 +27,7 @@ public Plugin myinfo =
 	url = "github.com/Bara"
 };
 
-public void OnAllPluginsLoaded()
+public void OnConfigsExecuted()
 {
 	if (LR_RegisterGame(LR_SHORT_KNORMAL, OnGameStart, OnGameEnd))
 	{
@@ -48,6 +48,8 @@ public void LR_OnOpenMenu(Menu menu)
 
 public void OnGameStart(int client, int target, const char[] name)
 {
+	PrintToChatAll("Knife.OnGameStart - Client: %N, Target: %N, Game: %s", client, target, name);
+
 	if(StrEqual(name, LR_SHORT_KNORMAL, false))
 	{
 		PrintToChatAll("%s", name);
@@ -79,6 +81,8 @@ public void OnGameStart(int client, int target, const char[] name)
 
 public void OnGameEnd(int winner, int loser)
 {
+	PrintToChatAll("Knife.OnGameEnd - Winner: %N, Loser: %N", winner, loser);
+
 	SDKUnhook(winner, SDKHook_TraceAttack, OnTraceAttack);
 	SDKUnhook(loser, SDKHook_TraceAttack, OnTraceAttack);
 	
@@ -89,17 +93,23 @@ public void OnGameEnd(int winner, int loser)
 
 public Action OnTraceAttack(int victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &ammotype, int hitbox, int hitgroup)
 {
+	PrintToChatAll("1, Knife: %d, Normal: %d, Backstab: %d", g_bKnife, g_bNormal, g_bBackstab);
+
 	if(!g_bKnife)
 	{
 		return Plugin_Continue;
 	}
+
+	PrintToChatAll("2");
 	
 	if(damagetype == DMG_FALL || damagetype == DMG_GENERIC || attacker == 0)
 	{
 		return Plugin_Continue;
 	}
+
+	PrintToChatAll("3, ValidA: %d, ValidV: %d, InLRA: %d, InLRV: %d", LR_IsClientValid(attacker), LR_IsClientValid(victim), LR_IsClientInLastRequest(attacker), LR_IsClientInLastRequest(victim));
 	
-	if(LR_IsClientValid(attacker) && LR_IsClientValid(victim) && !LR_IsClientInLastRequest(attacker) || !LR_IsClientInLastRequest(victim))
+	if(!LR_IsClientValid(attacker) || !LR_IsClientValid(victim) || !LR_IsClientInLastRequest(attacker) || !LR_IsClientInLastRequest(victim))
 	{
 		return Plugin_Handled;
 	}
