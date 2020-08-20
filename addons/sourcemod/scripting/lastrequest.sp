@@ -114,6 +114,11 @@ public void OnClientPutInServer(int client)
 
 public void OnClientDisconnect(int client)
 {
+	if (LR_IsClientValid(client) && g_iPlayer[client].InLR)
+	{
+		LR_StopLastRequest(g_iPlayer[client].Target, client);
+	}
+
 	g_iPlayer[client].Reset();
 }
 
