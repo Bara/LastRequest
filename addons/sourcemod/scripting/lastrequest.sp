@@ -476,6 +476,7 @@ public int Native_StopLastRequest(Handle plugin, int numParams)
 {
 	int winner = GetNativeCell(1);
 	int loser = GetNativeCell(2);
+	
 	LR_LoopClients(i)
 	{
 		if (GetClientTeam(i) == CS_TEAM_T && g_iPlayer[i].InLR && g_iPlayer[i].Target > 0)
@@ -497,6 +498,7 @@ public int Native_StopLastRequest(Handle plugin, int numParams)
 	
 	g_iPlayer[winner].Reset();
 	g_iPlayer[loser].Reset();
+
 	g_bRunningLR = false;
 	g_bIsAvailable = false;
 }
