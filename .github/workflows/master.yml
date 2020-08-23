@@ -19,17 +19,30 @@ jobs:
           SOURCEMOD_PATH=$GITHUB_WORKSPACE/addons/sourcemod
           echo ::set-env name=SOURCEMOD_PATH::$SOURCEMOD_PATH
           echo ::set-env name=SCRIPTS_PATH::$SOURCEMOD_PATH/scripting
+          echo ::set-env name=GAMES_PATH::$SOURCEMOD_PATH/scripting/games
 
       - name: Setup SourcePawn Compiler ${{ matrix.SM_VERSION }}
         uses: rumblefrog/setup-sp@master
         with:
           version: ${{ matrix.SM_VERSION }}
 
-      - name: Compile plugins
+      - name: Compiling core plugin
+        run: |
+          echo -e "\nCompiling lastrequest.sp..."
+          spcomp -E -w234 -O2 -v2 -i $SCRIPTS_PATH/include lastrequest.sp
+        working-directory: ${{ env.SCRIPTS_PATH }}/
+
+      - name: Compiling test plugin
+        run: |
+          echo -e "\nCompiling lastrequest_test.sp..."
+          spcomp -E -w234 -O2 -v2 -i $SCRIPTS_PATH/include lastrequest_test.sp
+        working-directory: ${{ env.SCRIPTS_PATH }}/
+
+      - name: Compiling games
         run: |
           for file in *.sp
           do
             echo -e "\nCompiling $file..."
             spcomp -E -w234 -O2 -v2 -i $SCRIPTS_PATH/include $file
           done
-        working-directory: ${{ env.SCRIPTS_PATH }}/
+        working-directory: ${{ env.GAMES_PATH }}/
