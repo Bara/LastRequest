@@ -48,17 +48,13 @@ public void LR_OnOpenMenu(Menu menu)
 
 public void OnGameStart(int client, int target, const char[] name)
 {
-	PrintToChatAll("Knife.OnGameStart - Client: %N, Target: %N, Game: %s", client, target, name);
-
 	if(StrEqual(name, LR_SHORT_KNORMAL, false))
 	{
-		PrintToChatAll("%s", name);
 		g_bKnife = true;
 		g_bNormal = true;
 	}
 	else if(StrEqual(name, LR_SHORT_BACKSTAB, false))
 	{
-		PrintToChatAll("%s", name);
 		g_bKnife = true;
 		g_bBackstab = true;
 	}
@@ -81,11 +77,6 @@ public void OnGameStart(int client, int target, const char[] name)
 
 public void OnGameEnd(int winner, int loser)
 {
-	if (winner != -1 && loser != -1)
-	{
-		PrintToChatAll("Knife.OnGameEnd - Winner: %N, Loser: %N", winner, loser);
-	}
-
 	if (winner != -1)
 	{
 		SDKUnhook(winner, SDKHook_TraceAttack, OnTraceAttack);
@@ -103,28 +94,20 @@ public void OnGameEnd(int winner, int loser)
 
 public Action OnTraceAttack(int victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &ammotype, int hitbox, int hitgroup)
 {
-	PrintToChatAll("1, Knife: %d, Normal: %d, Backstab: %d", g_bKnife, g_bNormal, g_bBackstab);
-
 	if(!g_bKnife)
 	{
 		return Plugin_Continue;
 	}
-
-	PrintToChatAll("2");
 	
 	if(damagetype == DMG_FALL || attacker == 0)
 	{
 		return Plugin_Continue;
 	}
-
-	PrintToChatAll("3, ValidA: %d (%d), ValidV: %d (%d)", LR_IsClientValid(attacker), attacker, LR_IsClientValid(victim), victim);
 	
 	if(!LR_IsClientValid(attacker) || !LR_IsClientValid(victim))
 	{
 		return Plugin_Handled;
 	}
-
-	PrintToChatAll("4, InLRA: %d, InLRV: %d", LR_IsClientInLastRequest(attacker), LR_IsClientInLastRequest(victim));
 	
 	if(!LR_IsClientInLastRequest(attacker) || !LR_IsClientInLastRequest(victim))
 	{
