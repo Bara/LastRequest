@@ -11,6 +11,7 @@
 #define PLUGIN_NAME "Last Request"
 
 bool g_bRunningLR = false;
+bool g_bCustomStart = false;
 bool g_bIsAvailable = false;
 
 ConVar g_cMenuTime = null;
@@ -21,13 +22,14 @@ ConVar g_cPlayCountdownSounds = null;
 ConVar g_cCountdownPath = null;
 ConVar g_cTimeoutPunishment = null;
 
-GlobalForward g_hOnMenu;
-GlobalForward g_hOnLRAvailable;
+GlobalForward g_hOnMenu = null;
+GlobalForward g_hOnLRAvailable = null;
 
 enum struct Games
 {
 	char Name[LR_MAX_SHORTNAME_LENGTH];
 	Handle plugin;
+	Function PreStartCB;
 	Function StartCB;
 	Function EndCB;
 }
@@ -62,7 +64,9 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	CreateNative("LR_RegisterGame", Native_RegisterLRGame);
 	CreateNative("LR_IsLastRequestAvailable", Native_IsLastRequestAvailable);
 	CreateNative("LR_IsClientInLastRequest", Native_IsClientInLastRequest);
+	CreateNative("LR_GetClientOpponent", Native_GetClientOpponent);
 	CreateNative("LR_StopLastRequest", Native_StopLastRequest);
+	CreateNative("LR_StartLastRequest", Native_StartLastRequest);
 	
 	g_hOnMenu = new GlobalForward("LR_OnOpenMenu", ET_Ignore, Param_Cell);
 	g_hOnLRAvailable = new GlobalForward("LR_OnLastRequestAvailable", ET_Ignore, Param_Cell);
@@ -97,6 +101,7 @@ public void OnMapStart()
 
 	g_bRunningLR = false;
 	g_bIsAvailable = false;
+	g_bCustomStart = false;
 
 	CreateTimer(3.0, Timer_CheckTeams, _, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
 }
@@ -138,11 +143,11 @@ public Action Event_PlayerDeath(Event event, const char[] name, bool dontBroadca
 
 public Action Timer_CheckTeams(Handle timer)
 {
-	if (!g_bRunningLR)
+	if (!g_bRunningLR && !g_bCustomStart)
 	{
 		CheckTeams();
 	}
-	else if (g_bRunningLR)
+	else if (g_bRunningLR || g_bCustomStart)
 	{
 		if (GetTeamCountAmount(CS_TEAM_T) == 0 || GetTeamCountAmount(CS_TEAM_CT) == 0)
 		{
@@ -173,9 +178,9 @@ void CheckTeams()
 		}
 	}
 
-	PrintToChatAll("T: %d, CT: %d, Running: %d, Available: %d", iT, iCT, g_bRunningLR, g_bIsAvailable);
+	PrintToChatAll("T: %d, CT: %d, Running: %d, CustomStart: %d, Available: %d", iT, iCT, g_bRunningLR, g_bCustomStart, g_bIsAvailable);
 
-	if (iT == 1 && iCT > 0 && !g_bRunningLR && !g_bIsAvailable)
+	if (iT == 1 && iCT > 0 && !g_bRunningLR && !g_bCustomStart && !g_bIsAvailable)
 	{
 		int client = iTIndex;
 		
@@ -234,6 +239,7 @@ public Action Event_RoundPreStart(Event event, const char[] name, bool dontBroad
 {
 	g_bRunningLR = false;
 	g_bIsAvailable = false;
+	g_bCustomStart = false;
 
 	LR_LoopClients(i)
 	{
@@ -397,13 +403,33 @@ public int Menu_TMenu(Menu menu, MenuAction action, int client, int param)
 		
 		PrintToChat(client, "LR: %s - Opponent: %N", g_iPlayer[client].Game.Name, target);
 
-		g_bRunningLR = true;
+		Action res = Plugin_Continue;
+		Call_StartFunction(g_iPlayer[client].Game.plugin, g_iPlayer[client].Game.PreStartCB);
+		Call_PushCell(client);
+		Call_PushCell(g_iPlayer[client].Target);
+		Call_PushString(g_iPlayer[client].Game.Name);
+		Call_Finish(res);
+
+		if (res == Plugin_Continue)
+		{
+			g_bRunningLR = true;
+			g_bCustomStart = false;
+		}
+		else
+		{
+			g_bRunningLR = false;
+			g_bCustomStart = true;
+		}
+
 		g_bIsAvailable = false;
 		
 		g_iPlayer[client].InLR = true;
 		g_iPlayer[target].InLR = true;
 		
-		CreateCountdown(3, client);
+		if (g_bRunningLR && !g_bCustomStart)
+		{
+			CreateCountdown(3, client);
+		}
 	}
 	else if (action == MenuAction_Cancel)
 	{
@@ -427,6 +453,17 @@ public int Menu_TMenu(Menu menu, MenuAction action, int client, int param)
 		{
 			delete menu;
 		}
+	}
+}
+
+public int Native_StartLastRequest(Handle plugin, int numParams)
+{
+	g_bRunningLR = true;
+	g_bCustomStart = false;
+
+	if (g_bRunningLR && !g_bCustomStart)
+	{
+		CreateCountdown(3, GetNativeCell(1));
 	}
 }
 
@@ -455,8 +492,9 @@ public int Native_RegisterLRGame(Handle plugin, int numParams)
 		strcopy(games.Name, sizeof(Games::Name), name);
 
 		games.plugin = plugin;
-		games.StartCB = GetNativeFunction(2);
-		games.EndCB = GetNativeFunction(3);
+		games.PreStartCB = GetNativeFunction(2);
+		games.StartCB = GetNativeFunction(3);
+		games.EndCB = GetNativeFunction(4);
 
 		LogMessage("[%s] Name: %s", PLUGIN_NAME, games.Name);
 
@@ -500,6 +538,7 @@ public int Native_StopLastRequest(Handle plugin, int numParams)
 	g_iPlayer[loser].Reset();
 
 	g_bRunningLR = false;
+	g_bCustomStart = false;
 	g_bIsAvailable = false;
 }
 
@@ -640,11 +679,17 @@ bool IsLRReady(int client)
 		return false;
 	}
 	
-	PrintToChat(client, "g_bIsAvailable: %d, g_bRunningLR: %d, g_bInLR: %d", g_bIsAvailable, g_bRunningLR, g_iPlayer[client].InLR);
+	PrintToChat(client, "g_bIsAvailable: %d, g_bRunningLR: %d, g_bCustomStart: %d, g_bInLR: %d", g_bIsAvailable, g_bRunningLR, g_bCustomStart, g_iPlayer[client].InLR);
 	
 	if (g_bRunningLR) // TODO: Add translation
 	{
 		ReplyToCommand(client, "Last Request is already running...");
+		return false;
+	}
+	
+	if (g_bCustomStart) // TODO: Add translation
+	{
+		ReplyToCommand(client, "Last Request is awaiting on plugin start...");
 		return false;
 	}
 
@@ -661,4 +706,16 @@ bool IsLRReady(int client)
 	}
 
 	return true;
+}
+
+public int Native_GetClientOpponent(Handle plugin, int numParams)
+{
+	int client = GetNativeCell(1);
+
+	if (g_iPlayer[client].InLR)
+	{
+		return g_iPlayer[client].Target;
+	}
+
+	return -1;
 }

@@ -20,7 +20,7 @@ public Plugin myinfo =
 
 public void OnConfigsExecuted()
 {
-	if (!LR_RegisterGame(LR_SHORTNAME, OnGameStart, OnGameEnd))
+	if (!LR_RegisterGame(LR_SHORTNAME, OnGamePreStart, OnGameStart, OnGameEnd))
 	{
 		SetFailState("Can't register last request: %s", LR_SHORTNAME);
 	}
@@ -41,6 +41,12 @@ public bool Hosties_OnLastRequestAvailable(int client)
 		PrintToChatAll("Last T is: %N", client);
 	}
 	PrintToChatAll("(Hosties_OnLastRequestAvailable) called!");
+}
+
+public Action OnGamePreStart(int requester, int opponent, const char[] shortname)
+{
+	PrintToChatAll("(OnGamePreStart) called!");
+	PrintToChatAll("OnGamePreStart - Requester: %d, Opponent: %d, Shot Name: %s", requester, opponent, shortname);
 }
 
 public void OnGameStart(int requester, int opponent, const char[] shortname)

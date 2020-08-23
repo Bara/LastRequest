@@ -29,12 +29,12 @@ public Plugin myinfo =
 
 public void OnConfigsExecuted()
 {
-	if (!LR_RegisterGame(LR_SHORT_KNORMAL, OnGameStart, OnGameEnd))
+	if (!LR_RegisterGame(LR_SHORT_KNORMAL, OnGamePreStart, OnGameStart, OnGameEnd))
 	{
 		SetFailState("Can't register last request: %s", LR_SHORT_KNORMAL);
 	}
 	
-	if (!LR_RegisterGame(LR_SHORT_BACKSTAB, OnGameStart, OnGameEnd))
+	if (!LR_RegisterGame(LR_SHORT_BACKSTAB, OnGamePreStart, OnGameStart, OnGameEnd))
 	{
 		SetFailState("Can't register last request: %s", LR_SHORT_BACKSTAB);
 	}
@@ -44,6 +44,11 @@ public void LR_OnOpenMenu(Menu menu)
 {
 	menu.AddItem(LR_SHORT_KNORMAL, "Knife Fight - Normal"); // TODO: Add translation
 	menu.AddItem(LR_SHORT_BACKSTAB, "Knife Fight - Backstab"); // TODO: Add translation
+}
+
+public Action OnGamePreStart(int requester, int opponent, const char[] shortname)
+{
+
 }
 
 public void OnGameStart(int client, int target, const char[] name)

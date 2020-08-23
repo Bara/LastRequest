@@ -12,7 +12,10 @@
 /*
  * Requester is mostly the last T and opponent is the choosed CT by the T.
  * Short Name will be required for games with subgames like knife fight with different modes.
+ * Note: If you return something other than Plugin_Continue, you must trigger LR_StartLastRequest
+ *       Example: Soon
  */
+typedef LRPreStartCB = function Action (int requester, int opponent, const char[] shortname);
 typedef LRStartCB = function void (int requester, int opponent, const char[] shortname);
 typedef LREndCB = function void (int winner, int loser);
 
@@ -39,7 +42,7 @@ forward bool LR_OnLastRequestAvailable(int client);
  *
  * @return                 True, if register was successful otherwise false
  */
-native bool LR_RegisterGame(const char[] shortname, LRStartCB startCallback, LREndCB endCallback);
+native bool LR_RegisterGame(const char[] shortname, LRPreStartCB preStartCallback, LRStartCB startCallback, LREndCB endCallback);
 
 /*
  * Check if the specific client is in a LR or not.
@@ -49,6 +52,15 @@ native bool LR_RegisterGame(const char[] shortname, LRStartCB startCallback, LRE
  * @return                True, if the client is in a LR, otherwise false
  */
 native bool LR_IsClientInLastRequest(int client);
+
+/*
+ * Returns the client index of the opponent
+ *
+ * @param client          Client index
+ *
+ * @return                Returns the client index of the opponent, otherwise it's -1
+ */
+native int LR_GetClientOpponent(int client);
 
 /*
  * Check if is LR is available.
@@ -61,6 +73,14 @@ native bool LR_IsLastRequestAvailable();
  * Stops the active LR immediately.
  */
 native void LR_StopLastRequest(int winner = -1, int loser = -1);
+
+/*
+ * If you returned something other then Plugin_Continue within the pre game start callback
+ * You must use this native to triggering the LR Start.
+ * Requester must the T who requested a game.
+ * Example: Soon
+ */
+native void LR_StartLastRequest(int requester);
 
 stock bool IsLastRequestAvailable()
 {
