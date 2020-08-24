@@ -21,6 +21,8 @@ ConVar g_cAvailablePath = null;
 ConVar g_cPlayCountdownSounds = null;
 ConVar g_cCountdownPath = null;
 ConVar g_cTimeoutPunishment = null;
+ConVar g_cAdminFlag = null;
+ConVar g_cPlayerCanStop = null;
 
 GlobalForward g_hOnMenu = null;
 GlobalForward g_hOnLRAvailable = null;
@@ -85,6 +87,8 @@ public void OnPluginStart()
 	g_cPlayCountdownSounds = CreateConVar("lastrequest_play_sounds", "1", "Play countdown sounds?", _, true, 0.0, true, 1.0);
 	g_cCountdownPath = CreateConVar("lastrequest_countdown_path", "lastrequest/countdownX.mp3", "Sounds for 3...2...1...Go ( Go = 0 )");
 	g_cTimeoutPunishment = CreateConVar("lastrequest_timeout_punishment", "0", "How punish the player who didn't response to the menu? (0 - Nothing, 1 - Slay, 2 - Kick)", _, true, 0.0, true, 2.0);
+	g_cAdminFlag = CreateConVar("lastrequest_admin_flag", "b", "Admin flag to cancel/stop active last requests.");
+	g_cPlayerCanStop = CreateConVar("lastrequest_player_can_stop_lr", "1", "The player, which is in a active last request, can stop the last request with the agreement of the opponent.", _, true, 0.0, true, 1.0);
 	
 	HookEvent("round_prestart", Event_RoundPreStart, EventHookMode_PostNoCopy);
 	HookEvent("player_death", Event_PlayerDeath, EventHookMode_Post);
@@ -273,7 +277,87 @@ public Action Command_LastRequest(int client, int args)
 
 public Action Command_StopLR(int client, int args)
 {
-	LR_StopLastRequest();
+    char sFlags[24];
+    g_cAdminFlag.GetString(sFlags, sizeof(sFlags));
+
+    if (CheckCommandAccess(client, "lr_admin", ReadFlagString(sFlags), true))
+    {
+        LR_StopLastRequest();
+    }
+
+    if (g_cPlayerCanStop.BoolValue && g_iPlayer[client].InLR)
+    {
+        AskOpponentToStop(client);
+    }
+}
+
+void AskOpponentToStop(int client)
+{
+	int iTarget = LR_GetClientOpponent(client);
+
+	if (!LR_IsClientValid(iTarget))
+	{
+		// TODO: Add message?
+		return;
+	}
+
+	Menu menu = new Menu(Menu_AskToStop);
+	menu.SetTitle("%N ask to stop this LR"); // TOOD: Add translation
+	menu.AddItem("yes", "Yes, stop LR.");
+	menu.AddItem("no", "No, don't stop!");
+	menu.ExitBackButton = false;
+	menu.ExitButton = false;
+	menu.Display(iTarget, g_cMenuTime.IntValue);
+}
+
+public int Menu_AskToStop(Menu menu, MenuAction action, int target, int param)
+{
+	if (action == MenuAction_Select)
+	{
+		char sParam[6];
+		menu.GetItem(param, sParam, sizeof(sParam));
+
+		int client = LR_GetClientOpponent(target);
+
+		if (!LR_IsClientValid(client))
+		{
+			// TODO: Add message?
+			return;
+		}
+
+		if (StrEqual(sParam, "yes", false))
+		{
+			PrintToChat(target, "You accepted the request from %N to stop this LR.", client);
+			PrintToChat(client, "%N has accepted your request to stop this LR.", target);
+
+			LR_StopLastRequest(client, target);
+		}
+		else
+		{
+			PrintToChat(target, "You declined the request from %N to stop this LR.", client);
+			PrintToChat(client, "%N has declined your request to stop this LR.", target);
+		}
+	}
+	else if (action == MenuAction_Cancel)
+	{
+		if (param == MenuCancel_Timeout)
+		{
+			PrintToChatAll("MenuCancel_Timeout %N", target);
+
+			if (g_cTimeoutPunishment.IntValue == 1)
+			{
+				ForcePlayerSuicide(target);
+			}
+			else if (g_cTimeoutPunishment.IntValue == 2)
+			{
+				KickClient(target, "You was kicked due afk during menu selection.");
+			}
+		}
+	}	
+	else if (action == MenuAction_End)
+	{
+		delete menu;
+	}
 }
 
 void ShowLastRequestList(int client)
@@ -318,7 +402,7 @@ public int Menu_LastRequest(Menu menu, MenuAction action, int client, int param)
 		}
 
 		char sParam[32];
-		GetMenuItem(menu, param, sParam, sizeof(sParam));
+		menu.GetItem(param, sParam, sizeof(sParam));
 		
 		PrintToChat(client, "LR: %s", sParam);
 		
@@ -395,7 +479,7 @@ public int Menu_TMenu(Menu menu, MenuAction action, int client, int param)
 		}
 
 		char sParam[32];
-		GetMenuItem(menu, param, sParam, sizeof(sParam));
+		menu.GetItem(param, sParam, sizeof(sParam));
 		
 		int target = StringToInt(sParam);
 		g_iPlayer[client].Target = target;
