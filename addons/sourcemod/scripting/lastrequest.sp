@@ -762,16 +762,16 @@ public Action Timer_Countdown(Handle timer, DataPack pack)
         {
             if (seconds == 1)
             {
-                PrintToChat(i, "Last request started in %d second ( Game: %s, Player: %N, Opponent: %N)", seconds, g_iPlayer[client].Game.Name, i, g_iPlayer[client].Target); // TODO: Add translation
+                PrintToChat(i, "Last request started in %d second ( Game: %s, Player: %N, Opponent: %N)", seconds, g_iPlayer[client].Game.Name, client, g_iPlayer[client].Target); // TODO: Add translation
             }
             else if (seconds == 0)
             {
-                PrintToChat(i, "Go! ( Game: %s, Player: %N, Opponent: %N)", g_iPlayer[client].Game.Name, i, g_iPlayer[client].Target); // TODO: Add translation
+                PrintToChat(i, "Go! ( Game: %s, Player: %N, Opponent: %N)", g_iPlayer[client].Game.Name, client, g_iPlayer[client].Target); // TODO: Add translation
                 StartLastRequest(client);
             }
             else
             {
-                PrintToChat(i, "Last request started in %d seconds ( Game: %s, Player: %N, Opponent: %N)", seconds, g_iPlayer[client].Game.Name, i, g_iPlayer[client].Target); // TODO: Add translation
+                PrintToChat(i, "Last request started in %d seconds ( Game: %s, Player: %N, Opponent: %N)", seconds, g_iPlayer[client].Game.Name, client, g_iPlayer[client].Target); // TODO: Add translation
             }
             
             if (g_cStartCountdown.BoolValue)
