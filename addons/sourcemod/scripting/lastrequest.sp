@@ -591,6 +591,11 @@ public int Menu_AskForConfirmation(Menu menu, MenuAction action, int target, int
             return;
         }
 
+        g_bRunningLR = true;
+        g_bCustomStart = false;
+        g_bConfirmation = false;
+        g_bIsAvailable = false;
+
         if (StrEqual(sParam, "yes", false))
         {
             PrintToChat(target, "You accepted the game setting!");
@@ -721,6 +726,7 @@ public int Native_StopLastRequest(Handle plugin, int numParams)
 
     g_bRunningLR = false;
     g_bCustomStart = false;
+    g_bConfirmation = false;
     g_bIsAvailable = false;
 }
 
@@ -861,7 +867,7 @@ bool IsLRReady(int client)
         return false;
     }
     
-    PrintToChat(client, "g_bIsAvailable: %d, g_bRunningLR: %d, g_bCustomStart: %d, g_bInLR: %d", g_bIsAvailable, g_bRunningLR, g_bCustomStart, g_iPlayer[client].InLR);
+    PrintToChat(client, "g_bIsAvailable: %d, g_bRunningLR: %d, g_bCustomStart: %d, g_bConfirmation: %d, g_bInLR: %d", g_bIsAvailable, g_bRunningLR, g_bCustomStart, g_bConfirmation, g_iPlayer[client].InLR);
     
     if (g_bRunningLR) // TODO: Add translation
     {
