@@ -75,12 +75,9 @@ native bool LR_IsLastRequestAvailable();
 native void LR_StopLastRequest(int winner = -1, int loser = -1);
 
 /*
- * If you returned something other then Plugin_Continue within the pre game start callback
- * You must use this native to triggering the LR Start.
- * Requester must the T who requested a game.
- * Example: Soon
+ * Firing last restart start
  */
-native void LR_StartLastRequest(int requester);
+native void LR_StartLastRequest(int requester, char[] mode, char[] weapon, int health = 100, bool armor =  false);
 
 stock bool IsLastRequestAvailable()
 {

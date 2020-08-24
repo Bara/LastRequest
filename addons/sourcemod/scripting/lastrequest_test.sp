@@ -47,6 +47,8 @@ public Action OnGamePreStart(int requester, int opponent, const char[] shortname
 {
 	PrintToChatAll("(OnGamePreStart) called!");
 	PrintToChatAll("OnGamePreStart - Requester: %d, Opponent: %d, Shot Name: %s", requester, opponent, shortname);
+
+	LR_StartLastRequest(requester, "Test", "All Weapons", 100, false);
 }
 
 public void OnGameStart(int requester, int opponent, const char[] shortname)

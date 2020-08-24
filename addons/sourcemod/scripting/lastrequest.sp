@@ -10,15 +10,16 @@
 
 #define PLUGIN_NAME "Last Request"
 
-bool g_bRunningLR = false;
-bool g_bCustomStart = false;
 bool g_bIsAvailable = false;
+bool g_bCustomStart = false;
+bool g_bConfirmation = false;
+bool g_bRunningLR = false;
 
 ConVar g_cMenuTime = null;
 ConVar g_cOpenMenu = null;
 ConVar g_cAvailableSounds = null;
 ConVar g_cAvailablePath = null;
-ConVar g_cPlayCountdownSounds = null;
+ConVar g_cStartCountdown = null;
 ConVar g_cCountdownPath = null;
 ConVar g_cTimeoutPunishment = null;
 ConVar g_cAdminFlag = null;
@@ -84,7 +85,7 @@ public void OnPluginStart()
     g_cOpenMenu = CreateConVar("lastrequest_open_menu", "1", "Open last request menu for the last player?", _, true, 0.0, true, 1.0);
     g_cAvailableSounds = CreateConVar("lastrequest_available_sounds", "3", "How many last request available to you have? 0 to disable it");
     g_cAvailablePath = CreateConVar("lastrequet_available_path", "lastrequest/availableX.mp3", "Sounds for available last request");
-    g_cPlayCountdownSounds = CreateConVar("lastrequest_play_sounds", "1", "Play countdown sounds?", _, true, 0.0, true, 1.0);
+    g_cStartCountdown = CreateConVar("lastrequest_start_countdown", "3", "Countdown after accepting game until the game starts", _, true, 3.0);
     g_cCountdownPath = CreateConVar("lastrequest_countdown_path", "lastrequest/countdownX.mp3", "Sounds for 3...2...1...Go ( Go = 0 )");
     g_cTimeoutPunishment = CreateConVar("lastrequest_timeout_punishment", "0", "How punish the player who didn't response to the menu? (0 - Nothing, 1 - Slay, 2 - Kick)", _, true, 0.0, true, 2.0);
     g_cAdminFlag = CreateConVar("lastrequest_admin_flag", "b", "Admin flag to cancel/stop active last requests.");
@@ -106,6 +107,7 @@ public void OnMapStart()
     g_bRunningLR = false;
     g_bIsAvailable = false;
     g_bCustomStart = false;
+    g_bConfirmation = false;
 
     CreateTimer(3.0, Timer_CheckTeams, _, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
 }
@@ -147,11 +149,11 @@ public Action Event_PlayerDeath(Event event, const char[] name, bool dontBroadca
 
 public Action Timer_CheckTeams(Handle timer)
 {
-    if (!g_bRunningLR && !g_bCustomStart)
+    if (!g_bRunningLR && !g_bCustomStart && !g_bConfirmation)
     {
         CheckTeams();
     }
-    else if (g_bRunningLR || g_bCustomStart)
+    else if (g_bRunningLR || g_bCustomStart || g_bConfirmation)
     {
         if (GetTeamCountAmount(CS_TEAM_T) == 0 || GetTeamCountAmount(CS_TEAM_CT) == 0)
         {
@@ -182,9 +184,9 @@ void CheckTeams()
         }
     }
 
-    PrintToChatAll("T: %d, CT: %d, Running: %d, CustomStart: %d, Available: %d", iT, iCT, g_bRunningLR, g_bCustomStart, g_bIsAvailable);
+    PrintToChatAll("T: %d, CT: %d, Running: %d, CustomStart: %d, Confirmation: %d, Available: %d", iT, iCT, g_bRunningLR, g_bCustomStart, g_bConfirmation, g_bIsAvailable);
 
-    if (iT == 1 && iCT > 0 && !g_bRunningLR && !g_bCustomStart && !g_bIsAvailable)
+    if (iT == 1 && iCT > 0 && !g_bRunningLR && !g_bCustomStart && !g_bConfirmation && !g_bIsAvailable)
     {
         int client = iTIndex;
         
@@ -244,6 +246,7 @@ public Action Event_RoundPreStart(Event event, const char[] name, bool dontBroad
     g_bRunningLR = false;
     g_bIsAvailable = false;
     g_bCustomStart = false;
+    g_bConfirmation = false;
 
     LR_LoopClients(i)
     {
@@ -282,12 +285,14 @@ public Action Command_StopLR(int client, int args)
 
     if (CheckCommandAccess(client, "lr_admin", ReadFlagString(sFlags), true))
     {
-        LR_StopLastRequest();
+        LR_StopLastRequest(-2, client);
+        return;
     }
 
     if (g_cPlayerCanStop.BoolValue && g_iPlayer[client].InLR)
     {
         AskOpponentToStop(client);
+        return;
     }
 }
 
@@ -302,7 +307,7 @@ void AskOpponentToStop(int client)
     }
 
     Menu menu = new Menu(Menu_AskToStop);
-    menu.SetTitle("%N ask to stop this LR"); // TOOD: Add translation
+    menu.SetTitle("%N ask to stop this LR", iTarget); // TOOD: Add translation
     menu.AddItem("yes", "Yes, stop LR.");
     menu.AddItem("no", "No, don't stop!");
     menu.ExitBackButton = false;
@@ -330,7 +335,7 @@ public int Menu_AskToStop(Menu menu, MenuAction action, int target, int param)
             PrintToChat(target, "You accepted the request from %N to stop this LR.", client);
             PrintToChat(client, "%N has accepted your request to stop this LR.", target);
 
-            LR_StopLastRequest(client, target);
+            LR_StopLastRequest(target, client);
         }
         else
         {
@@ -487,33 +492,20 @@ public int Menu_TMenu(Menu menu, MenuAction action, int client, int param)
         
         PrintToChat(client, "LR: %s - Opponent: %N", g_iPlayer[client].Game.Name, target);
 
-        Action res = Plugin_Continue;
-        Call_StartFunction(g_iPlayer[client].Game.plugin, g_iPlayer[client].Game.PreStartCB);
-        Call_PushCell(client);
-        Call_PushCell(g_iPlayer[client].Target);
-        Call_PushString(g_iPlayer[client].Game.Name);
-        Call_Finish(res);
-
-        if (res == Plugin_Continue)
-        {
-            g_bRunningLR = true;
-            g_bCustomStart = false;
-        }
-        else
-        {
-            g_bRunningLR = false;
-            g_bCustomStart = true;
-        }
+        g_bCustomStart = true;
+        g_bConfirmation = false;
+        g_bRunningLR = false;
 
         g_bIsAvailable = false;
         
         g_iPlayer[client].InLR = true;
         g_iPlayer[target].InLR = true;
-        
-        if (g_bRunningLR && !g_bCustomStart)
-        {
-            CreateCountdown(3, client);
-        }
+
+        Call_StartFunction(g_iPlayer[client].Game.plugin, g_iPlayer[client].Game.PreStartCB);
+        Call_PushCell(client);
+        Call_PushCell(g_iPlayer[client].Target);
+        Call_PushString(g_iPlayer[client].Game.Name);
+        Call_Finish();
     }
     else if (action == MenuAction_Cancel)
     {
@@ -542,12 +534,95 @@ public int Menu_TMenu(Menu menu, MenuAction action, int client, int param)
 
 public int Native_StartLastRequest(Handle plugin, int numParams)
 {
-    g_bRunningLR = true;
     g_bCustomStart = false;
+    g_bConfirmation = true;
+    g_bRunningLR = false;
 
-    if (g_bRunningLR && !g_bCustomStart)
+    int client = GetNativeCell(1);
+
+    char sMode[32];
+    GetNativeString(2, sMode, sizeof(sMode));
+
+    char sWeapon[32];
+    GetNativeString(3, sWeapon, sizeof(sWeapon));
+
+    int health = GetNativeCell(4);
+
+    bool armor = view_as<bool>(GetNativeCell(5));
+
+    if (g_bConfirmation && !g_bCustomStart && !g_bRunningLR)
     {
-        CreateCountdown(3, GetNativeCell(1));
+        AskForConfirmation(client, sMode, sWeapon, health, armor);
+    }
+}
+
+void AskForConfirmation(int client, const char[] mode, const char[] weapon, int health, int armor)
+{
+    int iTarget = LR_GetClientOpponent(client);
+
+    if (!LR_IsClientValid(iTarget))
+    {
+        // TODO: Add Message?
+        return;
+    }
+
+    Menu menu = new Menu(Menu_AskForConfirmation);
+    menu.SetTitle("%N wants to play against you!\n \nLast Request: %s\nMode: %s\nWeapons: %s\nHealth: %d\nArmor: %s\n \nDo you accept this setting?\n ",
+                    client, g_iPlayer[client].Game.Name, mode, weapon, health, armor ? "Yes" : "No");
+    menu.AddItem("yes", "Yes, I accept!");
+    menu.AddItem("no", "No, please...");
+    menu.ExitBackButton = false;
+    menu.ExitButton = false;
+    menu.Display(iTarget, g_cMenuTime.IntValue);
+}
+
+public int Menu_AskForConfirmation(Menu menu, MenuAction action, int target, int param)
+{
+    if (action == MenuAction_Select)
+    {
+        char sParam[6];
+        menu.GetItem(param, sParam, sizeof(sParam));
+
+        int client = LR_GetClientOpponent(target);
+
+        if (!LR_IsClientValid(client))
+        {
+            // TODO: Add message?
+            return;
+        }
+
+        if (StrEqual(sParam, "yes", false))
+        {
+            PrintToChat(target, "You accepted the game setting!");
+            PrintToChat(client, "%N has accepted your game setting!", target);
+
+            StartCountdown(g_cStartCountdown.IntValue, client);
+        }
+        else
+        {
+            PrintToChat(target, "You declined the game setting!");
+            PrintToChat(client, "%N has declined your game setting!", target);
+        }
+    }
+    else if (action == MenuAction_Cancel)
+    {
+        if (param == MenuCancel_Timeout)
+        {
+            PrintToChatAll("MenuCancel_Timeout %N", target);
+
+            if (g_cTimeoutPunishment.IntValue == 1)
+            {
+                ForcePlayerSuicide(target);
+            }
+            else if (g_cTimeoutPunishment.IntValue == 2)
+            {
+                KickClient(target, "You was kicked due afk during menu selection.");
+            }
+        }
+    }	
+    else if (action == MenuAction_End)
+    {
+        delete menu;
     }
 }
 
@@ -608,18 +683,41 @@ public int Native_StopLastRequest(Handle plugin, int numParams)
             Call_PushCell(loser);
             Call_Finish();
 
-            LR_LoopClients(j)
+            if (winner > 0)
             {
-                if (LR_IsClientValid(j))
+                LR_LoopClients(j)
                 {
-                    PrintToChat(j, "Last request over! ( Game: %s, Winner: %N, Loser: %N )", g_iPlayer[i].Game.Name, winner, loser); // TODO: Add translation
+                    if (LR_IsClientValid(j))
+                    {
+                        PrintToChat(j, "Last request over! ( Game: %s, Winner: %N, Loser: %N )", g_iPlayer[i].Game.Name, winner, loser); // TODO: Add translation
+                    }
+                }
+            }
+            else if (winner == -2)
+            {
+                LR_LoopClients(j)
+                {
+                    if (LR_IsClientValid(j))
+                    {
+                        PrintToChat(j, "Last request cancled by Admin %N!", loser); // TODO: Add translation
+                    }
                 }
             }
         }
     }
     
-    g_iPlayer[winner].Reset();
-    g_iPlayer[loser].Reset();
+    if (winner > 0)
+    {
+        g_iPlayer[winner].Reset();
+        g_iPlayer[loser].Reset();
+    }
+    else
+    {
+        LR_LoopClients(i)
+        {
+            g_iPlayer[i].Reset();
+        }
+    }
 
     g_bRunningLR = false;
     g_bCustomStart = false;
@@ -637,7 +735,7 @@ bool CheckLRShortName(const char[] name)
     return g_smGames.GetArray(name, game, sizeof(Games));
 }
 
-stock void CreateCountdown(int seconds, int client)
+void StartCountdown(int seconds, int client)
 {
     DataPack pack = new DataPack();
     pack.WriteCell(seconds);
@@ -670,7 +768,7 @@ public Action Timer_Countdown(Handle timer, DataPack pack)
                 PrintToChat(i, "Last request started in %d seconds ( Game: %s, Player: %N, Opponent: %N)", seconds, g_iPlayer[client].Game.Name, i, g_iPlayer[client].Target); // TODO: Add translation
             }
             
-            if (g_cPlayCountdownSounds.BoolValue)
+            if (g_cStartCountdown.BoolValue)
             {
                 PlayCountdownSounds(seconds);
             }
