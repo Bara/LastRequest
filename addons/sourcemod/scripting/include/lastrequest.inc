@@ -157,6 +157,12 @@ stock bool LR_SafeRemoveWeapon(int client, int weapon)
 	return true;
 }
 
+stock void SetKevlarHelm(int client, int kevlar, bool helm)
+{
+    SetEntProp(client, Prop_Data, "m_ArmorValue", kevlar, 1);
+    SetEntProp(client, Prop_Send, "m_bHasHelmet", helm);
+}
+
 public SharedPlugin __pl_lr = 
 {
 	name = "lastrequest",

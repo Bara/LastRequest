@@ -102,6 +102,9 @@ public void OnGameStart(int client, int target, const char[] name)
 	
 	LR_StripAllWeapons(client);
 	LR_StripAllWeapons(target);
+
+	SetKevlarHelm(client, 100, false);
+	SetKevlarHelm(target, 100, false);
 	
 	int iKnife1 = GivePlayerItem(client, "weapon_knife");
 	int iKnife2 = GivePlayerItem(target, "weapon_knife");

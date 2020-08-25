@@ -556,15 +556,15 @@ public int Native_StartLastRequest(Handle plugin, int numParams)
 
     int health = GetNativeCell(4);
 
-    int armor = GetNativeCell(5);
+    int kevlar = GetNativeCell(5);
 
     if (g_bConfirmation && !g_bCustomStart && !g_bRunningLR)
     {
-        AskForConfirmation(client, sMode, sWeapon, health, armor);
+        AskForConfirmation(client, sMode, sWeapon, health, kevlar);
     }
 }
 
-void AskForConfirmation(int client, const char[] mode, const char[] weapon, int health, int armor)
+void AskForConfirmation(int client, const char[] mode, const char[] weapon, int health, int kevlar)
 {
     int iTarget = LR_GetClientOpponent(client);
 
@@ -574,23 +574,23 @@ void AskForConfirmation(int client, const char[] mode, const char[] weapon, int 
         return;
     }
 
-    char sArmor[24];
-    if (armor == 0)
+    char sKevlar[24];
+    if (kevlar == 0)
     {
-        Format(sArmor, sizeof(sArmor), "No armor"); // TODO: Add translation
+        Format(sKevlar, sizeof(sKevlar), "No kevlar"); // TODO: Add translation
     }
-    else if (armor == 1)
+    else if (kevlar == 1)
     {
-        Format(sArmor, sizeof(sArmor), "Armor"); // TODO: Add translation
+        Format(sKevlar, sizeof(sKevlar), "Kevlar"); // TODO: Add translation
     }
-    else if (armor == 2)
+    else if (kevlar == 2)
     {
-        Format(sArmor, sizeof(sArmor), "Armor + Helm"); // TODO: Add translation
+        Format(sKevlar, sizeof(sKevlar), "Kevlar + Helm"); // TODO: Add translation
     }
 
     Menu menu = new Menu(Menu_AskForConfirmation);
-    menu.SetTitle("%N wants to play against you!\n \nLast Request: %s\nMode: %s\nWeapons: %s\nHealth: %d\nArmor: %s\n \nDo you accept this setting?\n ",
-                    client, g_iPlayer[client].Game.Name, mode, weapon, health, sArmor); // TODO: Add translation
+    menu.SetTitle("%N wants to play against you!\n \nLast Request: %s\nMode: %s\nWeapons: %s\nHealth: %d\nKevlar: %s\n \nDo you accept this setting?\n ",
+                    client, g_iPlayer[client].Game.Name, mode, weapon, health, sKevlar); // TODO: Add translation
     menu.AddItem("yes", "Yes, I accept!"); // TODO: Add translation
     menu.AddItem("no", "No, please..."); // TODO: Add translation
     menu.ExitBackButton = false;
@@ -939,3 +939,4 @@ public int Native_GetTimeoutPunishment(Handle plugin, int numParams)
 {
     return g_cTimeoutPunishment.IntValue;
 }
+
