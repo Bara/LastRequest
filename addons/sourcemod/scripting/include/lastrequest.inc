@@ -76,8 +76,12 @@ native void LR_StopLastRequest(int winner = -1, int loser = -1);
 
 /*
  * Firing last restart start
+ * @param armor            0 - no armor, 1 - armor, 2 - armor + helm
  */
-native void LR_StartLastRequest(int requester, char[] mode, char[] weapon, int health = 100, bool armor =  false);
+native void LR_StartLastRequest(int requester, char[] mode, char[] weapon, int health = 100, int armor = 0);
+
+native int LR_GetMenuTime();
+native int LR_GetTimeoutPunishment();
 
 stock bool IsLastRequestAvailable()
 {

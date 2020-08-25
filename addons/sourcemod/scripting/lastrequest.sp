@@ -71,6 +71,8 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
     CreateNative("LR_GetClientOpponent", Native_GetClientOpponent);
     CreateNative("LR_StopLastRequest", Native_StopLastRequest);
     CreateNative("LR_StartLastRequest", Native_StartLastRequest);
+    CreateNative("LR_GetMenuTime", Native_GetMenuTime);
+    CreateNative("LR_GetTimeoutPunishment", Native_GetTimeoutPunishment);
     
     g_hOnMenu = new GlobalForward("LR_OnOpenMenu", ET_Ignore, Param_Cell);
     g_hOnLRAvailable = new GlobalForward("LR_OnLastRequestAvailable", ET_Ignore, Param_Cell);
@@ -554,7 +556,7 @@ public int Native_StartLastRequest(Handle plugin, int numParams)
 
     int health = GetNativeCell(4);
 
-    bool armor = view_as<bool>(GetNativeCell(5));
+    int armor = GetNativeCell(5);
 
     if (g_bConfirmation && !g_bCustomStart && !g_bRunningLR)
     {
@@ -572,9 +574,23 @@ void AskForConfirmation(int client, const char[] mode, const char[] weapon, int 
         return;
     }
 
+    char sArmor[24];
+    if (armor == 0)
+    {
+        Format(sArmor, sizeof(sArmor), "No armor"); // TODO: Add translation
+    }
+    else if (armor == 1)
+    {
+        Format(sArmor, sizeof(sArmor), "Armor"); // TODO: Add translation
+    }
+    else if (armor == 2)
+    {
+        Format(sArmor, sizeof(sArmor), "Armor + Helm"); // TODO: Add translation
+    }
+
     Menu menu = new Menu(Menu_AskForConfirmation);
     menu.SetTitle("%N wants to play against you!\n \nLast Request: %s\nMode: %s\nWeapons: %s\nHealth: %d\nArmor: %s\n \nDo you accept this setting?\n ",
-                    client, g_iPlayer[client].Game.Name, mode, weapon, health, armor ? "Yes" : "No"); // TODO: Add translation
+                    client, g_iPlayer[client].Game.Name, mode, weapon, health, sArmor); // TODO: Add translation
     menu.AddItem("yes", "Yes, I accept!"); // TODO: Add translation
     menu.AddItem("no", "No, please..."); // TODO: Add translation
     menu.ExitBackButton = false;
@@ -912,4 +928,14 @@ public int Native_GetClientOpponent(Handle plugin, int numParams)
     }
 
     return -1;
+}
+
+public int Native_GetMenuTime(Handle plugin, int numParams)
+{
+    return g_cMenuTime.IntValue;
+}
+
+public int Native_GetTimeoutPunishment(Handle plugin, int numParams)
+{
+    return g_cTimeoutPunishment.IntValue;
 }
