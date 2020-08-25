@@ -9,10 +9,8 @@
 #include <lastrequest>
 
 #define LR_NAME "Knife Fight"
+#define LR_SHORT  "knifeFight"
 #define PLUGIN_NAME "Last Request - " ... LR_NAME
-
-#define LR_SHORT_KNORMAL  "knifeFight_Normal"
-#define LR_SHORT_BACKSTAB "knifeFight_Backstab"
 
 bool g_bKnife = false;
 bool g_bNormal = false;
@@ -29,41 +27,73 @@ public Plugin myinfo =
 
 public void OnConfigsExecuted()
 {
-	if (!LR_RegisterGame(LR_SHORT_KNORMAL, OnGamePreStart, OnGameStart, OnGameEnd))
+	if (!LR_RegisterGame(LR_SHORT, OnGamePreStart, OnGameStart, OnGameEnd))
 	{
-		SetFailState("Can't register last request: %s", LR_SHORT_KNORMAL);
-	}
-	
-	if (!LR_RegisterGame(LR_SHORT_BACKSTAB, OnGamePreStart, OnGameStart, OnGameEnd))
-	{
-		SetFailState("Can't register last request: %s", LR_SHORT_BACKSTAB);
+		SetFailState("Can't register last request: %s", LR_SHORT);
+		return;
 	}
 }
 
 public void LR_OnOpenMenu(Menu menu)
 {
-	menu.AddItem(LR_SHORT_KNORMAL, "Knife Fight - Normal"); // TODO: Add translation
-	menu.AddItem(LR_SHORT_BACKSTAB, "Knife Fight - Backstab"); // TODO: Add translation
+	menu.AddItem(LR_SHORT, "Knife Fight"); // TODO: Add translation
 }
 
 public Action OnGamePreStart(int requester, int opponent, const char[] shortname)
 {
+	Menu menu = new Menu(Menu_ModeSelection);
+	menu.SetTitle("Select knife mode");
+	menu.AddItem("normal", "Normal");
+	menu.AddItem("backstab", "Backstab");
+	menu.ExitBackButton = false;
+	menu.ExitButton = false;
+	menu.Display(LR_GetMenuTime(), requester);
+}
 
+public int Menu_ModeSelection(Menu menu, MenuAction action, int client, int param)
+{
+	if (action == MenuAction_Select)
+	{
+		char sParam[12], sDisplay[24];
+		menu.GetItem(param, sParam, sizeof(sParam), _, sDisplay, sizeof(sDisplay));
+
+		if(StrEqual(sParam, "normal", false))
+		{
+			g_bKnife = true;
+			g_bNormal = true;
+		}
+		else if(StrEqual(sParam, "backstab", false))
+		{
+			g_bKnife = true;
+			g_bBackstab = true;
+		}
+
+		LR_StartLastRequest(client, sDisplay, "Knife");
+	}
+	else if (action == MenuAction_Cancel)
+    {
+        if (param == MenuCancel_Timeout)
+        {
+            PrintToChatAll("MenuCancel_Timeout %N", client); // TODO: Add message/translation or debug?
+
+            if (LR_GetTimeoutPunishment() == 1)
+            {
+                ForcePlayerSuicide(client);
+            }
+            else if (LR_GetTimeoutPunishment() == 2)
+            {
+                KickClient(client, "You was kicked due afk during menu selection."); // TODO: Add translation
+            }
+        }
+    }	
+	else if (action == MenuAction_End)
+	{
+		delete menu;
+	}
 }
 
 public void OnGameStart(int client, int target, const char[] name)
 {
-	if(StrEqual(name, LR_SHORT_KNORMAL, false))
-	{
-		g_bKnife = true;
-		g_bNormal = true;
-	}
-	else if(StrEqual(name, LR_SHORT_BACKSTAB, false))
-	{
-		g_bKnife = true;
-		g_bBackstab = true;
-	}
-	
 	if(g_bKnife)
 	{
 		SDKHook(client, SDKHook_TraceAttack, OnTraceAttack);
