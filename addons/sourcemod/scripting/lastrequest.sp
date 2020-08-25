@@ -197,7 +197,7 @@ void CheckTeams()
         
         if (g_cOpenMenu.BoolValue)
         {
-            ShowLastRequestMenu(client);
+            ShowPlayerList(client);
         }
 
         g_bIsAvailable = true;
@@ -273,7 +273,7 @@ public Action Command_LastRequest(int client, int args)
         return Plugin_Handled;
     }
         
-    ShowLastRequestMenu(client);
+    ShowPlayerList(client);
     
     return Plugin_Continue;
 }
@@ -378,24 +378,37 @@ void ShowLastRequestList(int client)
     menu.Display(client, g_cMenuTime.IntValue);
 }
 
-void ShowLastRequestMenu(int client)
+void ShowPlayerList(int client)
 {
-    if (!IsLRReady(client))
+    Menu menu = new Menu(Menu_LastRequest);
+    menu.SetTitle("Choose your opponent:");
+
+    int iCount = 0;
+    
+    LR_LoopClients(i)
     {
-        return;
+        if (GetClientTeam(i) == CS_TEAM_CT && IsPlayerAlive(i) && !g_iPlayer[i].InLR)
+        {
+            char sIndex[12], sName[MAX_NAME_LENGTH];
+            IntToString(i, sIndex, sizeof(sIndex));
+            GetClientName(i, sName, sizeof(sName));
+            menu.AddItem(sIndex, sName);
+
+            iCount++;
+        }
     }
 
-    Menu menu = new Menu(Menu_LastRequest);
-    menu.SetTitle("Choose a game:"); // TODO: Add translation
+    if (iCount == 0)
+    {
+        PrintToChat(client, "Can not find a valid CT.");
+        delete menu;
+        return;
+    }
     
-    Call_StartForward(g_hOnMenu);
-    Call_PushCell(menu);
-    Call_Finish();
-    
-    menu.ExitButton = true;
+    menu.ExitBackButton = false;
+    menu.ExitButton = false;
     menu.Display(client, g_cMenuTime.IntValue);
 }
-
 
 public int Menu_LastRequest(Menu menu, MenuAction action, int client, int param)
 {
@@ -408,46 +421,23 @@ public int Menu_LastRequest(Menu menu, MenuAction action, int client, int param)
 
         char sParam[32];
         menu.GetItem(param, sParam, sizeof(sParam));
+
+        int target = StringToInt(sParam);
+        g_iPlayer[client].Target = target;
+        g_iPlayer[target].Target = client;
         
-        PrintToChat(client, "LR: %s", sParam);
+        PrintToChat(client, "Target: %N", target);
+
+        Menu gMenu = new Menu(Menu_TMenu);
+        gMenu.SetTitle("Choose a game:"); // TODO: Add translation
         
-        Games game;
-        if (g_smGames.GetArray(sParam, game, sizeof(Games)))
-        {
-            g_iPlayer[client].Game = game;
-
-            Menu tMenu = new Menu(Menu_TMenu);
-            tMenu.SetTitle("Choose your opponent:");
-
-            int iCount = 0;
-            
-            LR_LoopClients(i)
-            {
-                if (GetClientTeam(i) == CS_TEAM_CT && IsPlayerAlive(i) && !g_iPlayer[i].InLR)
-                {
-                    char sIndex[12], sName[MAX_NAME_LENGTH];
-                    IntToString(i, sIndex, sizeof(sIndex));
-                    GetClientName(i, sName, sizeof(sName));
-                    tMenu.AddItem(sIndex, sName);
-
-                    iCount++;
-                }
-            }
-
-            if (iCount == 0)
-            {
-                PrintToChat(client, "Can not find a valid CT.");
-                delete tMenu;
-                return;
-            }
-            
-            tMenu.ExitButton = true;
-            tMenu.Display(client, g_cMenuTime.IntValue);
-        }
-        else
-        {
-            PrintToChat(client, "Can not set game.");
-        }
+        Call_StartForward(g_hOnMenu);
+        Call_PushCell(gMenu);
+        Call_Finish();
+        
+        gMenu.ExitBackButton = false;
+        gMenu.ExitButton = true;
+        gMenu.Display(client, g_cMenuTime.IntValue);
     }
     else if (action == MenuAction_Cancel)
     {
@@ -463,6 +453,10 @@ public int Menu_LastRequest(Menu menu, MenuAction action, int client, int param)
             {
                 KickClient(client, "You was kicked due afk during lr menu selection.");
             }
+        }
+        else if (param == MenuCancel_Exit)
+        {
+            g_iPlayer[client].Reset();
         }
     }		
     else if (action == MenuAction_End)
@@ -485,12 +479,20 @@ public int Menu_TMenu(Menu menu, MenuAction action, int client, int param)
 
         char sParam[32];
         menu.GetItem(param, sParam, sizeof(sParam));
+
+        Games game;
+        if (g_smGames.GetArray(sParam, game, sizeof(Games)))
+        {
+            g_iPlayer[client].Game = game;
+        }
+        else
+        {
+            PrintToChat(client, "Can not set game.");
+        }
+
+
         
-        int target = StringToInt(sParam);
-        g_iPlayer[client].Target = target;
-        g_iPlayer[target].Target = client;
-        
-        PrintToChat(client, "LR: %s - Opponent: %N", g_iPlayer[client].Game.Name, target);
+        PrintToChat(client, "LR: %s - Opponent: %N", g_iPlayer[client].Game.Name, g_iPlayer[client].Target);
 
         g_bCustomStart = true;
         g_bConfirmation = false;
@@ -499,7 +501,7 @@ public int Menu_TMenu(Menu menu, MenuAction action, int client, int param)
         g_bIsAvailable = false;
         
         g_iPlayer[client].InLR = true;
-        g_iPlayer[target].InLR = true;
+        g_iPlayer[g_iPlayer[client].Target].InLR = true;
 
         Call_StartFunction(g_iPlayer[client].Game.plugin, g_iPlayer[client].Game.PreStartCB);
         Call_PushCell(client);
@@ -521,6 +523,10 @@ public int Menu_TMenu(Menu menu, MenuAction action, int client, int param)
             {
                 KickClient(client, "You was kicked due afk during lr menu selection.");
             }
+        }
+        else if (param == MenuCancel_Exit)
+        {
+            g_iPlayer[client].Reset();
         }
     }		
     else if (action == MenuAction_End)
