@@ -24,6 +24,7 @@ ConVar g_cCountdownPath = null;
 ConVar g_cTimeoutPunishment = null;
 ConVar g_cAdminFlag = null;
 ConVar g_cPlayerCanStop = null;
+ConVar g_cDebug = null;
 
 GlobalForward g_hOnMenu = null;
 GlobalForward g_hOnLRAvailable = null;
@@ -81,6 +82,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 
 public void OnPluginStart()
 {
+    g_cDebug = CreateConVar("lastrequest_debug", "1", "Show/Log debug messages?", _, true, 0.0, true, 1.0);
     g_cMenuTime = CreateConVar("lastrequest_menu_time", "30", "Time in seconds to choose a last request");
     g_cOpenMenu = CreateConVar("lastrequest_open_menu", "1", "Open last request menu for the last player?", _, true, 0.0, true, 1.0);
     g_cAvailableSounds = CreateConVar("lastrequest_available_sounds", "3", "How many last request available to you have? 0 to disable it");
@@ -184,7 +186,10 @@ void CheckTeams()
         }
     }
 
-    PrintToChatAll("T: %d, CT: %d, Running: %d, CustomStart: %d, Confirmation: %d, Available: %d", iT, iCT, g_bRunningLR, g_bCustomStart, g_bConfirmation, g_bIsAvailable);
+    if (g_cDebug.BoolValue)
+    {
+        PrintToChatAll("T: %d, CT: %d, Running: %d, CustomStart: %d, Confirmation: %d, Available: %d", iT, iCT, g_bRunningLR, g_bCustomStart, g_bConfirmation, g_bIsAvailable);
+    }
 
     if (iT == 1 && iCT > 0 && !g_bRunningLR && !g_bCustomStart && !g_bConfirmation && !g_bIsAvailable)
     {
@@ -302,14 +307,14 @@ void AskOpponentToStop(int client)
 
     if (!LR_IsClientValid(iTarget))
     {
-        // TODO: Add message?
+         // TODO: Add message/translation or debug?
         return;
     }
 
     Menu menu = new Menu(Menu_AskToStop);
-    menu.SetTitle("%N ask to stop this LR", iTarget); // TOOD: Add translation
-    menu.AddItem("yes", "Yes, stop LR.");
-    menu.AddItem("no", "No, don't stop!");
+    menu.SetTitle("%N ask to stop this LR", iTarget); // TODO: Add translation
+    menu.AddItem("yes", "Yes, stop LR."); // TODO: Add translation
+    menu.AddItem("no", "No, don't stop!"); // TODO: Add translation
     menu.ExitBackButton = false;
     menu.ExitButton = false;
     menu.Display(iTarget, g_cMenuTime.IntValue);
@@ -326,28 +331,31 @@ public int Menu_AskToStop(Menu menu, MenuAction action, int target, int param)
 
         if (!LR_IsClientValid(client))
         {
-            // TODO: Add message?
+             // TODO: Add message/translation or debug?
             return;
         }
 
         if (StrEqual(sParam, "yes", false))
         {
-            PrintToChat(target, "You accepted the request from %N to stop this LR.", client);
-            PrintToChat(client, "%N has accepted your request to stop this LR.", target);
+            PrintToChat(target, "You accepted the request from %N to stop this LR.", client); // TODO: Add translation
+            PrintToChat(client, "%N has accepted your request to stop this LR.", target); // TODO: Add translation
 
             LR_StopLastRequest(target, client);
         }
         else
         {
-            PrintToChat(target, "You declined the request from %N to stop this LR.", client);
-            PrintToChat(client, "%N has declined your request to stop this LR.", target);
+            PrintToChat(target, "You declined the request from %N to stop this LR.", client); // TODO: Add translation
+            PrintToChat(client, "%N has declined your request to stop this LR.", target); // TODO: Add translation
         }
     }
     else if (action == MenuAction_Cancel)
     {
         if (param == MenuCancel_Timeout)
         {
-            PrintToChatAll("MenuCancel_Timeout %N", target);
+            if (g_cDebug.BoolValue)
+            {
+                PrintToChatAll("MenuCancel_Timeout %N", target); // TODO: Add message/translation or debug?
+            }
 
             if (g_cTimeoutPunishment.IntValue == 1)
             {
@@ -355,7 +363,7 @@ public int Menu_AskToStop(Menu menu, MenuAction action, int target, int param)
             }
             else if (g_cTimeoutPunishment.IntValue == 2)
             {
-                KickClient(target, "You was kicked due afk during menu selection.");
+                KickClient(target, "You was kicked due afk during menu selection."); // TODO: Add translation
             }
         }
     }	
@@ -381,7 +389,7 @@ void ShowLastRequestList(int client)
 void ShowPlayerList(int client)
 {
     Menu menu = new Menu(Menu_LastRequest);
-    menu.SetTitle("Choose your opponent:");
+    menu.SetTitle("Choose your opponent:"); // TODO: Add translation
 
     int iCount = 0;
     
@@ -400,7 +408,7 @@ void ShowPlayerList(int client)
 
     if (iCount == 0)
     {
-        PrintToChat(client, "Can not find a valid CT.");
+        PrintToChat(client, "Can not find a valid CT."); // TODO: Add translation
         delete menu;
         return;
     }
@@ -426,7 +434,7 @@ public int Menu_LastRequest(Menu menu, MenuAction action, int client, int param)
         g_iPlayer[client].Target = target;
         g_iPlayer[target].Target = client;
         
-        PrintToChat(client, "Target: %N", target);
+        PrintToChat(client, "Target: %N", target); // TODO: Add message/translation or debug?
 
         Menu gMenu = new Menu(Menu_TMenu);
         gMenu.SetTitle("Choose a game:"); // TODO: Add translation
@@ -443,7 +451,7 @@ public int Menu_LastRequest(Menu menu, MenuAction action, int client, int param)
     {
         if (param == MenuCancel_Timeout)
         {
-            PrintToChatAll("MenuCancel_Timeout %N", client);
+            PrintToChatAll("MenuCancel_Timeout %N", client); // TODO: Add message/translation or debug?
 
             if (g_cTimeoutPunishment.IntValue == 1)
             {
@@ -451,7 +459,7 @@ public int Menu_LastRequest(Menu menu, MenuAction action, int client, int param)
             }
             else if (g_cTimeoutPunishment.IntValue == 2)
             {
-                KickClient(client, "You was kicked due afk during lr menu selection.");
+                KickClient(client, "You was kicked due afk during lr menu selection."); // TODO: Add translation
             }
         }
         else if (param == MenuCancel_Exit)
@@ -461,10 +469,7 @@ public int Menu_LastRequest(Menu menu, MenuAction action, int client, int param)
     }		
     else if (action == MenuAction_End)
     {
-        if (menu != null)
-        {
-            delete menu;
-        }
+        delete menu;
     }
 }
 
@@ -487,12 +492,10 @@ public int Menu_TMenu(Menu menu, MenuAction action, int client, int param)
         }
         else
         {
-            PrintToChat(client, "Can not set game.");
+            PrintToChat(client, "Can not set game."); // TODO: Add message/translation or debug?
         }
-
-
         
-        PrintToChat(client, "LR: %s - Opponent: %N", g_iPlayer[client].Game.Name, g_iPlayer[client].Target);
+        PrintToChat(client, "LR: %s - Opponent: %N", g_iPlayer[client].Game.Name, g_iPlayer[client].Target); // TODO: Add message/translation or debug?
 
         g_bCustomStart = true;
         g_bConfirmation = false;
@@ -513,7 +516,7 @@ public int Menu_TMenu(Menu menu, MenuAction action, int client, int param)
     {
         if (param == MenuCancel_Timeout)
         {
-            PrintToChatAll("MenuCancel_Timeout %N", client);
+            PrintToChatAll("MenuCancel_Timeout %N", client); // TODO: Add message/translation or debug?
 
             if (g_cTimeoutPunishment.IntValue == 1)
             {
@@ -521,7 +524,7 @@ public int Menu_TMenu(Menu menu, MenuAction action, int client, int param)
             }
             else if (g_cTimeoutPunishment.IntValue == 2)
             {
-                KickClient(client, "You was kicked due afk during lr menu selection.");
+                KickClient(client, "You was kicked due afk during lr menu selection."); // TODO: Add translation
             }
         }
         else if (param == MenuCancel_Exit)
@@ -531,10 +534,7 @@ public int Menu_TMenu(Menu menu, MenuAction action, int client, int param)
     }		
     else if (action == MenuAction_End)
     {
-        if (menu != null)
-        {
-            delete menu;
-        }
+        delete menu;
     }
 }
 
@@ -568,15 +568,15 @@ void AskForConfirmation(int client, const char[] mode, const char[] weapon, int 
 
     if (!LR_IsClientValid(iTarget))
     {
-        // TODO: Add Message?
+        // TODO: Add message/translation or debug?
         return;
     }
 
     Menu menu = new Menu(Menu_AskForConfirmation);
     menu.SetTitle("%N wants to play against you!\n \nLast Request: %s\nMode: %s\nWeapons: %s\nHealth: %d\nArmor: %s\n \nDo you accept this setting?\n ",
-                    client, g_iPlayer[client].Game.Name, mode, weapon, health, armor ? "Yes" : "No");
-    menu.AddItem("yes", "Yes, I accept!");
-    menu.AddItem("no", "No, please...");
+                    client, g_iPlayer[client].Game.Name, mode, weapon, health, armor ? "Yes" : "No"); // TODO: Add translation
+    menu.AddItem("yes", "Yes, I accept!"); // TODO: Add translation
+    menu.AddItem("no", "No, please..."); // TODO: Add translation
     menu.ExitBackButton = false;
     menu.ExitButton = false;
     menu.Display(iTarget, g_cMenuTime.IntValue);
@@ -593,7 +593,7 @@ public int Menu_AskForConfirmation(Menu menu, MenuAction action, int target, int
 
         if (!LR_IsClientValid(client))
         {
-            // TODO: Add message?
+            // TODO: Add message/translation or debug?
             return;
         }
 
@@ -604,22 +604,22 @@ public int Menu_AskForConfirmation(Menu menu, MenuAction action, int target, int
 
         if (StrEqual(sParam, "yes", false))
         {
-            PrintToChat(target, "You accepted the game setting!");
-            PrintToChat(client, "%N has accepted your game setting!", target);
+            PrintToChat(target, "You accepted the game setting!"); // TODO: Add translation
+            PrintToChat(client, "%N has accepted your game setting!", target); // TODO: Add translation
 
             StartCountdown(g_cStartCountdown.IntValue, client);
         }
         else
         {
-            PrintToChat(target, "You declined the game setting!");
-            PrintToChat(client, "%N has declined your game setting!", target);
+            PrintToChat(target, "You declined the game setting!"); // TODO: Add translation
+            PrintToChat(client, "%N has declined your game setting!", target); // TODO: Add translation
         }
     }
     else if (action == MenuAction_Cancel)
     {
         if (param == MenuCancel_Timeout)
         {
-            PrintToChatAll("MenuCancel_Timeout %N", target);
+            PrintToChatAll("MenuCancel_Timeout %N", target); // TODO: Add message/translation or debug?
 
             if (g_cTimeoutPunishment.IntValue == 1)
             {
@@ -627,7 +627,7 @@ public int Menu_AskForConfirmation(Menu menu, MenuAction action, int target, int
             }
             else if (g_cTimeoutPunishment.IntValue == 2)
             {
-                KickClient(target, "You was kicked due afk during menu selection.");
+                KickClient(target, "You was kicked due afk during menu selection."); // TODO: Add translation
             }
         }
     }	
@@ -641,10 +641,7 @@ public int Menu_Empty(Menu menu, MenuAction action, int client, int param)
 {
     if (action == MenuAction_End)
     {
-        if (menu != null)
-        {
-            delete menu;
-        }
+        delete menu;
     }
     return 0;
 }
@@ -666,7 +663,10 @@ public int Native_RegisterLRGame(Handle plugin, int numParams)
         games.StartCB = GetNativeFunction(3);
         games.EndCB = GetNativeFunction(4);
 
-        LogMessage("[%s] Name: %s", PLUGIN_NAME, games.Name);
+        if (g_cDebug.BoolValue)
+        {
+            LogMessage("[%s] Name: %s", PLUGIN_NAME, games.Name);
+        }
 
         return g_smGames.SetArray(games.Name, games, sizeof(Games));
     }
@@ -867,35 +867,35 @@ bool IsLRReady(int client)
         return false;
     }
     
-    if (GetClientTeam(client) != CS_TEAM_T) // TODO: Add translation
+    if (GetClientTeam(client) != CS_TEAM_T)
     {
-        ReplyToCommand(client, "You must be a Terrorist to use last request!");
+        ReplyToCommand(client, "You must be a Terrorist to use last request!"); // TODO: Add translation
         return false;
     }
     
     PrintToChat(client, "g_bIsAvailable: %d, g_bRunningLR: %d, g_bCustomStart: %d, g_bConfirmation: %d, g_bInLR: %d", g_bIsAvailable, g_bRunningLR, g_bCustomStart, g_bConfirmation, g_iPlayer[client].InLR);
     
-    if (g_bRunningLR) // TODO: Add translation
+    if (g_bRunningLR)
     {
-        ReplyToCommand(client, "Last Request is already running...");
+        ReplyToCommand(client, "Last Request is already running..."); // TODO: Add translation
         return false;
     }
     
-    if (g_bCustomStart) // TODO: Add translation
+    if (g_bCustomStart)
     {
-        ReplyToCommand(client, "Last Request is awaiting on plugin start...");
+        ReplyToCommand(client, "Last Request is awaiting on plugin start..."); // TODO: Add translation
         return false;
     }
 
-    if (!g_bIsAvailable) // TODO: Add translation
+    if (!g_bIsAvailable)
     {
-        ReplyToCommand(client, "Last Request is not available...");
+        ReplyToCommand(client, "Last Request is not available..."); // TODO: Add translation
         return false;
     }
     
-    if (g_iPlayer[client].InLR) // TODO: Add translation
+    if (g_iPlayer[client].InLR)
     {
-        ReplyToCommand(client, "You are already in a last request!");
+        ReplyToCommand(client, "You are already in a last request!"); // TODO: Add translation
         return false;
     }
 
