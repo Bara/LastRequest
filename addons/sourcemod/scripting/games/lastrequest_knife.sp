@@ -47,7 +47,7 @@ public Action OnGamePreStart(int requester, int opponent, const char[] shortname
 	menu.AddItem("backstab", "Backstab");
 	menu.ExitBackButton = false;
 	menu.ExitButton = false;
-	menu.Display(LR_GetMenuTime(), requester);
+	menu.Display(requester, LR_GetMenuTime());
 }
 
 public int Menu_ModeSelection(Menu menu, MenuAction action, int client, int param)
