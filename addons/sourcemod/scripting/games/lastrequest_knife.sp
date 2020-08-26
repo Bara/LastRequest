@@ -27,7 +27,7 @@ public Plugin myinfo =
 
 public void OnConfigsExecuted()
 {
-    if (!LR_RegisterGame(LR_SHORT, OnGamePreStart, OnGameStart, OnGameEnd))
+    if (!LR_RegisterGame(LR_SHORT, LR_NAME, OnGamePreStart, OnGameStart, OnGameEnd))
     {
         SetFailState("Can't register last request: %s", LR_SHORT);
         return;

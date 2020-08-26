@@ -6,7 +6,8 @@
 
 #include <lastrequest>
 
-#define LR_SHORTNAME "Test"
+#define LR_SHORTNAME "test"
+#define LR_FULLNAME "test"
 #define PLUGIN_NAME "Last Request - " ... LR_SHORTNAME
 
 public Plugin myinfo =
@@ -20,7 +21,7 @@ public Plugin myinfo =
 
 public void OnConfigsExecuted()
 {
-    if (!LR_RegisterGame(LR_SHORTNAME, OnGamePreStart, OnGameStart, OnGameEnd))
+    if (!LR_RegisterGame(LR_SHORTNAME, LR_FULLNAME, OnGamePreStart, OnGameStart, OnGameEnd))
     {
         SetFailState("Can't register last request: %s", LR_SHORTNAME);
     }

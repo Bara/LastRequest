@@ -32,6 +32,7 @@ GlobalForward g_hOnLRAvailable = null;
 enum struct Games
 {
     char Name[LR_MAX_SHORTNAME_LENGTH];
+    char FullName[LR_MAX_FULLNAME_LENGTH];
     Handle plugin;
     Function PreStartCB;
     Function StartCB;
@@ -590,7 +591,7 @@ void AskForConfirmation(int client, const char[] mode, const char[] weapon, int 
 
     Menu menu = new Menu(Menu_AskForConfirmation);
     menu.SetTitle("%N wants to play against you!\n \nLast Request: %s\nMode: %s\nWeapons: %s\nHealth: %d\nKevlar: %s\n \nDo you accept this setting?\n ",
-                    client, g_iPlayer[client].Game.Name, mode, weapon, health, sKevlar); // TODO: Add translation
+                    client, g_iPlayer[client].Game.FullName, mode, weapon, health, sKevlar); // TODO: Add translation
     menu.AddItem("yes", "Yes, I accept!"); // TODO: Add translation
     menu.AddItem("no", "No, please..."); // TODO: Add translation
     menu.ExitBackButton = false;
@@ -670,21 +671,24 @@ public int Native_RegisterLRGame(Handle plugin, int numParams)
     
     if (!CheckLRShortName(name))
     {
-        Games games;
+        Games game;
 
-        strcopy(games.Name, sizeof(Games::Name), name);
+        strcopy(game.Name, sizeof(Games::Name), name);
 
-        games.plugin = plugin;
-        games.PreStartCB = GetNativeFunction(2);
-        games.StartCB = GetNativeFunction(3);
-        games.EndCB = GetNativeFunction(4);
+        char sFullName[LR_MAX_FULLNAME_LENGTH];
+        strcopy(game.FullName, sizeof(Games::FullName), sFullName);
+
+        game.plugin = plugin;
+        game.PreStartCB = GetNativeFunction(2);
+        game.StartCB = GetNativeFunction(3);
+        game.EndCB = GetNativeFunction(4);
 
         if (g_cDebug.BoolValue)
         {
-            LogMessage("[%s] Name: %s", PLUGIN_NAME, games.Name);
+            LogMessage("[%s] Name: %s, FullName: %s", PLUGIN_NAME, game.Name, game.FullName);
         }
 
-        return g_smGames.SetArray(games.Name, games, sizeof(Games));
+        return g_smGames.SetArray(game.Name, game, sizeof(Games));
     }
     
     return false;

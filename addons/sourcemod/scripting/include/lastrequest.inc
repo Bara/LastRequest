@@ -42,7 +42,7 @@ forward bool LR_OnLastRequestAvailable(int client);
  *
  * @return                 True, if register was successful otherwise false
  */
-native bool LR_RegisterGame(const char[] shortname, LRPreStartCB preStartCallback, LRStartCB startCallback, LREndCB endCallback);
+native bool LR_RegisterGame(const char[] shortname, const char[] fullname, LRPreStartCB preStartCallback, LRStartCB startCallback, LREndCB endCallback);
 
 /*
  * Check if the specific client is in a LR or not.
