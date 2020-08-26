@@ -939,4 +939,3 @@ public int Native_GetTimeoutPunishment(Handle plugin, int numParams)
 {
     return g_cTimeoutPunishment.IntValue;
 }
-

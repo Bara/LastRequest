@@ -85,92 +85,93 @@ native int LR_GetTimeoutPunishment();
 
 stock bool IsLastRequestAvailable()
 {
-	if (!LibraryExists("lastrequest"))
-	{
-		return SetFailState("Last Request is not loaded!");
-	}
+    if (!LibraryExists("lastrequest"))
+    {
+        return SetFailState("Last Request is not loaded!");
+    }
 }
 
 stock bool LR_IsClientValid(int client)
 {
-	if (client > 0 && client <= MaxClients)
-	{
-		if(IsClientInGame(client) && !IsFakeClient(client) && !IsClientSourceTV(client))
-		{
-			return true;
-		}
-	}
-	return false;
+    if (client > 0 && client <= MaxClients)
+    {
+        if(IsClientInGame(client) && !IsFakeClient(client) && !IsClientSourceTV(client))
+        {
+            return true;
+        }
+    }
+    return false;
 }
 
 stock void LR_StripAllWeapons(int client)
 {
-	for(int i = CS_SLOT_PRIMARY; i <= CS_SLOT_C4; i++)
-	{
-		int index = -1;
-		while((index = GetPlayerWeaponSlot(client, i)) != -1)
-		{
-			LR_SafeRemoveWeapon(client, index);
-		}
-	}
+    for(int i = CS_SLOT_PRIMARY; i <= CS_SLOT_C4; i++)
+    {
+        int index = -1;
+        while((index = GetPlayerWeaponSlot(client, i)) != -1)
+        {
+            LR_SafeRemoveWeapon(client, index);
+        }
+    }
 }
 
 stock bool LR_SafeRemoveWeapon(int client, int weapon)
 {
-	if (!IsValidEntity(weapon) || !IsValidEdict(weapon))
-	{
-		return false;
-	}
-	
-	if (!HasEntProp(weapon, Prop_Send, "m_hOwnerEntity"))
-	{
-		return false;
-	}
-	
-	int iOwner = GetEntPropEnt(weapon, Prop_Send, "m_hOwnerEntity");
-	
-	if (iOwner != client)
-	{
-		SetEntPropEnt(weapon, Prop_Send, "m_hOwnerEntity", client);
-	}
-	
-	CS_DropWeapon(client, weapon, false);
-	
-	if (HasEntProp(weapon, Prop_Send, "m_hWeaponWorldModel"))
-	{
-		int iWorldModel = GetEntPropEnt(weapon, Prop_Send, "m_hWeaponWorldModel");
-		
-		if (IsValidEdict(iWorldModel) && IsValidEntity(iWorldModel))
-		{
-			if (!AcceptEntityInput(iWorldModel, "Kill"))
-			{
-				return false;
-			}
-		}
-	}
-	
-	if (!AcceptEntityInput(weapon, "Kill"))
-	{
-		return false;
-	}
-	
-	return true;
+    if (!IsValidEntity(weapon) || !IsValidEdict(weapon))
+    {
+        return false;
+    }
+    
+    if (!HasEntProp(weapon, Prop_Send, "m_hOwnerEntity"))
+    {
+        return false;
+    }
+    
+    int iOwner = GetEntPropEnt(weapon, Prop_Send, "m_hOwnerEntity");
+    
+    if (iOwner != client)
+    {
+        SetEntPropEnt(weapon, Prop_Send, "m_hOwnerEntity", client);
+    }
+    
+    CS_DropWeapon(client, weapon, false);
+    
+    if (HasEntProp(weapon, Prop_Send, "m_hWeaponWorldModel"))
+    {
+        int iWorldModel = GetEntPropEnt(weapon, Prop_Send, "m_hWeaponWorldModel");
+        
+        if (IsValidEdict(iWorldModel) && IsValidEntity(iWorldModel))
+        {
+            if (!AcceptEntityInput(iWorldModel, "Kill"))
+            {
+                return false;
+            }
+        }
+    }
+    
+    if (!AcceptEntityInput(weapon, "Kill"))
+    {
+        return false;
+    }
+    
+    return true;
 }
 
-stock void SetKevlarHelm(int client, int kevlar, bool helm)
+stock void SetHealthKevlarHelm(int client, int health, int kevlar, bool helm)
 {
-    SetEntProp(client, Prop_Data, "m_ArmorValue", kevlar, 1);
+    SetEntityHealth(client, health);
+    SetEntProp(client, Prop_Data, "m_ArmorValue", kevlar);
     SetEntProp(client, Prop_Send, "m_bHasHelmet", helm);
 }
 
 public SharedPlugin __pl_lr = 
 {
-	name = "lastrequest",
-	file = "lastrequest.smx",
+    name = "lastrequest",
+    file = "lastrequest.smx",
 #if defined REQUIRE_PLUGIN
-	required = 1,
+    required = 1,
 #else
-	required = 0,
+    required = 0,
 #endif
 };
 
@@ -178,10 +179,10 @@ public SharedPlugin __pl_lr =
 
 public __pl_lr_SetNTVOptional()
 {
-	MarkNativeAsOptional("LR_RegisterGame");
-	MarkNativeAsOptional("LR_IsClientInLastRequest");
-	MarkNativeAsOptional("LR_IsLastRequestAvailable");
-	MarkNativeAsOptional("LR_SetLastRequestStatus");
-	MarkNativeAsOptional("LR_StopLastRequest");
+    MarkNativeAsOptional("LR_RegisterGame");
+    MarkNativeAsOptional("LR_IsClientInLastRequest");
+    MarkNativeAsOptional("LR_IsLastRequestAvailable");
+    MarkNativeAsOptional("LR_SetLastRequestStatus");
+    MarkNativeAsOptional("LR_StopLastRequest");
 }
 #endif
