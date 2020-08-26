@@ -1,12 +1,11 @@
 #pragma semicolon 1
+#pragma newdecls required
 
 #include <sourcemod>
 #include <sdktools>
 #include <sdkhooks>
-
-#pragma newdecls required
-
 #include <lastrequest>
+#include <autoexecconfig>
 
 #define LR_NAME "Knife Fight"
 #define LR_SHORT  "knifeFight"
@@ -25,7 +24,14 @@ enum struct Modes
     }
 }
 
+enum struct Configs {
+    ConVar Normal;
+    ConVar Backstab;
+    ConVar LowHP;
+}
+
 Modes Mode;
+Configs Config;
 
 public Plugin myinfo =
 {
@@ -35,6 +41,18 @@ public Plugin myinfo =
     version = "1.0.0",
     url = "github.com/Bara"
 };
+
+public void OnPluginStart()
+{
+    AutoExecConfig_SetCreateDirectory(true);
+    AutoExecConfig_SetCreateFile(true);
+    AutoExecConfig_SetFile("knife", "lastrequest");
+    Config.Normal = AutoExecConfig_CreateConVar("knife_enable_normal_mode", "1", "Enable or disable normal knife mode?", _, true, 0.0, true, 1.0);
+    Config.Backstab = AutoExecConfig_CreateConVar("knife_enable_backstab_mode", "1", "Enable or disable backstab knife mode?", _, true, 0.0, true, 1.0);
+    Config.LowHP = AutoExecConfig_CreateConVar("knife_enable_35hp_mode", "1", "Enable or disable 35hp knife mode?", _, true, 0.0, true, 1.0);
+    AutoExecConfig_ExecuteFile();
+    AutoExecConfig_CleanFile();
+}
 
 public void OnConfigsExecuted()
 {
@@ -54,9 +72,22 @@ public Action OnGamePreStart(int requester, int opponent, const char[] shortname
 {
     Menu menu = new Menu(Menu_ModeSelection);
     menu.SetTitle("Select knife mode");
-    menu.AddItem("normal", "Normal");
-    menu.AddItem("backstab", "Backstab");
-    menu.AddItem("35hp", "35 HP");
+
+    if (Config.Normal.BoolValue)
+    {
+        menu.AddItem("normal", "Normal");
+    }
+
+    if (Config.Backstab.BoolValue)
+    {
+        menu.AddItem("backstab", "Backstab");
+    }
+
+    if (Config.LowHP.BoolValue)
+    {
+        menu.AddItem("35hp", "35 HP");
+    }
+
     menu.ExitBackButton = false;
     menu.ExitButton = false;
     menu.Display(requester, LR_GetMenuTime());
