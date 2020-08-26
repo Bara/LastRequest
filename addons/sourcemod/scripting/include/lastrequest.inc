@@ -103,13 +103,23 @@ stock bool LR_IsClientValid(int client)
     return false;
 }
 
-stock void LR_StripAllWeapons(int client)
+stock void LR_StripAllWeapons(int client, int target = -1)
 {
     for(int i = 0; i < GetEntPropArraySize(client, Prop_Send, "m_hMyWeapons"); i++)
     {
         int weapon = GetEntPropEnt(client, Prop_Send, "m_hMyWeapons", i);
 
         LR_SafeRemoveWeapon(client, weapon);
+    }
+
+    if (target > 0)
+    {
+        for(int i = 0; i < GetEntPropArraySize(target, Prop_Send, "m_hMyWeapons"); i++)
+        {
+            int weapon = GetEntPropEnt(target, Prop_Send, "m_hMyWeapons", i);
+
+            LR_SafeRemoveWeapon(target, weapon);
+        }
     }
 }
 
@@ -155,11 +165,18 @@ stock bool LR_SafeRemoveWeapon(int client, int weapon)
     return true;
 }
 
-stock void SetHealthKevlarHelm(int client, int health, int kevlar, bool helm)
+stock void SetHealthKevlarHelm(int client, int target, int health, int kevlar, bool helm)
 {
     SetEntityHealth(client, health);
     SetEntProp(client, Prop_Data, "m_ArmorValue", kevlar);
     SetEntProp(client, Prop_Send, "m_bHasHelmet", helm);
+
+    if (target > 0)
+    {
+        SetEntityHealth(target, health);
+        SetEntProp(target, Prop_Data, "m_ArmorValue", kevlar);
+        SetEntProp(target, Prop_Send, "m_bHasHelmet", helm);
+    }
 }
 
 public SharedPlugin __pl_lr = 

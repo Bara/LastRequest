@@ -12,9 +12,20 @@
 #define LR_SHORT  "knifeFight"
 #define PLUGIN_NAME "Last Request - " ... LR_NAME
 
-bool g_bKnife = false;
-bool g_bNormal = false;
-bool g_bBackstab = false;
+enum struct Modes
+{
+    bool Normal;
+    bool Backstab;
+    bool LowHP;
+
+    void Reset() {
+        this.Normal = false;
+        this.Backstab = false;
+        this.LowHP = false;
+    }
+}
+
+Modes Mode;
 
 public Plugin myinfo =
 {
@@ -45,6 +56,7 @@ public Action OnGamePreStart(int requester, int opponent, const char[] shortname
     menu.SetTitle("Select knife mode");
     menu.AddItem("normal", "Normal");
     menu.AddItem("backstab", "Backstab");
+    menu.AddItem("35hp", "35 HP");
     menu.ExitBackButton = false;
     menu.ExitButton = false;
     menu.Display(requester, LR_GetMenuTime());
@@ -57,15 +69,19 @@ public int Menu_ModeSelection(Menu menu, MenuAction action, int client, int para
         char sParam[12], sDisplay[24];
         menu.GetItem(param, sParam, sizeof(sParam), _, sDisplay, sizeof(sDisplay));
 
-        if(StrEqual(sParam, "normal", false))
+        Mode.Reset();
+
+        if (StrEqual(sParam, "normal", false))
         {
-            g_bKnife = true;
-            g_bNormal = true;
+            Mode.Normal = true;
         }
-        else if(StrEqual(sParam, "backstab", false))
+        else if (StrEqual(sParam, "backstab", false))
         {
-            g_bKnife = true;
-            g_bBackstab = true;
+            Mode.Backstab = true;
+        }
+        else if (StrEqual(sParam, "35hp", false))
+        {
+            Mode.LowHP = true;
         }
 
         LR_StartLastRequest(client, sDisplay, "Knife");
@@ -94,17 +110,17 @@ public int Menu_ModeSelection(Menu menu, MenuAction action, int client, int para
 
 public void OnGameStart(int client, int target, const char[] name)
 {
-    if(g_bKnife)
-    {
-        SDKHook(client, SDKHook_TraceAttack, OnTraceAttack);
-        SDKHook(target, SDKHook_TraceAttack, OnTraceAttack);
-    }
+    SDKHook(client, SDKHook_TraceAttack, OnTraceAttack);
+    SDKHook(target, SDKHook_TraceAttack, OnTraceAttack);
     
-    LR_StripAllWeapons(client);
-    LR_StripAllWeapons(target);
+    LR_StripAllWeapons(client, target);
 
-    SetHealthKevlarHelm(client, 100, 0, false);
-    SetHealthKevlarHelm(target, 100, 0, false);
+    SetHealthKevlarHelm(client, target, 100, 0, false);
+
+    if (Mode.LowHP)
+    {
+        SetHealthKevlarHelm(client, target, 35, 0, false);
+    }
     
     int iKnife1 = GivePlayerItem(client, "weapon_knife");
     int iKnife2 = GivePlayerItem(target, "weapon_knife");
@@ -125,29 +141,22 @@ public void OnGameEnd(int winner, int loser)
         SDKUnhook(loser, SDKHook_TraceAttack, OnTraceAttack);
     }
     
-    g_bKnife = false;
-    g_bNormal = false;
-    g_bBackstab = false;
+    Mode.Reset();
 }
 
 public Action OnTraceAttack(int victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &ammotype, int hitbox, int hitgroup)
 {
-    if(!g_bKnife)
+    if (damagetype == DMG_FALL || attacker == 0)
     {
         return Plugin_Continue;
     }
     
-    if(damagetype == DMG_FALL || attacker == 0)
-    {
-        return Plugin_Continue;
-    }
-    
-    if(!LR_IsClientValid(attacker) || !LR_IsClientValid(victim))
+    if (!LR_IsClientValid(attacker) || !LR_IsClientValid(victim))
     {
         return Plugin_Handled;
     }
     
-    if(!LR_IsClientInLastRequest(attacker) || !LR_IsClientInLastRequest(victim))
+    if (!LR_IsClientInLastRequest(attacker) || !LR_IsClientInLastRequest(victim))
     {
         return Plugin_Handled;
     }
@@ -157,11 +166,11 @@ public Action OnTraceAttack(int victim, int &attacker, int &inflictor, float &da
     
     if ((StrContains(sWeapon, "knife", false) != -1) || (StrContains(sWeapon, "bayonet", false) != -1))
     {
-        if(g_bNormal)
+        if (Mode.Normal)
         {
             return Plugin_Continue;
         }
-        else if(g_bBackstab)
+        else if (Mode.Backstab)
         {
             float fAAngle[3], fVAngle[3], fBAngle[3];
             
@@ -169,7 +178,7 @@ public Action OnTraceAttack(int victim, int &attacker, int &inflictor, float &da
             GetClientAbsAngles(attacker, fAAngle);
             MakeVectorFromPoints(fVAngle, fAAngle, fBAngle);
             
-            if(fBAngle[1] > -90.0 && fBAngle[1] < 90.0)
+            if (fBAngle[1] > -90.0 && fBAngle[1] < 90.0)
             {
                 return Plugin_Continue;
             }
