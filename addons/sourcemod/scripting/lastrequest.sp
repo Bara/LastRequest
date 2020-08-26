@@ -98,7 +98,7 @@ public void OnPluginStart()
 {
     Config.Debug = CreateConVar("lastrequest_debug", "1", "Show/Log debug messages?", _, true, 0.0, true, 1.0);
     Config.MenuTime = CreateConVar("lastrequest_menu_time", "30", "Time in seconds to choose a last request");
-    Config.OpenMenu = CreateConVar("lastrequest_open_menu", "1", "Open last request menu for the last player?", _, true, 0.0, true, 1.0);
+    Config.OpenMenu = CreateConVar("lastrequest_open_menu", "1", "Open last request menu (on player death only) for the last player?", _, true, 0.0, true, 1.0);
     Config.AvailableSounds = CreateConVar("lastrequest_available_sounds", "3", "How many last request available to you have? 0 to disable it");
     Config.AvailablePath = CreateConVar("lastrequet_available_path", "lastrequest/availableX.mp3", "Sounds for available last request");
     Config.StartCountdown = CreateConVar("lastrequest_start_countdown", "3", "Countdown after accepting game until the game starts", _, true, 3.0);
@@ -159,7 +159,7 @@ public Action Event_PlayerDeath(Event event, const char[] name, bool dontBroadca
         return;
     }
     
-    CheckTeams();
+    CheckTeams(true);
     return;
 }
 
@@ -178,7 +178,7 @@ public Action Timer_CheckTeams(Handle timer)
     }
 }
 
-void CheckTeams()
+void CheckTeams(bool openMenu = false)
 {
     int iTIndex = -1;
     int iT = 0;
@@ -214,7 +214,7 @@ void CheckTeams()
             PlayAvailableSound();
         }
         
-        if (Config.OpenMenu.BoolValue)
+        if (openMenu && Config.OpenMenu.BoolValue)
         {
             ShowPlayerList(client);
         }
@@ -428,7 +428,7 @@ void ShowPlayerList(int client)
     }
     
     menu.ExitBackButton = false;
-    menu.ExitButton = false;
+    menu.ExitButton = true;
     menu.Display(client, Config.MenuTime.IntValue);
 }
 
