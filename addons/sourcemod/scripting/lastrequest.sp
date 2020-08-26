@@ -10,24 +10,30 @@
 
 #define PLUGIN_NAME "Last Request"
 
-bool g_bIsAvailable = false;
-bool g_bCustomStart = false;
-bool g_bConfirmation = false;
-bool g_bRunningLR = false;
+enum struct Variables {
+    bool IsAvailable;
+    bool CustomStart;
+    bool Confirmation;
+    bool RunningLR;
+}
 
-ConVar g_cMenuTime = null;
-ConVar g_cOpenMenu = null;
-ConVar g_cAvailableSounds = null;
-ConVar g_cAvailablePath = null;
-ConVar g_cStartCountdown = null;
-ConVar g_cCountdownPath = null;
-ConVar g_cTimeoutPunishment = null;
-ConVar g_cAdminFlag = null;
-ConVar g_cPlayerCanStop = null;
-ConVar g_cDebug = null;
+enum struct Configs {
+    ConVar MenuTime;
+    ConVar OpenMenu;
+    ConVar AvailableSounds;
+    ConVar AvailablePath;
+    ConVar StartCountdown;
+    ConVar CountdownPath;
+    ConVar TimeoutPunishment;
+    ConVar AdminFlag;
+    ConVar PlayerCanStop;
+    ConVar Debug;
+}
 
-GlobalForward g_hOnMenu = null;
-GlobalForward g_hOnLRAvailable = null;
+enum struct Forwards {
+    GlobalForward OnMenu;
+    GlobalForward OnLRAvailable;
+}
 
 enum struct Games
 {
@@ -53,6 +59,11 @@ enum struct PlayerData
 }
 
 StringMap g_smGames = null;
+
+Variables Core;
+Configs Config;
+Forwards Forward;
+
 PlayerData g_iPlayer[MAXPLAYERS + 1];
 
 public Plugin myinfo =
@@ -75,8 +86,8 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
     CreateNative("LR_GetMenuTime", Native_GetMenuTime);
     CreateNative("LR_GetTimeoutPunishment", Native_GetTimeoutPunishment);
     
-    g_hOnMenu = new GlobalForward("LR_OnOpenMenu", ET_Ignore, Param_Cell);
-    g_hOnLRAvailable = new GlobalForward("LR_OnLastRequestAvailable", ET_Ignore, Param_Cell);
+    Forward.OnMenu = new GlobalForward("LR_OnOpenMenu", ET_Ignore, Param_Cell);
+    Forward.OnLRAvailable = new GlobalForward("LR_OnLastRequestAvailable", ET_Ignore, Param_Cell);
     
     RegPluginLibrary("lastrequest");
     
@@ -85,16 +96,16 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 
 public void OnPluginStart()
 {
-    g_cDebug = CreateConVar("lastrequest_debug", "1", "Show/Log debug messages?", _, true, 0.0, true, 1.0);
-    g_cMenuTime = CreateConVar("lastrequest_menu_time", "30", "Time in seconds to choose a last request");
-    g_cOpenMenu = CreateConVar("lastrequest_open_menu", "1", "Open last request menu for the last player?", _, true, 0.0, true, 1.0);
-    g_cAvailableSounds = CreateConVar("lastrequest_available_sounds", "3", "How many last request available to you have? 0 to disable it");
-    g_cAvailablePath = CreateConVar("lastrequet_available_path", "lastrequest/availableX.mp3", "Sounds for available last request");
-    g_cStartCountdown = CreateConVar("lastrequest_start_countdown", "3", "Countdown after accepting game until the game starts", _, true, 3.0);
-    g_cCountdownPath = CreateConVar("lastrequest_countdown_path", "lastrequest/countdownX.mp3", "Sounds for 3...2...1...Go ( Go = 0 )");
-    g_cTimeoutPunishment = CreateConVar("lastrequest_timeout_punishment", "0", "How punish the player who didn't response to the menu? (0 - Nothing, 1 - Slay, 2 - Kick)", _, true, 0.0, true, 2.0);
-    g_cAdminFlag = CreateConVar("lastrequest_admin_flag", "b", "Admin flag to cancel/stop active last requests.");
-    g_cPlayerCanStop = CreateConVar("lastrequest_player_can_stop_lr", "1", "The player, which is in a active last request, can stop the last request with the agreement of the opponent.", _, true, 0.0, true, 1.0);
+    Config.Debug = CreateConVar("lastrequest_debug", "1", "Show/Log debug messages?", _, true, 0.0, true, 1.0);
+    Config.MenuTime = CreateConVar("lastrequest_menu_time", "30", "Time in seconds to choose a last request");
+    Config.OpenMenu = CreateConVar("lastrequest_open_menu", "1", "Open last request menu for the last player?", _, true, 0.0, true, 1.0);
+    Config.AvailableSounds = CreateConVar("lastrequest_available_sounds", "3", "How many last request available to you have? 0 to disable it");
+    Config.AvailablePath = CreateConVar("lastrequet_available_path", "lastrequest/availableX.mp3", "Sounds for available last request");
+    Config.StartCountdown = CreateConVar("lastrequest_start_countdown", "3", "Countdown after accepting game until the game starts", _, true, 3.0);
+    Config.CountdownPath = CreateConVar("lastrequest_countdown_path", "lastrequest/countdownX.mp3", "Sounds for 3...2...1...Go ( Go = 0 )");
+    Config.TimeoutPunishment = CreateConVar("lastrequest_timeout_punishment", "0", "How punish the player who didn't response to the menu? (0 - Nothing, 1 - Slay, 2 - Kick)", _, true, 0.0, true, 2.0);
+    Config.AdminFlag = CreateConVar("lastrequest_admin_flag", "b", "Admin flag to cancel/stop active last requests.");
+    Config.PlayerCanStop = CreateConVar("lastrequest_player_can_stop_lr", "1", "The player, which is in a active last request, can stop the last request with the agreement of the opponent.", _, true, 0.0, true, 1.0);
     
     HookEvent("round_prestart", Event_RoundPreStart, EventHookMode_PostNoCopy);
     HookEvent("player_death", Event_PlayerDeath, EventHookMode_Post);
@@ -109,10 +120,10 @@ public void OnMapStart()
     delete g_smGames;
     g_smGames = new StringMap();
 
-    g_bRunningLR = false;
-    g_bIsAvailable = false;
-    g_bCustomStart = false;
-    g_bConfirmation = false;
+    Core.RunningLR = false;
+    Core.IsAvailable = false;
+    Core.CustomStart = false;
+    Core.Confirmation = false;
 
     CreateTimer(3.0, Timer_CheckTeams, _, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
 }
@@ -154,11 +165,11 @@ public Action Event_PlayerDeath(Event event, const char[] name, bool dontBroadca
 
 public Action Timer_CheckTeams(Handle timer)
 {
-    if (!g_bRunningLR && !g_bCustomStart && !g_bConfirmation)
+    if (!Core.RunningLR && !Core.CustomStart && !Core.Confirmation)
     {
         CheckTeams();
     }
-    else if (g_bRunningLR || g_bCustomStart || g_bConfirmation)
+    else if (Core.RunningLR || Core.CustomStart || Core.Confirmation)
     {
         if (GetTeamCountAmount(CS_TEAM_T) == 0 || GetTeamCountAmount(CS_TEAM_CT) == 0)
         {
@@ -189,28 +200,28 @@ void CheckTeams()
         }
     }
 
-    if (g_cDebug.BoolValue)
+    if (Config.Debug.BoolValue)
     {
-        PrintToChatAll("T: %d, CT: %d, Running: %d, CustomStart: %d, Confirmation: %d, Available: %d", iT, iCT, g_bRunningLR, g_bCustomStart, g_bConfirmation, g_bIsAvailable);
+        PrintToChatAll("T: %d, CT: %d, Running: %d, CustomStart: %d, Confirmation: %d, Available: %d", iT, iCT, Core.RunningLR, Core.CustomStart, Core.Confirmation, Core.IsAvailable);
     }
 
-    if (iT == 1 && iCT > 0 && !g_bRunningLR && !g_bCustomStart && !g_bConfirmation && !g_bIsAvailable)
+    if (iT == 1 && iCT > 0 && !Core.RunningLR && !Core.CustomStart && !Core.Confirmation && !Core.IsAvailable)
     {
         int client = iTIndex;
         
-        if (g_cAvailableSounds.IntValue > 0)
+        if (Config.AvailableSounds.IntValue > 0)
         {
             PlayAvailableSound();
         }
         
-        if (g_cOpenMenu.BoolValue)
+        if (Config.OpenMenu.BoolValue)
         {
             ShowPlayerList(client);
         }
 
-        g_bIsAvailable = true;
+        Core.IsAvailable = true;
         
-        Call_StartForward(g_hOnLRAvailable);
+        Call_StartForward(Forward.OnLRAvailable);
         Call_PushCell(client);
         Call_Finish();
     }
@@ -219,9 +230,9 @@ void CheckTeams()
 void PrecacheAvailableSounds()
 {
     char sFile[PLATFORM_MAX_PATH + 1], sid[2];
-    g_cAvailablePath.GetString(sFile, sizeof(sFile));
+    Config.AvailablePath.GetString(sFile, sizeof(sFile));
     
-    for (int i = 1; i <= g_cAvailableSounds.IntValue; i++)
+    for (int i = 1; i <= Config.AvailableSounds.IntValue; i++)
     {
         IntToString(i, sid, sizeof(sid));
         ReplaceString(sFile, sizeof(sFile), "X", sid, true);
@@ -232,12 +243,12 @@ void PrecacheAvailableSounds()
 void PlayAvailableSound()
 {
     char sFile[PLATFORM_MAX_PATH + 1], sid[2];
-    g_cAvailablePath.GetString(sFile, sizeof(sFile));
+    Config.AvailablePath.GetString(sFile, sizeof(sFile));
     
     int id;
-    if (g_cAvailableSounds.IntValue > 1)
+    if (Config.AvailableSounds.IntValue > 1)
     {
-        id = GetRandomInt(1, g_cAvailableSounds.IntValue);
+        id = GetRandomInt(1, Config.AvailableSounds.IntValue);
     }
     else
     {
@@ -251,10 +262,10 @@ void PlayAvailableSound()
 
 public Action Event_RoundPreStart(Event event, const char[] name, bool dontBroadcast)
 {
-    g_bRunningLR = false;
-    g_bIsAvailable = false;
-    g_bCustomStart = false;
-    g_bConfirmation = false;
+    Core.RunningLR = false;
+    Core.IsAvailable = false;
+    Core.CustomStart = false;
+    Core.Confirmation = false;
 
     LR_LoopClients(i)
     {
@@ -289,7 +300,7 @@ public Action Command_LastRequest(int client, int args)
 public Action Command_StopLR(int client, int args)
 {
     char sFlags[24];
-    g_cAdminFlag.GetString(sFlags, sizeof(sFlags));
+    Config.AdminFlag.GetString(sFlags, sizeof(sFlags));
 
     if (CheckCommandAccess(client, "lr_admin", ReadFlagString(sFlags), true))
     {
@@ -297,7 +308,7 @@ public Action Command_StopLR(int client, int args)
         return;
     }
 
-    if (g_cPlayerCanStop.BoolValue && g_iPlayer[client].InLR)
+    if (Config.PlayerCanStop.BoolValue && g_iPlayer[client].InLR)
     {
         AskOpponentToStop(client);
         return;
@@ -320,7 +331,7 @@ void AskOpponentToStop(int client)
     menu.AddItem("no", "No, don't stop!"); // TODO: Add translation
     menu.ExitBackButton = false;
     menu.ExitButton = false;
-    menu.Display(iTarget, g_cMenuTime.IntValue);
+    menu.Display(iTarget, Config.MenuTime.IntValue);
 }
 
 public int Menu_AskToStop(Menu menu, MenuAction action, int target, int param)
@@ -355,16 +366,16 @@ public int Menu_AskToStop(Menu menu, MenuAction action, int target, int param)
     {
         if (param == MenuCancel_Timeout)
         {
-            if (g_cDebug.BoolValue)
+            if (Config.Debug.BoolValue)
             {
                 PrintToChatAll("MenuCancel_Timeout %N", target); // TODO: Add message/translation or debug?
             }
 
-            if (g_cTimeoutPunishment.IntValue == 1)
+            if (Config.TimeoutPunishment.IntValue == 1)
             {
                 ForcePlayerSuicide(target);
             }
-            else if (g_cTimeoutPunishment.IntValue == 2)
+            else if (Config.TimeoutPunishment.IntValue == 2)
             {
                 KickClient(target, "You was kicked due afk during menu selection."); // TODO: Add translation
             }
@@ -381,12 +392,12 @@ void ShowLastRequestList(int client)
     Menu menu = new Menu(Menu_Empty); // TODO: As panel
     menu.SetTitle("Last Requests:"); // TODO: Add translation
     
-    Call_StartForward(g_hOnMenu);
+    Call_StartForward(Forward.OnMenu);
     Call_PushCell(menu);
     Call_Finish();
     
     menu.ExitButton = true;
-    menu.Display(client, g_cMenuTime.IntValue);
+    menu.Display(client, Config.MenuTime.IntValue);
 }
 
 void ShowPlayerList(int client)
@@ -418,7 +429,7 @@ void ShowPlayerList(int client)
     
     menu.ExitBackButton = false;
     menu.ExitButton = false;
-    menu.Display(client, g_cMenuTime.IntValue);
+    menu.Display(client, Config.MenuTime.IntValue);
 }
 
 public int Menu_LastRequest(Menu menu, MenuAction action, int client, int param)
@@ -442,13 +453,13 @@ public int Menu_LastRequest(Menu menu, MenuAction action, int client, int param)
         Menu gMenu = new Menu(Menu_TMenu);
         gMenu.SetTitle("Choose a game:"); // TODO: Add translation
         
-        Call_StartForward(g_hOnMenu);
+        Call_StartForward(Forward.OnMenu);
         Call_PushCell(gMenu);
         Call_Finish();
         
         gMenu.ExitBackButton = false;
         gMenu.ExitButton = true;
-        gMenu.Display(client, g_cMenuTime.IntValue);
+        gMenu.Display(client, Config.MenuTime.IntValue);
     }
     else if (action == MenuAction_Cancel)
     {
@@ -456,11 +467,11 @@ public int Menu_LastRequest(Menu menu, MenuAction action, int client, int param)
         {
             PrintToChatAll("MenuCancel_Timeout %N", client); // TODO: Add message/translation or debug?
 
-            if (g_cTimeoutPunishment.IntValue == 1)
+            if (Config.TimeoutPunishment.IntValue == 1)
             {
                 ForcePlayerSuicide(client);
             }
-            else if (g_cTimeoutPunishment.IntValue == 2)
+            else if (Config.TimeoutPunishment.IntValue == 2)
             {
                 KickClient(client, "You was kicked due afk during lr menu selection."); // TODO: Add translation
             }
@@ -500,11 +511,11 @@ public int Menu_TMenu(Menu menu, MenuAction action, int client, int param)
         
         PrintToChat(client, "LR: %s - Opponent: %N", g_iPlayer[client].Game.Name, g_iPlayer[client].Target); // TODO: Add message/translation or debug?
 
-        g_bCustomStart = true;
-        g_bConfirmation = false;
-        g_bRunningLR = false;
+        Core.CustomStart = true;
+        Core.Confirmation = false;
+        Core.RunningLR = false;
 
-        g_bIsAvailable = false;
+        Core.IsAvailable = false;
         
         g_iPlayer[client].InLR = true;
         g_iPlayer[g_iPlayer[client].Target].InLR = true;
@@ -521,11 +532,11 @@ public int Menu_TMenu(Menu menu, MenuAction action, int client, int param)
         {
             PrintToChatAll("MenuCancel_Timeout %N", client); // TODO: Add message/translation or debug?
 
-            if (g_cTimeoutPunishment.IntValue == 1)
+            if (Config.TimeoutPunishment.IntValue == 1)
             {
                 ForcePlayerSuicide(client);
             }
-            else if (g_cTimeoutPunishment.IntValue == 2)
+            else if (Config.TimeoutPunishment.IntValue == 2)
             {
                 KickClient(client, "You was kicked due afk during lr menu selection."); // TODO: Add translation
             }
@@ -543,9 +554,9 @@ public int Menu_TMenu(Menu menu, MenuAction action, int client, int param)
 
 public int Native_StartLastRequest(Handle plugin, int numParams)
 {
-    g_bCustomStart = false;
-    g_bConfirmation = true;
-    g_bRunningLR = false;
+    Core.CustomStart = false;
+    Core.Confirmation = true;
+    Core.RunningLR = false;
 
     int client = GetNativeCell(1);
 
@@ -559,7 +570,7 @@ public int Native_StartLastRequest(Handle plugin, int numParams)
 
     int kevlar = GetNativeCell(5);
 
-    if (g_bConfirmation && !g_bCustomStart && !g_bRunningLR)
+    if (Core.Confirmation && !Core.CustomStart && !Core.RunningLR)
     {
         AskForConfirmation(client, sMode, sWeapon, health, kevlar);
     }
@@ -596,7 +607,7 @@ void AskForConfirmation(int client, const char[] mode, const char[] weapon, int 
     menu.AddItem("no", "No, please..."); // TODO: Add translation
     menu.ExitBackButton = false;
     menu.ExitButton = false;
-    menu.Display(iTarget, g_cMenuTime.IntValue);
+    menu.Display(iTarget, Config.MenuTime.IntValue);
 }
 
 public int Menu_AskForConfirmation(Menu menu, MenuAction action, int target, int param)
@@ -614,17 +625,17 @@ public int Menu_AskForConfirmation(Menu menu, MenuAction action, int target, int
             return;
         }
 
-        g_bRunningLR = true;
-        g_bCustomStart = false;
-        g_bConfirmation = false;
-        g_bIsAvailable = false;
+        Core.RunningLR = true;
+        Core.CustomStart = false;
+        Core.Confirmation = false;
+        Core.IsAvailable = false;
 
         if (StrEqual(sParam, "yes", false))
         {
             PrintToChat(target, "You accepted the game setting!"); // TODO: Add translation
             PrintToChat(client, "%N has accepted your game setting!", target); // TODO: Add translation
 
-            StartCountdown(g_cStartCountdown.IntValue, client);
+            StartCountdown(Config.StartCountdown.IntValue, client);
         }
         else
         {
@@ -638,11 +649,11 @@ public int Menu_AskForConfirmation(Menu menu, MenuAction action, int target, int
         {
             PrintToChatAll("MenuCancel_Timeout %N", target); // TODO: Add message/translation or debug?
 
-            if (g_cTimeoutPunishment.IntValue == 1)
+            if (Config.TimeoutPunishment.IntValue == 1)
             {
                 ForcePlayerSuicide(target);
             }
-            else if (g_cTimeoutPunishment.IntValue == 2)
+            else if (Config.TimeoutPunishment.IntValue == 2)
             {
                 KickClient(target, "You was kicked due afk during menu selection."); // TODO: Add translation
             }
@@ -683,7 +694,7 @@ public int Native_RegisterLRGame(Handle plugin, int numParams)
         game.StartCB = GetNativeFunction(3);
         game.EndCB = GetNativeFunction(4);
 
-        if (g_cDebug.BoolValue)
+        if (Config.Debug.BoolValue)
         {
             LogMessage("[%s] Name: %s, FullName: %s", PLUGIN_NAME, game.Name, game.FullName);
         }
@@ -750,15 +761,15 @@ public int Native_StopLastRequest(Handle plugin, int numParams)
         }
     }
 
-    g_bRunningLR = false;
-    g_bCustomStart = false;
-    g_bConfirmation = false;
-    g_bIsAvailable = false;
+    Core.RunningLR = false;
+    Core.CustomStart = false;
+    Core.Confirmation = false;
+    Core.IsAvailable = false;
 }
 
 public int Native_IsLastRequestAvailable(Handle plugin, int numParams)
 {
-    return g_bIsAvailable;
+    return Core.IsAvailable;
 }
 
 bool CheckLRShortName(const char[] name)
@@ -800,7 +811,7 @@ public Action Timer_Countdown(Handle timer, DataPack pack)
                 PrintToChat(i, "Last request started in %d seconds ( Game: %s, Player: %N, Opponent: %N)", seconds, g_iPlayer[client].Game.Name, client, g_iPlayer[client].Target); // TODO: Add translation
             }
             
-            if (g_cStartCountdown.BoolValue)
+            if (Config.StartCountdown.BoolValue)
             {
                 PlayCountdownSounds(seconds);
             }
@@ -823,7 +834,7 @@ public Action Timer_Countdown(Handle timer, DataPack pack)
 void PrecacheCountdownSounds()
 {
     char sFile[PLATFORM_MAX_PATH + 1], sid[2];
-    g_cCountdownPath.GetString(sFile, sizeof(sFile));
+    Config.CountdownPath.GetString(sFile, sizeof(sFile));
     
     for (int i = 0; i <= 3; i++)
     {
@@ -838,7 +849,7 @@ void PlayCountdownSounds(int seconds)
     if (seconds >= 0 && seconds <= 3)
     {
         char sFile[PLATFORM_MAX_PATH + 1], sid[2];
-        g_cCountdownPath.GetString(sFile, sizeof(sFile));
+        Config.CountdownPath.GetString(sFile, sizeof(sFile));
         IntToString(seconds, sid, sizeof(sid));
         ReplaceString(sFile, sizeof(sFile), "X", sid, true);
         EmitSoundToAllAny(sFile);
@@ -893,21 +904,21 @@ bool IsLRReady(int client)
         return false;
     }
     
-    PrintToChat(client, "g_bIsAvailable: %d, g_bRunningLR: %d, g_bCustomStart: %d, g_bConfirmation: %d, g_bInLR: %d", g_bIsAvailable, g_bRunningLR, g_bCustomStart, g_bConfirmation, g_iPlayer[client].InLR);
+    PrintToChat(client, "Core.IsAvailable: %d, Core.RunningLR: %d, Core.CustomStart: %d, Core.Confirmation: %d, Core.InLR: %d", Core.IsAvailable, Core.RunningLR, Core.CustomStart, Core.Confirmation, g_iPlayer[client].InLR);
     
-    if (g_bRunningLR)
+    if (Core.RunningLR)
     {
         ReplyToCommand(client, "Last Request is already running..."); // TODO: Add translation
         return false;
     }
     
-    if (g_bCustomStart)
+    if (Core.CustomStart)
     {
         ReplyToCommand(client, "Last Request is awaiting on plugin start..."); // TODO: Add translation
         return false;
     }
 
-    if (!g_bIsAvailable)
+    if (!Core.IsAvailable)
     {
         ReplyToCommand(client, "Last Request is not available..."); // TODO: Add translation
         return false;
@@ -936,10 +947,10 @@ public int Native_GetClientOpponent(Handle plugin, int numParams)
 
 public int Native_GetMenuTime(Handle plugin, int numParams)
 {
-    return g_cMenuTime.IntValue;
+    return Config.MenuTime.IntValue;
 }
 
 public int Native_GetTimeoutPunishment(Handle plugin, int numParams)
 {
-    return g_cTimeoutPunishment.IntValue;
+    return Config.TimeoutPunishment.IntValue;
 }
