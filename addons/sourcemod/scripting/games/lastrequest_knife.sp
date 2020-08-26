@@ -166,7 +166,7 @@ public Action OnTraceAttack(int victim, int &attacker, int &inflictor, float &da
     
     if ((StrContains(sWeapon, "knife", false) != -1) || (StrContains(sWeapon, "bayonet", false) != -1))
     {
-        if (Mode.Normal)
+        if (Mode.Normal || Mode.LowHP)
         {
             return Plugin_Continue;
         }
@@ -181,10 +181,6 @@ public Action OnTraceAttack(int victim, int &attacker, int &inflictor, float &da
             if (fBAngle[1] > -90.0 && fBAngle[1] < 90.0)
             {
                 return Plugin_Continue;
-            }
-            else
-            {
-                return Plugin_Handled;
             }
         }
     }
