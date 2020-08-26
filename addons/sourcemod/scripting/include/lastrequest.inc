@@ -105,13 +105,11 @@ stock bool LR_IsClientValid(int client)
 
 stock void LR_StripAllWeapons(int client)
 {
-    for(int i = CS_SLOT_PRIMARY; i <= CS_SLOT_C4; i++)
+    for(int i = 0; i < GetEntPropArraySize(client, Prop_Send, "m_hMyWeapons"); i++)
     {
-        int index = -1;
-        while((index = GetPlayerWeaponSlot(client, i)) != -1)
-        {
-            LR_SafeRemoveWeapon(client, index);
-        }
+        int weapon = GetEntPropEnt(client, Prop_Send, "m_hMyWeapons", i);
+
+        LR_SafeRemoveWeapon(client, weapon);
     }
 }
 
