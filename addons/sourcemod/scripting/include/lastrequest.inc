@@ -4,6 +4,7 @@
 #define _lr_included
 
 #include <cstrike>
+#include <sdktools>
 
 #define LR_MAX_SHORTNAME_LENGTH 32
 #define LR_MAX_FULLNAME_LENGTH 64
@@ -76,9 +77,8 @@ native void LR_StopLastRequest(int winner = -1, int loser = -1);
 
 /*
  * Firing last restart start
- * @param armor            0 - no armor, 1 - armor, 2 - armor + helm
  */
-native void LR_StartLastRequest(int requester, char[] mode, char[] weapon, int health = 100, int armor = 0);
+native void LR_StartLastRequest(int requester, char[] mode, char[] weapon, int health = 100, int armor = 0, bool helm = false);
 
 native int LR_GetMenuTime();
 native int LR_GetTimeoutPunishment();
@@ -103,7 +103,7 @@ stock bool LR_IsClientValid(int client)
     return false;
 }
 
-stock void LR_StripAllWeapons(int client, int target = -1)
+stock void LR_StripClientWeapons(int client, int target = -1)
 {
     for(int i = 0; i < GetEntPropArraySize(client, Prop_Send, "m_hMyWeapons"); i++)
     {
@@ -165,7 +165,7 @@ stock bool LR_SafeRemoveWeapon(int client, int weapon)
     return true;
 }
 
-stock void SetHealthKevlarHelm(int client, int target, int health, int kevlar, bool helm)
+stock void LR_SetHealthKevlarHelm(int client, int target, int health, int kevlar, bool helm)
 {
     SetEntityHealth(client, health);
     SetEntProp(client, Prop_Data, "m_ArmorValue", kevlar);

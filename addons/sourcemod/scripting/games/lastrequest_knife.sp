@@ -2,12 +2,11 @@
 #pragma newdecls required
 
 #include <sourcemod>
-#include <sdktools>
 #include <sdkhooks>
 #include <lastrequest>
 #include <autoexecconfig>
 
-#define LR_NAME "Knife Fight"
+#define LR_NAME "Knife Fight" // TODO: Replace this with a string buffer
 #define LR_SHORT  "knifeFight"
 #define PLUGIN_NAME "Last Request - " ... LR_NAME
 
@@ -193,7 +192,14 @@ public int Menu_ModeSelection(Menu menu, MenuAction action, int client, int para
             Mode.ThirdPerson = true;
         }
 
-        LR_StartLastRequest(client, sDisplay, "Knife");
+        if (!Mode.LowHP)
+        {
+            LR_StartLastRequest(client, sDisplay, "Knife");
+        }
+        else
+        {
+            LR_StartLastRequest(client, sDisplay, "Knife", 35);
+        }
     }
     else if (action == MenuAction_Cancel)
     {
@@ -223,15 +229,6 @@ public void OnGameStart(int client, int target, const char[] name)
     SDKHook(target, SDKHook_TraceAttack, OnTraceAttack);
     SDKHook(client, SDKHook_Think, OnThink);
     SDKHook(target, SDKHook_Think, OnThink);
-    
-    LR_StripAllWeapons(client, target);
-
-    SetHealthKevlarHelm(client, target, 100, 0, false);
-
-    if (Mode.LowHP)
-    {
-        SetHealthKevlarHelm(client, target, 35, 0, false);
-    }
 
     if (Mode.Drunk)
     {

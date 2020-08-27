@@ -36,9 +36,15 @@ enum struct Forwards {
 
 enum struct Games
 {
+    int Health;
+    int Kevlar;
+    bool Helm;
+
     char Name[LR_MAX_SHORTNAME_LENGTH];
     char FullName[LR_MAX_FULLNAME_LENGTH];
+
     Handle plugin;
+
     Function PreStartCB;
     Function StartCB;
     Function EndCB;
@@ -570,17 +576,17 @@ public int Native_StartLastRequest(Handle plugin, int numParams)
     char sWeapon[32];
     GetNativeString(3, sWeapon, sizeof(sWeapon));
 
-    int health = GetNativeCell(4);
-
-    int kevlar = GetNativeCell(5);
+    g_iPlayer[client].Game.Health = GetNativeCell(4);
+    g_iPlayer[client].Game.Kevlar = GetNativeCell(5);
+    g_iPlayer[client].Game.Helm = GetNativeCell(6);
 
     if (Core.Confirmation && !Core.CustomStart && !Core.RunningLR)
     {
-        AskForConfirmation(client, sMode, sWeapon, health, kevlar);
+        AskForConfirmation(client, sMode, sWeapon);
     }
 }
 
-void AskForConfirmation(int client, const char[] mode, const char[] weapon, int health, int kevlar)
+void AskForConfirmation(int client, const char[] mode, const char[] weapon)
 {
     int iTarget = LR_GetClientOpponent(client);
 
@@ -590,23 +596,9 @@ void AskForConfirmation(int client, const char[] mode, const char[] weapon, int 
         return;
     }
 
-    char sKevlar[24];
-    if (kevlar == 0)
-    {
-        Format(sKevlar, sizeof(sKevlar), "No kevlar"); // TODO: Add translation
-    }
-    else if (kevlar == 1)
-    {
-        Format(sKevlar, sizeof(sKevlar), "Kevlar"); // TODO: Add translation
-    }
-    else if (kevlar == 2)
-    {
-        Format(sKevlar, sizeof(sKevlar), "Kevlar + Helm"); // TODO: Add translation
-    }
-
     Menu menu = new Menu(Menu_AskForConfirmation);
-    menu.SetTitle("%N wants to play against you!\n \nLast Request: %s\nMode: %s\nWeapons: %s\nHealth: %d\nKevlar: %s\n \nDo you accept this setting?\n ",
-                    client, g_iPlayer[client].Game.FullName, mode, weapon, health, sKevlar); // TODO: Add translation
+    menu.SetTitle("%N wants to play against you!\n \nLast Request: %s\nMode: %s\nWeapons: %s\nHealth: %d\nKevlar: %d\nHelm: %s\n \nDo you accept this setting?\n ",
+                    client, g_iPlayer[client].Game.FullName, mode, weapon, g_iPlayer[client].Game.Health, g_iPlayer[client].Game.Kevlar, g_iPlayer[client].Game.Helm ? "Yes" : "No"); // TODO: Add translation
     menu.AddItem("yes", "Yes, I accept!"); // TODO: Add translation
     menu.AddItem("no", "No, please..."); // TODO: Add translation
     menu.ExitBackButton = false;
@@ -869,6 +861,9 @@ void StartLastRequest(int client)
             PrintToChat(i, "Last request aborted! Client invalid"); // TODO: Add translation
         }
     }
+
+    LR_StripClientWeapons(client, g_iPlayer[client].Target);
+    LR_SetHealthKevlarHelm(client, g_iPlayer[client].Target, g_iPlayer[client].Game.Health, g_iPlayer[client].Game.Kevlar, g_iPlayer[client].Game.Helm);
     
     Call_StartFunction(g_iPlayer[client].Game.plugin, g_iPlayer[client].Game.StartCB);
     Call_PushCell(client);
