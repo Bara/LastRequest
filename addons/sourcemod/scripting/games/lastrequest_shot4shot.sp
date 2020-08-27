@@ -270,7 +270,7 @@ void GivePlayerWeapon(int client, int clip = 0)
 
 void SetAmmo(int client, int clip)
 {
-    if (GetPlayerWeaponSlot(client, CS_SLOT_SECONDARY) == Player[client].Weapon)
+    if (GetPlayerWeaponSlot(client, CS_SLOT_SECONDARY) == Player[client].Weapon) // TODO Make it dynamically, when someone adds a primary it doesn't work.
     {
         SetEntProp(Player[client].Weapon, Prop_Send, "m_iClip1", clip);
         SetEntProp(Player[client].Weapon, Prop_Send, "m_iPrimaryReserveAmmoCount", 0);
