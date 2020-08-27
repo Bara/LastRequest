@@ -17,6 +17,13 @@ enum struct Variables {
 
     GlobalForward OnMenu;
     GlobalForward OnLRAvailable;
+
+    void SetState(bool available, bool custom, bool confirmation, bool running) {
+        this.IsAvailable = available;
+        this.CustomStart = custom;
+        this.Confirmation = confirmation;
+        this.RunningLR = running;
+    }
 }
 
 enum struct Configs {
@@ -127,10 +134,7 @@ public void OnMapStart()
     delete g_smGames;
     g_smGames = new StringMap();
 
-    Core.RunningLR = false;
-    Core.IsAvailable = false;
-    Core.CustomStart = false;
-    Core.Confirmation = false;
+    Core.SetState(false, false, false, false);
 
     CreateTimer(3.0, Timer_CheckTeams, _, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
 }
@@ -226,7 +230,7 @@ void CheckTeams(bool openMenu = false)
             ShowPlayerList(client);
         }
 
-        Core.IsAvailable = true;
+        Core.SetState(true, false, false, false);
         
         Call_StartForward(Core.OnLRAvailable);
         Call_PushCell(client);
@@ -269,10 +273,7 @@ void PlayAvailableSound()
 
 public Action Event_RoundPreStart(Event event, const char[] name, bool dontBroadcast)
 {
-    Core.RunningLR = false;
-    Core.IsAvailable = false;
-    Core.CustomStart = false;
-    Core.Confirmation = false;
+    Core.SetState(false, false, false, false);
 
     LR_LoopClients(i)
     {
@@ -518,11 +519,7 @@ public int Menu_TMenu(Menu menu, MenuAction action, int client, int param)
         
         PrintToChat(client, "LR: %s - Opponent: %N", g_iPlayer[client].Game.Name, g_iPlayer[client].Target); // TODO: Add message/translation or debug?
 
-        Core.CustomStart = true;
-        Core.Confirmation = false;
-        Core.RunningLR = false;
-
-        Core.IsAvailable = false;
+        Core.SetState(false, true, false, false);
         
         g_iPlayer[client].InLR = true;
         g_iPlayer[g_iPlayer[client].Target].InLR = true;
@@ -561,9 +558,7 @@ public int Menu_TMenu(Menu menu, MenuAction action, int client, int param)
 
 public int Native_StartLastRequest(Handle plugin, int numParams)
 {
-    Core.CustomStart = false;
-    Core.Confirmation = true;
-    Core.RunningLR = false;
+    Core.SetState(false, false, true, false);
 
     int client = GetNativeCell(1);
 
@@ -618,10 +613,7 @@ public int Menu_AskForConfirmation(Menu menu, MenuAction action, int target, int
             return;
         }
 
-        Core.RunningLR = true;
-        Core.CustomStart = false;
-        Core.Confirmation = false;
-        Core.IsAvailable = false;
+        Core.SetState(false, false, false, true);
 
         if (StrEqual(sParam, "yes", false))
         {
@@ -754,10 +746,7 @@ public int Native_StopLastRequest(Handle plugin, int numParams)
         }
     }
 
-    Core.RunningLR = false;
-    Core.CustomStart = false;
-    Core.Confirmation = false;
-    Core.IsAvailable = false;
+    Core.SetState(false, false, false, false);
 }
 
 public int Native_IsLastRequestAvailable(Handle plugin, int numParams)
