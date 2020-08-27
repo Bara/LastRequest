@@ -16,11 +16,21 @@ enum struct Modes
     bool Normal;
     bool Backstab;
     bool LowHP;
+    bool Drunk; // TODO: Need Test
+    bool LowGrav; // TODO Need Test - Saving old value
+    bool HighSpeed; // TODO Need Test - Saving old value
+    bool Drugs; // TODO Need Test
+    bool ThirdPerson; // TODO Need Test
 
     void Reset() {
         this.Normal = false;
         this.Backstab = false;
         this.LowHP = false;
+        this.Drunk = false;
+        this.LowGrav = false;
+        this.HighSpeed = false;
+        this.Drugs = false;
+        this.ThirdPerson = false;
     }
 }
 
@@ -28,6 +38,13 @@ enum struct Configs {
     ConVar Normal;
     ConVar Backstab;
     ConVar LowHP;
+    ConVar Drunk;
+    ConVar LowGrav;
+    ConVar GravValue;
+    ConVar HighSpeed;
+    ConVar SpeedValue;
+    ConVar Drugs;
+    ConVar ThirdPerson;
 }
 
 Modes Mode;
@@ -47,9 +64,16 @@ public void OnPluginStart()
     AutoExecConfig_SetCreateDirectory(true);
     AutoExecConfig_SetCreateFile(true);
     AutoExecConfig_SetFile("knife", "lastrequest");
-    Config.Normal = AutoExecConfig_CreateConVar("knife_enable_normal_mode", "1", "Enable or disable normal knife mode?", _, true, 0.0, true, 1.0);
-    Config.Backstab = AutoExecConfig_CreateConVar("knife_enable_backstab_mode", "1", "Enable or disable backstab knife mode?", _, true, 0.0, true, 1.0);
-    Config.LowHP = AutoExecConfig_CreateConVar("knife_enable_35hp_mode", "1", "Enable or disable 35hp knife mode?", _, true, 0.0, true, 1.0);
+    Config.Normal = AutoExecConfig_CreateConVar("knife_normal_mode_enable", "1", "Enable or disable Normal mode?", _, true, 0.0, true, 1.0);
+    Config.Backstab = AutoExecConfig_CreateConVar("knife_backstab_mode_enable", "1", "Enable or disable Backstab mode?", _, true, 0.0, true, 1.0);
+    Config.LowHP = AutoExecConfig_CreateConVar("knife_35hp_mode_enable", "1", "Enable or disable 35HP mode?", _, true, 0.0, true, 1.0);
+    Config.Drunk = AutoExecConfig_CreateConVar("knife_drunk_mode_enable", "1", "Enable or disable Drunk mode?", _, true, 0.0, true, 1.0);
+    Config.LowGrav = AutoExecConfig_CreateConVar("knife_lowgrav_mode_enable", "1", "Enable or disable LowGrav mode?", _, true, 0.0, true, 1.0);
+    Config.GravValue = AutoExecConfig_CreateConVar("knife_lowgrav_value", "0.6", "Set gravity value for low gravity mode. Default is 0.6 and general default is 1.0", _, true, 0.1, true, 1.0);
+    Config.HighSpeed = AutoExecConfig_CreateConVar("knife_highspeed_mode_enable", "1", "Enable or disable HighSpeed mode?", _, true, 0.0, true, 1.0);
+    Config.GravValue = AutoExecConfig_CreateConVar("knife_highspeed_value", "2.2", "Set speed value for high speed mode. Default is 2.2 and general default is 1.0", _, true, 1.1);
+    Config.Drugs = AutoExecConfig_CreateConVar("knife_drugs_mode_enable", "1", "Enable or disable Drugs mode?", _, true, 0.0, true, 1.0);
+    Config.ThirdPerson = AutoExecConfig_CreateConVar("knife_thirdperson_mode_enable", "1", "Enable or disable ThirdPerson mode?", _, true, 0.0, true, 1.0);
     AutoExecConfig_ExecuteFile();
     AutoExecConfig_CleanFile();
 }
@@ -88,6 +112,31 @@ public Action OnGamePreStart(int requester, int opponent, const char[] shortname
         menu.AddItem("35hp", "35 HP");
     }
 
+    if (Config.Drunk.BoolValue)
+    {
+        menu.AddItem("drunk", "Drunk");
+    }
+
+    if (Config.LowGrav.BoolValue)
+    {
+        menu.AddItem("lowgrav", "LowGrav");
+    }
+
+    if (Config.HighSpeed.BoolValue)
+    {
+        menu.AddItem("highspeed", "HighSpeed");
+    }
+
+    if (Config.Drugs.BoolValue)
+    {
+        menu.AddItem("drugs", "Drugs");
+    }
+
+    if (Config.ThirdPerson.BoolValue)
+    {
+        menu.AddItem("thirdperson", "ThirdPerson");
+    }
+
     menu.ExitBackButton = false;
     menu.ExitButton = false;
     menu.Display(requester, LR_GetMenuTime());
@@ -113,6 +162,26 @@ public int Menu_ModeSelection(Menu menu, MenuAction action, int client, int para
         else if (StrEqual(sParam, "35hp", false))
         {
             Mode.LowHP = true;
+        }
+        else if (StrEqual(sParam, "drunk", false))
+        {
+            Mode.Drunk = true;
+        }
+        else if (StrEqual(sParam, "lowgrav", false))
+        {
+            Mode.LowGrav = true;
+        }
+        else if (StrEqual(sParam, "highspeed", false))
+        {
+            Mode.HighSpeed = true;
+        }
+        else if (StrEqual(sParam, "drugs", false))
+        {
+            Mode.Drugs = true;
+        }
+        else if (StrEqual(sParam, "thirdperson", false))
+        {
+            Mode.ThirdPerson = true;
         }
 
         LR_StartLastRequest(client, sDisplay, "Knife");
@@ -143,6 +212,8 @@ public void OnGameStart(int client, int target, const char[] name)
 {
     SDKHook(client, SDKHook_TraceAttack, OnTraceAttack);
     SDKHook(target, SDKHook_TraceAttack, OnTraceAttack);
+    SDKHook(client, SDKHook_Think, OnThink);
+    SDKHook(target, SDKHook_Think, OnThink);
     
     LR_StripAllWeapons(client, target);
 
@@ -151,6 +222,36 @@ public void OnGameStart(int client, int target, const char[] name)
     if (Mode.LowHP)
     {
         SetHealthKevlarHelm(client, target, 35, 0, false);
+    }
+
+    if (Mode.Drunk)
+    {
+        SetDrunk(client, true);
+        SetDrunk(target, true);
+    }
+
+    if (Mode.ThirdPerson)
+    {
+        SetThirdPerson(client, true);
+        SetThirdPerson(target, true);
+    }
+
+    if (Mode.Drugs)
+    {
+        SetDrugs(client, true);
+        SetDrugs(target, true);
+    }
+
+    if (Mode.HighSpeed)
+    {
+        SetSpeed(client, true);
+        SetSpeed(target, true);
+    }
+
+    if (Mode.LowGrav)
+    {
+        SetGravity(client, true);
+        SetGravity(target, true);
     }
     
     int iKnife1 = GivePlayerItem(client, "weapon_knife");
@@ -165,11 +266,21 @@ public void OnGameEnd(int winner, int loser)
     if (winner != -1)
     {
         SDKUnhook(winner, SDKHook_TraceAttack, OnTraceAttack);
+        SDKUnhook(winner, SDKHook_Think, OnThink);
+
+        SetDrunk(winner, false);
+        SetThirdPerson(winner, false);
+        SetDrugs(winner, false);
     }
 
     if (loser != -1)
     {
         SDKUnhook(loser, SDKHook_TraceAttack, OnTraceAttack);
+        SDKUnhook(loser, SDKHook_Think, OnThink);
+
+        SetDrunk(loser, false);
+        SetThirdPerson(loser, false);
+        SetDrugs(loser, false);
     }
     
     Mode.Reset();
@@ -217,4 +328,112 @@ public Action OnTraceAttack(int victim, int &attacker, int &inflictor, float &da
     }
     
     return Plugin_Handled;
+}
+
+public void OnThink(int client)
+{
+    if (!LR_IsClientInLastRequest(client))
+    {
+        return;
+    }
+
+    if (Mode.Drunk)
+    {
+        SetDrunk(client, true);
+    }
+
+    if (Mode.ThirdPerson)
+    {
+        SetThirdPerson(client, true);
+    }
+
+    if (Mode.Drugs)
+    {
+        SetDrugs(client, true);
+    }
+
+    if (Mode.HighSpeed)
+    {
+        SetSpeed(client, true);
+    }
+
+    if (Mode.LowGrav)
+    {
+        SetGravity(client, true);
+    }
+}
+
+void SetDrunk(int client, bool drunk)
+{
+    if (drunk)
+    {
+        SetEntProp(client, Prop_Send, "m_iFOV", 105);
+        SetEntProp(client, Prop_Send, "m_iDefaultFOV", 105);
+
+        ClientCommand(client, "r_screenoverlay \"effects/strider_pinch_dudv\"");
+    }
+    else
+    {
+        SetEntProp(client, Prop_Send, "m_iFOV", 90);
+        SetEntProp(client, Prop_Send, "m_iDefaultFOV", 90);
+    }
+}
+
+void SetThirdPerson(int client, bool third)
+{
+    if (third)
+    {
+        SetEntPropEnt(client, Prop_Send, "m_hObserverTarget", 0);
+
+        SetEntProp(client, Prop_Send, "m_iObserverMode", 1);
+        SetEntProp(client, Prop_Send, "m_bDrawViewmodel", 0);
+        SetEntProp(client, Prop_Send, "m_iFOV", 120);
+        SetEntProp(client, Prop_Send, "m_iDefaultFOV", 120);
+    }
+    else
+    {
+        SetEntPropEnt(client, Prop_Send, "m_hObserverTarget", 1);
+
+        SetEntProp(client, Prop_Send, "m_iObserverMode", 0);
+        SetEntProp(client, Prop_Send, "m_bDrawViewmodel", 1);
+        SetEntProp(client, Prop_Send, "m_iFOV", 90);
+        SetEntProp(client, Prop_Send, "m_iDefaultFOV", 90);
+    }
+}
+
+void SetDrugs(int client, bool drugs)
+{
+    if (drugs)
+    {
+        ServerCommand("sm_drug #%d 1", GetClientUserId(client));
+    }
+    else
+    {
+        ServerCommand("sm_drug #%d 0", GetClientUserId(client));
+    }
+}
+
+void SetSpeed(int client, bool speed)
+{
+    if (speed)
+    {
+        SetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue", Config.SpeedValue.FloatValue);
+    }
+    else
+    {
+        SetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue", 1.0); // Saving old players value, to don't break custom value?
+    }
+}
+
+
+void SetGravity(int client, bool gravity)
+{
+    if (gravity)
+    {
+        SetEntityGravity(client, Config.GravValue.FloatValue);
+    }
+    else
+    {
+        SetEntityGravity(client, 1.0); // Saving old players value, to don't break custom value?
+    }
 }
