@@ -53,7 +53,7 @@ enum struct PlayerData {
 
 Modes Mode;
 Configs Config;
-PlayerData g_iPlayer[MAXPLAYERS + 1];
+PlayerData Player[MAXPLAYERS + 1];
 
 public Plugin myinfo =
 {
@@ -99,8 +99,8 @@ public void LR_OnOpenMenu(Menu menu)
 
 public Action OnGamePreStart(int requester, int opponent, const char[] shortname)
 {
-    g_iPlayer[requester].Speed = 0.0;
-    g_iPlayer[opponent].Gravity = 0.0;
+    Player[requester].Speed = 0.0;
+    Player[opponent].Gravity = 0.0;
 
     Menu menu = new Menu(Menu_ModeSelection);
     menu.SetTitle("Select knife mode");
@@ -250,8 +250,8 @@ public void OnGameStart(int client, int target, const char[] name)
 
     if (Mode.HighSpeed)
     {
-        g_iPlayer[client].Speed = GetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue");
-        g_iPlayer[target].Speed = GetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue");
+        Player[client].Speed = GetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue");
+        Player[target].Speed = GetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue");
 
         SetSpeed(client, true);
         SetSpeed(target, true);
@@ -259,8 +259,8 @@ public void OnGameStart(int client, int target, const char[] name)
 
     if (Mode.LowGrav)
     {
-        g_iPlayer[client].Gravity = GetEntityGravity(client);
-        g_iPlayer[target].Gravity = GetEntityGravity(client);
+        Player[client].Gravity = GetEntityGravity(client);
+        Player[target].Gravity = GetEntityGravity(client);
 
         SetGravity(client, true);
         SetGravity(target, true);
@@ -433,13 +433,13 @@ void SetSpeed(int client, bool speed)
     }
     else
     {
-        if (g_iPlayer[client].Speed < 0.1)
+        if (Player[client].Speed < 0.1)
         {
             SetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue", 1.0);
         }
         else
         {
-            SetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue", g_iPlayer[client].Speed);
+            SetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue", Player[client].Speed);
         }
     }
 }
@@ -453,13 +453,13 @@ void SetGravity(int client, bool gravity)
     }
     else
     {
-        if (g_iPlayer[client].Gravity < 0.1)
+        if (Player[client].Gravity < 0.1)
         {
             SetEntityGravity(client, 1.0);
         }
         else
         {
-            SetEntityGravity(client, g_iPlayer[client].Gravity);
+            SetEntityGravity(client, Player[client].Gravity);
         }
     }
 }
