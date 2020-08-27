@@ -265,13 +265,12 @@ void GivePlayerWeapon(int client, int clip = 0)
 {
     Player[client].Weapon = GivePlayerItem(client, Core.Weapon);
     EquipPlayerWeapon(client, Player[client].Weapon);
-    
     SetAmmo(client, clip);
 }
 
 void SetAmmo(int client, int clip)
 {
-    if (IsValidEntity(Player[client].Weapon))
+    if (GetPlayerWeaponSlot(client, CS_SLOT_SECONDARY) == Player[client].Weapon)
     {
         SetEntProp(Player[client].Weapon, Prop_Send, "m_iClip1", clip);
         SetEntProp(Player[client].Weapon, Prop_Send, "m_iPrimaryReserveAmmoCount", 0);
