@@ -14,6 +14,9 @@ enum struct Variables {
     bool CustomStart;
     bool Confirmation;
     bool RunningLR;
+
+    GlobalForward OnMenu;
+    GlobalForward OnLRAvailable;
 }
 
 enum struct Configs {
@@ -27,11 +30,6 @@ enum struct Configs {
     ConVar AdminFlag;
     ConVar PlayerCanStop;
     ConVar Debug;
-}
-
-enum struct Forwards {
-    GlobalForward OnMenu;
-    GlobalForward OnLRAvailable;
 }
 
 enum struct Games
@@ -67,7 +65,6 @@ StringMap g_smGames = null;
 
 Variables Core;
 Configs Config;
-Forwards Forward;
 
 PlayerData g_iPlayer[MAXPLAYERS + 1];
 
@@ -91,8 +88,8 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
     CreateNative("LR_GetMenuTime", Native_GetMenuTime);
     CreateNative("LR_GetTimeoutPunishment", Native_GetTimeoutPunishment);
     
-    Forward.OnMenu = new GlobalForward("LR_OnOpenMenu", ET_Ignore, Param_Cell);
-    Forward.OnLRAvailable = new GlobalForward("LR_OnLastRequestAvailable", ET_Ignore, Param_Cell);
+    Core.OnMenu = new GlobalForward("LR_OnOpenMenu", ET_Ignore, Param_Cell);
+    Core.OnLRAvailable = new GlobalForward("LR_OnLastRequestAvailable", ET_Ignore, Param_Cell);
     
     RegPluginLibrary("lastrequest");
     
@@ -231,7 +228,7 @@ void CheckTeams(bool openMenu = false)
 
         Core.IsAvailable = true;
         
-        Call_StartForward(Forward.OnLRAvailable);
+        Call_StartForward(Core.OnLRAvailable);
         Call_PushCell(client);
         Call_Finish();
     }
@@ -402,7 +399,7 @@ void ShowLastRequestList(int client)
     Menu menu = new Menu(Menu_Empty); // TODO: As panel
     menu.SetTitle("Last Requests:"); // TODO: Add translation
     
-    Call_StartForward(Forward.OnMenu);
+    Call_StartForward(Core.OnMenu);
     Call_PushCell(menu);
     Call_Finish();
     
@@ -463,7 +460,7 @@ public int Menu_LastRequest(Menu menu, MenuAction action, int client, int param)
         Menu gMenu = new Menu(Menu_TMenu);
         gMenu.SetTitle("Choose a game:"); // TODO: Add translation
         
-        Call_StartForward(Forward.OnMenu);
+        Call_StartForward(Core.OnMenu);
         Call_PushCell(gMenu);
         Call_Finish();
         
