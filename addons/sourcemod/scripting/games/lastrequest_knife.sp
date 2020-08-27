@@ -17,8 +17,8 @@ enum struct Modes
     bool Backstab;
     bool LowHP;
     bool Drunk; // TODO: Need Test
-    bool LowGrav; // TODO Need Test - Saving old value
-    bool HighSpeed; // TODO Need Test - Saving old value
+    bool LowGrav; // TODO Need Test
+    bool HighSpeed; // TODO Need Test
     bool Drugs; // TODO Need Test
     bool ThirdPerson; // TODO Need Test
 
@@ -47,8 +47,14 @@ enum struct Configs {
     ConVar ThirdPerson;
 }
 
+enum struct PlayerData {
+    float Speed;
+    float Gravity;
+}
+
 Modes Mode;
 Configs Config;
+PlayerData g_iPlayer[MAXPLAYERS + 1];
 
 public Plugin myinfo =
 {
@@ -94,6 +100,9 @@ public void LR_OnOpenMenu(Menu menu)
 
 public Action OnGamePreStart(int requester, int opponent, const char[] shortname)
 {
+    g_iPlayer[requester].Speed = 0.0;
+    g_iPlayer[opponent].Gravity = 0.0;
+
     Menu menu = new Menu(Menu_ModeSelection);
     menu.SetTitle("Select knife mode");
 
@@ -244,12 +253,18 @@ public void OnGameStart(int client, int target, const char[] name)
 
     if (Mode.HighSpeed)
     {
+        g_iPlayer[client].Speed = GetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue");
+        g_iPlayer[target].Speed = GetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue");
+
         SetSpeed(client, true);
         SetSpeed(target, true);
     }
 
     if (Mode.LowGrav)
     {
+        g_iPlayer[client].Gravity = GetEntityGravity(client);
+        g_iPlayer[target].Gravity = GetEntityGravity(client);
+
         SetGravity(client, true);
         SetGravity(target, true);
     }
@@ -421,7 +436,14 @@ void SetSpeed(int client, bool speed)
     }
     else
     {
-        SetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue", 1.0); // Saving old players value, to don't break custom value?
+        if (g_iPlayer[client].Speed < 0.1)
+        {
+            SetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue", 1.0);
+        }
+        else
+        {
+            SetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue", g_iPlayer[client].Speed);
+        }
     }
 }
 
@@ -434,6 +456,13 @@ void SetGravity(int client, bool gravity)
     }
     else
     {
-        SetEntityGravity(client, 1.0); // Saving old players value, to don't break custom value?
+        if (g_iPlayer[client].Gravity < 0.1)
+        {
+            SetEntityGravity(client, 1.0);
+        }
+        else
+        {
+            SetEntityGravity(client, g_iPlayer[client].Gravity);
+        }
     }
 }
