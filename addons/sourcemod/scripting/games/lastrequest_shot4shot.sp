@@ -131,7 +131,7 @@ public void LR_OnOpenMenu(Menu menu)
 public Action OnGamePreStart(int requester, int opponent, const char[] shortname)
 {
     Menu menu = new Menu(Menu_WeaponSelection);
-    menu.SetTitle("Select weapon");
+    menu.SetTitle("Select weapon"); // TODO: Add translation
 
     if (Core.Enable.BoolValue)
     {
@@ -163,7 +163,7 @@ public int Menu_WeaponSelection(Menu menu, MenuAction action, int client, int pa
 
         strcopy(Core.Weapon, sizeof(General::Weapon), sClass);
 
-        LR_StartLastRequest(client, "Normal", sDisplay);
+        LR_StartLastRequest(client, "Normal", sDisplay); // TODO: Add translation
     }
     else if (action == MenuAction_Cancel)
     {

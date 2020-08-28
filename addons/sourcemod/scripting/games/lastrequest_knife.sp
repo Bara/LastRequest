@@ -103,46 +103,46 @@ public Action OnGamePreStart(int requester, int opponent, const char[] shortname
     Player[opponent].Gravity = 0.0;
 
     Menu menu = new Menu(Menu_ModeSelection);
-    menu.SetTitle("Select knife mode");
+    menu.SetTitle("Select knife mode"); // TODO: Add translation
 
     if (Config.Normal.BoolValue)
     {
-        menu.AddItem("normal", "Normal");
+        menu.AddItem("normal", "Normal"); // TODO: Add translation
     }
 
     if (Config.Backstab.BoolValue)
     {
-        menu.AddItem("backstab", "Backstab");
+        menu.AddItem("backstab", "Backstab"); // TODO: Add translation
     }
 
     if (Config.LowHP.BoolValue)
     {
-        menu.AddItem("35hp", "35 HP");
+        menu.AddItem("35hp", "35 HP"); // TODO: Add translation
     }
 
     if (Config.Drunk.BoolValue)
     {
-        menu.AddItem("drunk", "Drunk");
+        menu.AddItem("drunk", "Drunk"); // TODO: Add translation
     }
 
     if (Config.LowGrav.BoolValue)
     {
-        menu.AddItem("lowgrav", "LowGrav");
+        menu.AddItem("lowgrav", "LowGrav"); // TODO: Add translation
     }
 
     if (Config.HighSpeed.BoolValue)
     {
-        menu.AddItem("highspeed", "HighSpeed");
+        menu.AddItem("highspeed", "HighSpeed"); // TODO: Add translation
     }
 
     if (Config.Drugs.BoolValue)
     {
-        menu.AddItem("drugs", "Drugs");
+        menu.AddItem("drugs", "Drugs"); // TODO: Add translation
     }
 
     if (Config.ThirdPerson.BoolValue)
     {
-        menu.AddItem("thirdperson", "ThirdPerson");
+        menu.AddItem("thirdperson", "ThirdPerson"); // TODO: Add translation
     }
 
     menu.ExitBackButton = false;
@@ -194,11 +194,11 @@ public int Menu_ModeSelection(Menu menu, MenuAction action, int client, int para
 
         if (!Mode.LowHP)
         {
-            LR_StartLastRequest(client, sDisplay, "Knife");
+            LR_StartLastRequest(client, sDisplay, "Knife"); // TODO: Add translation
         }
         else
         {
-            LR_StartLastRequest(client, sDisplay, "Knife", 35);
+            LR_StartLastRequest(client, sDisplay, "Knife", 35); // TODO: Add translation
         }
     }
     else if (action == MenuAction_Cancel)
