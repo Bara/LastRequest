@@ -125,7 +125,10 @@ public void OnConfigsExecuted()
 
 public void LR_OnOpenMenu(Menu menu)
 {
-    menu.AddItem(LR_SHORT, "Shot 4 Shot"); // TODO: Add translation
+    if (Core.Enable.BoolValue)
+    {
+        menu.AddItem(LR_SHORT, "Shot 4 Shot"); // TODO: Add translation
+    }
 }
 
 public Action OnGamePreStart(int requester, int opponent, const char[] shortname)
@@ -268,12 +271,12 @@ void GivePlayerWeapon(int client, int clip = 0)
     SetAmmo(client, clip);
 }
 
-void SetAmmo(int client, int clip)
+void SetAmmo(int client, int clip, int ammo = 0)
 {
     if (GetPlayerWeaponSlot(client, CS_SLOT_SECONDARY) == Player[client].Weapon) // TODO Make it dynamically, when someone adds a primary it doesn't work.
     {
         SetEntProp(Player[client].Weapon, Prop_Send, "m_iClip1", clip);
-        SetEntProp(Player[client].Weapon, Prop_Send, "m_iPrimaryReserveAmmoCount", 0);
+        SetEntProp(Player[client].Weapon, Prop_Send, "m_iPrimaryReserveAmmoCount", ammo);
     }
     else
     {
