@@ -10,6 +10,14 @@
 #define LR_MAX_FULLNAME_LENGTH 64
 #define LR_LoopClients(%1) for(int %1 = 1; %1 <= MaxClients; %1++) if(LR_IsClientValid(%1))
 
+enum LR_End_Reason {
+    Server = -3,
+    Admin = -2,
+    Tie = -1,
+    Unknown = 0,
+    Normal = 1
+}
+
 /*
  * Requester is mostly the last T and opponent is the choosed CT by the T.
  * Short Name will be required for games with subgames like knife fight with different modes.
@@ -18,7 +26,7 @@
  */
 typedef LRPreStartCB = function Action (int requester, int opponent, const char[] shortname);
 typedef LRStartCB = function void (int requester, int opponent, const char[] shortname);
-typedef LREndCB = function void (int winner, int loser);
+typedef LREndCB = function void (LR_End_Reason reason, int winner, int loser);
 
 /*
  * This forward will called, when someone opens the LR games list or wants to start a lr.
@@ -73,7 +81,7 @@ native bool LR_IsLastRequestAvailable();
 /*
  * Stops the active LR immediately.
  */
-native void LR_StopLastRequest(int winner = -1, int loser = -1);
+native void LR_StopLastRequest(LR_End_Reason reason, int winner = -1, int loser = -1);
 
 /*
  * Firing last restart start

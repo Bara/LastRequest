@@ -239,7 +239,7 @@ public Action Timer_CheckPosition(Handle timer, int userid)
 
     if (!LR_IsClientValid(client))
     {
-        LR_StopLastRequest(-3);
+        LR_StopLastRequest(Server);
         return Plugin_Stop;
     }
 
@@ -247,7 +247,7 @@ public Action Timer_CheckPosition(Handle timer, int userid)
 
     if (!IsValidEntity(iWeapon))
     {
-        LR_StopLastRequest(-3);
+        LR_StopLastRequest(Server);
         return Plugin_Stop;
     }
 
@@ -293,7 +293,7 @@ void CheckPlayers(int client)
 
     if (!LR_IsClientValid(target))
     {
-        LR_StopLastRequest(client, target);
+        LR_StopLastRequest(Unknown, client, target);
     }
 
     if (Player[target].Distance <= 0.0)
@@ -303,19 +303,19 @@ void CheckPlayers(int client)
 
     if (Player[client].Distance > Player[target].Distance)
     {
-        LR_StopLastRequest(client, target);
+        LR_StopLastRequest(Normal, client, target);
     }
     else if (Player[target].Distance > Player[client].Distance)
     {
-        LR_StopLastRequest(target, client);
+        LR_StopLastRequest(Normal, target, client);
     }
     else
     {
-        LR_StopLastRequest(-1);
+        LR_StopLastRequest(Tie);
     }
 }
 
-public void OnGameEnd(int winner, int loser)
+public void OnGameEnd(LR_End_Reason reason, int winner, int loser)
 {
     Core.Reset();
     

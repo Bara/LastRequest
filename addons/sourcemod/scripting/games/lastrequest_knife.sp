@@ -273,7 +273,7 @@ public void OnGameStart(int client, int target, const char[] name)
     EquipPlayerWeapon(target, iKnife2);
 }
 
-public void OnGameEnd(int winner, int loser)
+public void OnGameEnd(LR_End_Reason reason, int winner, int loser)
 {
     if (winner != -1)
     {

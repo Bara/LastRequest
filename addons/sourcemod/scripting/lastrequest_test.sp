@@ -58,8 +58,8 @@ public void OnGameStart(int requester, int opponent, const char[] shortname)
     PrintToChatAll("OnGameStart - Requester: %d, Opponent: %d, Shot Name: %s", requester, opponent, shortname);
 }
 
-public void OnGameEnd(int winner, int loser)
+public void OnGameEnd(LR_End_Reason reason, int winner, int loser)
 {
     PrintToChatAll("(OnGameEnd) called!");
-    PrintToChatAll("OnGameEnd - Winner: %d, Loser: %d", winner, loser);
+    PrintToChatAll("OnGameEnd - Reason: %d, Winner: %d, Loser: %d", reason, winner, loser);
 }

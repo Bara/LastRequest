@@ -249,7 +249,7 @@ public void Frame_SetAmmo(int userid)
     }
 }
 
-public void OnGameEnd(int winner, int loser)
+public void OnGameEnd(LR_End_Reason reason, int winner, int loser)
 {
     Core.Reset();
     

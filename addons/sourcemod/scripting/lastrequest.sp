@@ -154,7 +154,7 @@ public void OnClientDisconnect(int client)
 {
     if (LR_IsClientValid(client) && Player[client].InLR)
     {
-        LR_StopLastRequest(Player[client].Target, client);
+        LR_StopLastRequest(Unknown, Player[client].Target, client);
     }
 
     Player[client].Reset();
@@ -166,7 +166,7 @@ public Action Event_PlayerDeath(Event event, const char[] name, bool dontBroadca
     
     if (LR_IsClientValid(client) && Player[client].InLR)
     {
-        LR_StopLastRequest(Player[client].Target, client);
+        LR_StopLastRequest(Normal, Player[client].Target, client);
         return;
     }
     
@@ -184,7 +184,7 @@ public Action Timer_CheckTeams(Handle timer)
     {
         if (GetTeamCountAmount(CS_TEAM_T) == 0 || GetTeamCountAmount(CS_TEAM_CT) == 0)
         {
-            LR_StopLastRequest(-3);
+            LR_StopLastRequest(Server);
         }
     }
 }
@@ -312,7 +312,7 @@ public Action Command_StopLR(int client, int args)
 
     if (CheckCommandAccess(client, "lr_admin", ReadFlagString(sFlags), true))
     {
-        LR_StopLastRequest(-2, client);
+        LR_StopLastRequest(Admin, client);
         return;
     }
 
@@ -362,7 +362,7 @@ public int Menu_AskToStop(Menu menu, MenuAction action, int target, int param)
             PrintToChat(target, "You accepted the request from %N to stop this LR.", client); // TODO: Add translation
             PrintToChat(client, "%N has accepted your request to stop this LR.", target); // TODO: Add translation
 
-            LR_StopLastRequest(target, client);
+            LR_StopLastRequest(Unknown, target, client);
         }
         else
         {
@@ -698,14 +698,16 @@ public int Native_IsClientInLastRequest(Handle plugin, int numParams)
 
 public int Native_StopLastRequest(Handle plugin, int numParams)
 {
-    int winner = GetNativeCell(1);
-    int loser = GetNativeCell(2);
+    LR_End_Reason reason = view_as<LR_End_Reason>(GetNativeCell(1));
+    int winner = GetNativeCell(2);
+    int loser = GetNativeCell(3);
     
     LR_LoopClients(i)
     {
         if (GetClientTeam(i) == CS_TEAM_T && Player[i].InLR && Player[i].Target > 0)
         {
             Call_StartFunction(Player[i].Game.plugin, Player[i].Game.EndCB);
+            Call_PushCell(reason);
             Call_PushCell(winner);
             Call_PushCell(loser);
             Call_Finish();
@@ -715,19 +717,20 @@ public int Native_StopLastRequest(Handle plugin, int numParams)
             {
                 if (LR_IsClientValid(j))
                 {
-                    if (winner > 0)
+                    if (reason == Normal)
                     {
                         PrintToChat(j, "Last request over, Winner of %s is %N!", Player[i].Game.Name, winner); // TODO: Add translation
                     }
-                    else if (winner == -1)
+                    // TODO: Unknown?
+                    else if (reason == Tie)
                     {
                         PrintToChat(j, "Tie, Game has been ended!"); // TODO: Add translation
                     }
-                    else if (winner == -2)
+                    else if (reason == Admin)
                     {
-                        PrintToChat(j, "Last request cancled by Admin %N!", loser); // TODO: Add translation
+                        PrintToChat(j, "Last request cancled by Admin %N!", winner); // TODO: Add translation
                     }
-                    else if (winner == -3)
+                    else if (reason == Server)
                     {
                         PrintToChat(j, "Last request cancled by Server!"); // TODO: Add translation
                     }
