@@ -184,7 +184,7 @@ public Action Timer_CheckTeams(Handle timer)
     {
         if (GetTeamCountAmount(CS_TEAM_T) == 0 || GetTeamCountAmount(CS_TEAM_CT) == 0)
         {
-            LR_StopLastRequest();
+            LR_StopLastRequest(-3);
         }
     }
 }
@@ -720,6 +720,16 @@ public int Native_StopLastRequest(Handle plugin, int numParams)
                     }
                 }
             }
+            else if (winner == -1)
+            {
+                LR_LoopClients(j)
+                {
+                    if (LR_IsClientValid(j))
+                    {
+                        PrintToChat(j, "Tie, Game has been ended!"); // TODO: Add translation
+                    }
+                }
+            }
             else if (winner == -2)
             {
                 LR_LoopClients(j)
@@ -730,20 +740,27 @@ public int Native_StopLastRequest(Handle plugin, int numParams)
                     }
                 }
             }
+            else if (winner == -3)
+            {
+                LR_LoopClients(j)
+                {
+                    if (LR_IsClientValid(j))
+                    {
+                        PrintToChat(j, "Last request cancled by Server!"); // TODO: Add translation
+                    }
+                }
+            }
         }
     }
     
-    if (winner > 0)
+    if (winner > 1)
     {
         Player[winner].Reset();
-        Player[loser].Reset();
     }
-    else
+
+    if (loser > 1)
     {
-        LR_LoopClients(i)
-        {
-            Player[i].Reset();
-        }
+        Player[loser].Reset();
     }
 
     Core.SetState(false, false, false, false);
