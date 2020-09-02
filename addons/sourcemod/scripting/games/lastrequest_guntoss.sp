@@ -1,0 +1,342 @@
+#pragma semicolon 1
+#pragma newdecls required
+
+#include <sourcemod>
+#include <sdkhooks>
+#include <lastrequest>
+#include <autoexecconfig>
+
+#define LR_NAME "Gun Toss" // TODO: Replace this with a string buffer
+#define LR_SHORT  "guntoss"
+#define PLUGIN_NAME "Last Request - " ... LR_NAME
+
+enum struct General
+{
+    ConVar Enable;
+    ConVar Debug;
+    ConVar Knife;
+
+    char Weapon[32];
+
+    void Reset() {
+        this.Weapon[0] = '\0';
+    }
+}
+
+enum struct PlayerData {
+    int Weapon;
+
+    float Start[3];
+    float End[3];
+    float FinalEnd[3];
+
+    float Distance;
+
+    void Reset() {
+        this.Weapon = -1;
+
+        this.Start = NULL_VECTOR;
+        this.End = NULL_VECTOR;
+        this.FinalEnd = NULL_VECTOR;
+
+        this.Distance = 0.0;
+    }
+}
+
+General Core;
+PlayerData Player[MAXPLAYERS + 1];
+
+StringMap g_smWeapons = null;
+
+public Plugin myinfo =
+{
+    name = PLUGIN_NAME,
+    author = "Bara",
+    description = "",
+    version = "1.0.0",
+    url = "github.com/Bara"
+};
+
+public void OnPluginStart()
+{
+    AutoExecConfig_SetCreateDirectory(true);
+    AutoExecConfig_SetCreateFile(true);
+    AutoExecConfig_SetFile("guntoss", "lastrequest");
+    Core.Enable = AutoExecConfig_CreateConVar("guntoss_enable", "1", "Enable or disable gun toss?", _, true, 0.0, true, 1.0);
+    Core.Knife = AutoExecConfig_CreateConVar("guntoss_give_knife", "1", "Give players a knife too?", _, true, 0.0, true, 1.0);
+    AutoExecConfig_ExecuteFile();
+    AutoExecConfig_CleanFile();
+}
+
+public void OnConfigsExecuted()
+{
+    char sFile[PLATFORM_MAX_PATH + 1];
+    BuildPath(Path_SM, sFile, sizeof(sFile), "configs/lastrequest/guntoss_weapons.ini");
+
+    if (!FileExists(sFile))
+    {
+        SetFailState("Can not found the following file: \"%s\"", sFile);
+        return;
+    }
+
+    KeyValues kvConfig = new KeyValues("Weapons");
+
+    if (!kvConfig.ImportFromFile(sFile))
+    {
+        SetFailState("Can not read from the following file: \"%s\"", sFile);
+        return;
+    }
+
+    Core.Debug = FindConVar("lastrequest_debug");
+
+    delete g_smWeapons;
+    g_smWeapons = new StringMap();
+
+    if (kvConfig.GotoFirstSubKey(false))
+    {
+        char sClass[32];
+        char sName[64];
+
+        int iCount = 0;
+
+        do
+        {
+            kvConfig.GetSectionName(sClass, sizeof(sClass));
+            kvConfig.GetString(NULL_STRING, sName, sizeof(sName));
+
+            if (strlen(sClass) > 1 && strlen(sName) > 1)
+            {
+                if (Core.Debug.BoolValue)
+                {
+                    LogMessage("[Shot4Shot] Adding %s (Class: %s) to weapon stringmap.", sName, sClass);
+                }
+
+                g_smWeapons.SetString(sClass, sName, true);
+                iCount++;
+            }
+        }
+        while (kvConfig.GotoNextKey(false));
+
+        if (iCount == 0)
+        {
+            SetFailState("[Shot4Shot] No weapons found!");
+            return;
+        }
+    }
+
+    delete kvConfig;
+
+    if (!LR_RegisterGame(LR_SHORT, LR_NAME, OnGamePreStart, OnGameStart, OnGameEnd))
+    {
+        SetFailState("Can't register last request: %s", LR_SHORT);
+        return;
+    }
+}
+
+public void LR_OnOpenMenu(Menu menu)
+{
+    if (Core.Enable.BoolValue)
+    {
+        menu.AddItem(LR_SHORT, "Gun Toss"); // TODO: Add translation
+    }
+}
+
+public Action OnGamePreStart(int requester, int opponent, const char[] shortname)
+{
+    Menu menu = new Menu(Menu_WeaponSelection);
+    menu.SetTitle("Select weapon"); // TODO: Add translation
+
+    if (Core.Enable.BoolValue)
+    {
+        StringMapSnapshot snap = g_smWeapons.Snapshot();
+
+        char sName[32], sClass[32];
+
+        for (int i = 0; i < snap.Length; i++)
+        {
+            snap.GetKey(i, sClass, sizeof(sClass));
+            g_smWeapons.GetString(sClass, sName, sizeof(sName));
+            menu.AddItem(sClass, sName);
+        }
+
+        delete snap;
+    }
+
+    menu.ExitBackButton = false;
+    menu.ExitButton = false;
+    menu.Display(requester, LR_GetMenuTime());
+}
+
+public int Menu_WeaponSelection(Menu menu, MenuAction action, int client, int param)
+{
+    if (action == MenuAction_Select)
+    {
+        char sClass[32], sDisplay[32];
+        menu.GetItem(param, sClass, sizeof(sClass), _, sDisplay, sizeof(sDisplay));
+
+        strcopy(Core.Weapon, sizeof(General::Weapon), sClass);
+
+        LR_StartLastRequest(client, "Normal", sDisplay); // TODO: Add translation
+    }
+    else if (action == MenuAction_Cancel)
+    {
+        if (param == MenuCancel_Timeout)
+        {
+            PrintToChatAll("MenuCancel_Timeout %N", client); // TODO: Add message/translation or debug?
+
+            if (LR_GetTimeoutPunishment() == 1)
+            {
+                ForcePlayerSuicide(client);
+            }
+            else if (LR_GetTimeoutPunishment() == 2)
+            {
+                KickClient(client, "You was kicked due afk during menu selection."); // TODO: Add translation
+            }
+        }
+    }	
+    else if (action == MenuAction_End)
+    {
+        delete menu;
+    }
+}
+
+public void OnGameStart(int client, int target, const char[] name)
+{
+    if (Core.Knife.BoolValue)
+    {
+        int iWeapon = GivePlayerItem(client, "weapon_knife");
+        EquipPlayerWeapon(client, iWeapon);
+        iWeapon = GivePlayerItem(target, "weapon_knife");
+        EquipPlayerWeapon(target, iWeapon);
+    }
+
+    GivePlayerWeapon(client, -1, -1);
+    GivePlayerWeapon(target, -1, -1);
+
+    SDKHook(client, SDKHook_WeaponDrop, OnWeaponDrop);
+    SDKHook(target, SDKHook_WeaponDrop, OnWeaponDrop);
+}
+
+public Action OnWeaponDrop(int client, int weapon)
+{
+    if (weapon != EntRefToEntIndex(Player[client].Weapon))
+    {
+        return Plugin_Continue;
+    }
+
+    GetClientAbsOrigin(client, Player[client].Start);
+
+    CreateTimer(0.1, Timer_CheckPosition, GetClientUserId(client), TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+
+    return Plugin_Continue;
+}
+
+public Action Timer_CheckPosition(Handle timer, int userid)
+{
+    int client = GetClientOfUserId(userid);
+
+    if (!LR_IsClientValid(client))
+    {
+        LR_StopLastRequest(-3);
+        return Plugin_Stop;
+    }
+
+    int iWeapon = EntRefToEntIndex(Player[client].Weapon);
+
+    if (!IsValidEntity(iWeapon))
+    {
+        LR_StopLastRequest(-3);
+        return Plugin_Stop;
+    }
+
+    GetEntPropVector(iWeapon, Prop_Send, "m_vecOrigin", Player[client].FinalEnd);
+
+    if (!IsNullVector(Player[client].End) && GetVectorDistance(Player[client].End, Player[client].FinalEnd) < 3.0)
+    {
+        Player[client].Distance = GetVectorDistance(Player[client].End, Player[client].FinalEnd);
+
+        CheckPlayers(client);
+
+        return Plugin_Stop;
+    }
+
+    GetEntPropVector(iWeapon, Prop_Send, "m_vecOrigin", Player[client].End);
+
+    return Plugin_Continue;
+}
+
+void CheckPlayers(int client)
+{
+    int target = LR_GetClientOpponent(client);
+
+    if (!LR_IsClientValid(target))
+    {
+        LR_StopLastRequest(client, target);
+    }
+
+    if (Player[target].Distance <= 0.0)
+    {
+        return;
+    }
+
+    if (Player[client].Distance > Player[target].Distance)
+    {
+        LR_StopLastRequest(client, target);
+    }
+    else if (Player[target].Distance > Player[client].Distance)
+    {
+        LR_StopLastRequest(target, client);
+    }
+    else
+    {
+        LR_StopLastRequest(-1);
+    }
+}
+
+public void OnGameEnd(int winner, int loser)
+{
+    Core.Reset();
+    
+    if (winner != -1)
+    {
+        Player[winner].Reset();
+        SDKUnhook(winner, SDKHook_WeaponDrop, OnWeaponDrop);
+    }
+
+    if (loser != -1)
+    {
+        Player[loser].Reset();
+        SDKUnhook(loser, SDKHook_WeaponDrop, OnWeaponDrop);
+    }
+}
+
+void GivePlayerWeapon(int client, int clip = 0, int ammo = 0)
+{
+    int iWeapon = GivePlayerItem(client, Core.Weapon);
+    EquipPlayerWeapon(client, iWeapon);
+    Player[client].Weapon = EntIndexToEntRef(iWeapon);
+
+    SetAmmo(client, clip, ammo);
+}
+
+void SetAmmo(int client, int clip, int ammo = 0) // TODO Make it dynamically, when someone adds a primary it doesn't work.
+{
+    int iWeapon = GetPlayerWeaponSlot(client, CS_SLOT_SECONDARY);
+
+    if (IsValidEntity(EntRefToEntIndex(Player[client].Weapon)) && iWeapon == EntRefToEntIndex(Player[client].Weapon))
+    {
+        if (clip > -1)
+        {
+            SetEntProp(iWeapon, Prop_Send, "m_iClip1", clip);
+        }
+        
+        if (ammo > -1)
+        {
+            SetEntProp(iWeapon, Prop_Send, "m_iPrimaryReserveAmmoCount", ammo);
+        }
+    }
+    else
+    {
+        GivePlayerWeapon(client, clip);
+    }
+}
