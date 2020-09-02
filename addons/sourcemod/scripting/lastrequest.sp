@@ -710,41 +710,24 @@ public int Native_StopLastRequest(Handle plugin, int numParams)
             Call_PushCell(loser);
             Call_Finish();
 
-            if (winner > 0)
+            
+            LR_LoopClients(j)
             {
-                LR_LoopClients(j)
+                if (LR_IsClientValid(j))
                 {
-                    if (LR_IsClientValid(j))
+                    if (winner > 0)
                     {
-                        PrintToChat(j, "Last request over! ( Game: %s, Winner: %N, Loser: %N )", Player[i].Game.Name, winner, loser); // TODO: Add translation
+                        PrintToChat(j, "Last request over, Winner of %s is %N!", Player[i].Game.Name, winner); // TODO: Add translation
                     }
-                }
-            }
-            else if (winner == -1)
-            {
-                LR_LoopClients(j)
-                {
-                    if (LR_IsClientValid(j))
+                    else if (winner == -1)
                     {
                         PrintToChat(j, "Tie, Game has been ended!"); // TODO: Add translation
                     }
-                }
-            }
-            else if (winner == -2)
-            {
-                LR_LoopClients(j)
-                {
-                    if (LR_IsClientValid(j))
+                    else if (winner == -2)
                     {
                         PrintToChat(j, "Last request cancled by Admin %N!", loser); // TODO: Add translation
                     }
-                }
-            }
-            else if (winner == -3)
-            {
-                LR_LoopClients(j)
-                {
-                    if (LR_IsClientValid(j))
+                    else if (winner == -3)
                     {
                         PrintToChat(j, "Last request cancled by Server!"); // TODO: Add translation
                     }
