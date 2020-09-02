@@ -264,13 +264,13 @@ public void OnGameEnd(int winner, int loser)
     }
 }
 
-void GivePlayerWeapon(int client, int clip = 0)
+void GivePlayerWeapon(int client, int clip = 0, int ammo = 0)
 {
     int iWeapon = GivePlayerItem(client, Core.Weapon);
     EquipPlayerWeapon(client, iWeapon);
     Player[client].Weapon = EntIndexToEntRef(iWeapon);
 
-    SetAmmo(client, clip);
+    SetAmmo(client, clip, ammo);
 }
 
 void SetAmmo(int client, int clip, int ammo = 0) // TODO Make it dynamically, when someone adds a primary it doesn't work.
@@ -279,8 +279,15 @@ void SetAmmo(int client, int clip, int ammo = 0) // TODO Make it dynamically, wh
 
     if (IsValidEntity(EntRefToEntIndex(Player[client].Weapon)) && iWeapon == EntRefToEntIndex(Player[client].Weapon))
     {
-        SetEntProp(iWeapon, Prop_Send, "m_iClip1", clip);
-        SetEntProp(iWeapon, Prop_Send, "m_iPrimaryReserveAmmoCount", ammo);
+        if (clip > -1)
+        {
+            SetEntProp(iWeapon, Prop_Send, "m_iClip1", clip);
+        }
+        
+        if (ammo > -1)
+        {
+            SetEntProp(iWeapon, Prop_Send, "m_iPrimaryReserveAmmoCount", ammo);
+        }
     }
     else
     {
