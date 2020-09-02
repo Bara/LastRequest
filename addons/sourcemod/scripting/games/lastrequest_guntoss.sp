@@ -15,6 +15,7 @@ enum struct General
     ConVar Enable;
     ConVar Debug;
     ConVar Knife;
+    ConVar Unit;
 
     char Weapon[32];
 
@@ -64,6 +65,7 @@ public void OnPluginStart()
     AutoExecConfig_SetFile("guntoss", "lastrequest");
     Core.Enable = AutoExecConfig_CreateConVar("guntoss_enable", "1", "Enable or disable gun toss?", _, true, 0.0, true, 1.0);
     Core.Knife = AutoExecConfig_CreateConVar("guntoss_give_knife", "1", "Give players a knife too?", _, true, 0.0, true, 1.0);
+    Core.Unit = AutoExecConfig_CreateConVar("guntoss_unit", "0", "Show throwed distance in 0 - Units, 1 - Meters, 2 - Feet", _, true, 0.0, true, 2.0);
     AutoExecConfig_ExecuteFile();
     AutoExecConfig_CleanFile();
 }
@@ -254,6 +256,26 @@ public Action Timer_CheckPosition(Handle timer, int userid)
     if (!IsNullVector(Player[client].End) && GetVectorDistance(Player[client].End, Player[client].FinalEnd) < 3.0)
     {
         Player[client].Distance = GetVectorDistance(Player[client].End, Player[client].FinalEnd);
+
+        LR_LoopClients(i)
+        {
+            char sDistance[18];
+
+            if (Core.Unit.IntValue == 0)
+            {
+                Format(sDistance, sizeof(sDistance), "%.2f units", Player[client].Distance);
+            }
+            else if (Core.Unit.IntValue == 1)
+            {
+                Format(sDistance, sizeof(sDistance), "%.2f meters", Player[client].Distance * 0.01905);
+            }
+            else if (Core.Unit.IntValue == 2)
+            {
+                Format(sDistance, sizeof(sDistance), "%.2f feets", (Player[client].Distance * 0.01905) * 3.2808399);
+            }
+
+            PrintToChat(i, "%N throwed a distance of %s!", client, sDistance);
+        }
 
         CheckPlayers(client);
 
