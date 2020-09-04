@@ -40,8 +40,8 @@ public void OnPluginStart()
 
 public void OnMapStart()
 {
-    delete g_smGames;
-    g_smGames = new StringMap();
+    delete Core.Games;
+    Core.Games = new StringMap();
 
     Core.SetState(false, false, false, false);
 

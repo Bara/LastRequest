@@ -40,7 +40,7 @@ public int Native_RegisterLRGame(Handle plugin, int numParams)
             LogMessage("[%s] Name: %s, FullName: %s", LR_BASE_NAME, game.Name, game.FullName);
         }
 
-        return g_smGames.SetArray(game.Name, game, sizeof(Games));
+        return Core.Games.SetArray(game.Name, game, sizeof(Games));
     }
     
     return false;

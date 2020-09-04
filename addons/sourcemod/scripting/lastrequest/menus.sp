@@ -111,7 +111,7 @@ public int Menu_TMenu(Menu menu, MenuAction action, int client, int param)
         menu.GetItem(param, sParam, sizeof(sParam));
 
         Games game;
-        if (g_smGames.GetArray(sParam, game, sizeof(Games)))
+        if (Core.Games.GetArray(sParam, game, sizeof(Games)))
         {
             Player[client].Game = game;
         }

@@ -106,7 +106,7 @@ bool IsLRReady(int client)
 bool CheckLRShortName(const char[] name)
 {
     Games game;
-    return g_smGames.GetArray(name, game, sizeof(Games));
+    return Core.Games.GetArray(name, game, sizeof(Games));
 }
 
 void CheckTeams(bool openMenu = false)

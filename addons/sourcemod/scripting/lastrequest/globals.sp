@@ -3,6 +3,7 @@ enum struct Variables {
     bool CustomStart;
     bool Confirmation;
     bool RunningLR;
+    StringMap Games;
 
     GlobalForward OnMenu;
     GlobalForward OnLRAvailable;
@@ -47,19 +48,21 @@ enum struct Games
 enum struct PlayerData
 {
     bool InLR;
+
     int Target;
+
     Games Game;
+
     ArrayList Weapons;
 
     void Reset()
     {
         this.InLR = false;
         this.Target = -1;
+
         delete this.Weapons;
     }
 }
-
-StringMap g_smGames = null;
 
 Variables Core;
 Configs Config;
