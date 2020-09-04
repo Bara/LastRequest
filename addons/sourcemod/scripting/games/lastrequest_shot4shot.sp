@@ -172,16 +172,7 @@ public int Menu_WeaponSelection(Menu menu, MenuAction action, int client, int pa
     {
         if (param == MenuCancel_Timeout)
         {
-            PrintToChatAll("MenuCancel_Timeout %N", client); // TODO: Add message/translation or debug?
-
-            if (LR_GetTimeoutPunishment() == 1)
-            {
-                ForcePlayerSuicide(client);
-            }
-            else if (LR_GetTimeoutPunishment() == 2)
-            {
-                KickClient(client, "You was kicked due afk during menu selection."); // TODO: Add translation
-            }
+            LR_MenuTimeout(client);
         }
     }	
     else if (action == MenuAction_End)

@@ -90,6 +90,7 @@ native void LR_StartLastRequest(int requester, char[] mode, char[] weapon, int h
 
 native int LR_GetMenuTime();
 native int LR_GetTimeoutPunishment();
+native void LR_MenuTimeout(int client);
 
 stock bool IsLastRequestAvailable()
 {

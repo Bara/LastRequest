@@ -94,6 +94,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
     CreateNative("LR_StartLastRequest", Native_StartLastRequest);
     CreateNative("LR_GetMenuTime", Native_GetMenuTime);
     CreateNative("LR_GetTimeoutPunishment", Native_GetTimeoutPunishment);
+    CreateNative("LR_MenuTimeout", Native_MenuTimeout);
     
     Core.OnMenu = new GlobalForward("LR_OnOpenMenu", ET_Ignore, Param_Cell);
     Core.OnLRAvailable = new GlobalForward("LR_OnLastRequestAvailable", ET_Ignore, Param_Cell);
@@ -110,8 +111,8 @@ public void OnPluginStart()
     AutoExecConfig_SetFile("core", "lastrequest");
     Config.Debug = AutoExecConfig_CreateConVar("lastrequest_debug", "1", "Show/Log debug messages?", _, true, 0.0, true, 1.0);
     Config.MenuTime = AutoExecConfig_CreateConVar("lastrequest_menu_time", "30", "Time in seconds to choose a last request");
-    Config.OpenMenu = AutoExecConfig_CreateConVar("lastrequest_open_menu", "1", "Open last request menu (on player death only) for the last player?", _, true, 0.0, true, 1.0);
-    Config.AvailableSounds = AutoExecConfig_CreateConVar("lastrequest_available_sounds", "3", "How many last request available to you have? 0 to disable it");
+    Config.OpenMenu = AutoExecConfig_CreateConVar("lastrequest_open_menu", "0", "Open last request menu (on player death only) for the last player?", _, true, 0.0, true, 1.0);
+    Config.AvailableSounds = AutoExecConfig_CreateConVar("lastrequest_available_sounds", "0", "How many last request available to you have? 0 to disable it");
     Config.AvailablePath = AutoExecConfig_CreateConVar("lastrequet_available_path", "lastrequest/availableX.mp3", "Sounds for available last request");
     Config.StartCountdown = AutoExecConfig_CreateConVar("lastrequest_start_countdown", "3", "Countdown after accepting game until the game starts", _, true, 3.0);
     Config.CountdownPath = AutoExecConfig_CreateConVar("lastrequest_countdown_path", "lastrequest/countdownX.mp3", "Sounds for 3...2...1...Go ( Go = 0 )");
@@ -374,19 +375,7 @@ public int Menu_AskToStop(Menu menu, MenuAction action, int target, int param)
     {
         if (param == MenuCancel_Timeout)
         {
-            if (Config.Debug.BoolValue)
-            {
-                PrintToChatAll("MenuCancel_Timeout %N", target); // TODO: Add message/translation or debug?
-            }
-
-            if (Config.TimeoutPunishment.IntValue == 1)
-            {
-                ForcePlayerSuicide(target);
-            }
-            else if (Config.TimeoutPunishment.IntValue == 2)
-            {
-                KickClient(target, "You was kicked due afk during menu selection."); // TODO: Add translation
-            }
+            LR_MenuTimeout(target);
         }
     }	
     else if (action == MenuAction_End)
@@ -473,16 +462,7 @@ public int Menu_LastRequest(Menu menu, MenuAction action, int client, int param)
     {
         if (param == MenuCancel_Timeout)
         {
-            PrintToChatAll("MenuCancel_Timeout %N", client); // TODO: Add message/translation or debug?
-
-            if (Config.TimeoutPunishment.IntValue == 1)
-            {
-                ForcePlayerSuicide(client);
-            }
-            else if (Config.TimeoutPunishment.IntValue == 2)
-            {
-                KickClient(client, "You was kicked due afk during lr menu selection."); // TODO: Add translation
-            }
+            LR_MenuTimeout(client);
         }
         else if (param == MenuCancel_Exit)
         {
@@ -534,16 +514,7 @@ public int Menu_TMenu(Menu menu, MenuAction action, int client, int param)
     {
         if (param == MenuCancel_Timeout)
         {
-            PrintToChatAll("MenuCancel_Timeout %N", client); // TODO: Add message/translation or debug?
-
-            if (Config.TimeoutPunishment.IntValue == 1)
-            {
-                ForcePlayerSuicide(client);
-            }
-            else if (Config.TimeoutPunishment.IntValue == 2)
-            {
-                KickClient(client, "You was kicked due afk during lr menu selection."); // TODO: Add translation
-            }
+            LR_MenuTimeout(client);
         }
         else if (param == MenuCancel_Exit)
         {
@@ -632,16 +603,7 @@ public int Menu_AskForConfirmation(Menu menu, MenuAction action, int target, int
     {
         if (param == MenuCancel_Timeout)
         {
-            PrintToChatAll("MenuCancel_Timeout %N", target); // TODO: Add message/translation or debug?
-
-            if (Config.TimeoutPunishment.IntValue == 1)
-            {
-                ForcePlayerSuicide(target);
-            }
-            else if (Config.TimeoutPunishment.IntValue == 2)
-            {
-                KickClient(target, "You was kicked due afk during menu selection."); // TODO: Add translation
-            }
+            LR_MenuTimeout(target);
         }
     }	
     else if (action == MenuAction_End)
@@ -721,7 +683,10 @@ public int Native_StopLastRequest(Handle plugin, int numParams)
                     {
                         PrintToChat(j, "Last request over, Winner of %s is %N!", Player[i].Game.Name, winner); // TODO: Add translation
                     }
-                    // TODO: Unknown?
+                    else if (reason == Unknown)
+                    {
+                        // TODO: Unknown?
+                    }
                     else if (reason == Tie)
                     {
                         PrintToChat(j, "Tie, Game has been ended!"); // TODO: Add translation
@@ -941,4 +906,23 @@ public int Native_GetMenuTime(Handle plugin, int numParams)
 public int Native_GetTimeoutPunishment(Handle plugin, int numParams)
 {
     return Config.TimeoutPunishment.IntValue;
+}
+
+public int Native_MenuTimeout(Handle plugin, int numParams)
+{
+    int client = GetNativeCell(0);
+
+    if (Config.Debug.BoolValue)
+    {
+        PrintToChatAll("MenuCancel_Timeout %N", client); // TODO: Add message/translation or debug?
+    }
+
+    if (Config.TimeoutPunishment.IntValue == 1)
+    {
+        ForcePlayerSuicide(client);
+    }
+    else if (Config.TimeoutPunishment.IntValue == 2)
+    {
+        KickClient(client, "You was kicked due afk during menu selection."); // TODO: Add translation
+    }
 }
