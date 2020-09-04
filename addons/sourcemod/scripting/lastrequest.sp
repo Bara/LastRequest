@@ -93,7 +93,6 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
     CreateNative("LR_StopLastRequest", Native_StopLastRequest);
     CreateNative("LR_StartLastRequest", Native_StartLastRequest);
     CreateNative("LR_GetMenuTime", Native_GetMenuTime);
-    CreateNative("LR_GetTimeoutPunishment", Native_GetTimeoutPunishment);
     CreateNative("LR_MenuTimeout", Native_MenuTimeout);
     
     Core.OnMenu = new GlobalForward("LR_OnOpenMenu", ET_Ignore, Param_Cell);
@@ -901,11 +900,6 @@ public int Native_GetClientOpponent(Handle plugin, int numParams)
 public int Native_GetMenuTime(Handle plugin, int numParams)
 {
     return Config.MenuTime.IntValue;
-}
-
-public int Native_GetTimeoutPunishment(Handle plugin, int numParams)
-{
-    return Config.TimeoutPunishment.IntValue;
 }
 
 public int Native_MenuTimeout(Handle plugin, int numParams)
