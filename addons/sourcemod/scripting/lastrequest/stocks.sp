@@ -109,59 +109,6 @@ bool CheckLRShortName(const char[] name)
     return g_smGames.GetArray(name, game, sizeof(Games));
 }
 
-void StartCountdown(int seconds, int client)
-{
-    DataPack pack = new DataPack();
-    pack.WriteCell(seconds);
-    pack.WriteCell(GetClientUserId(client));
-    CreateTimer(0.0, Timer_Countdown, pack);
-}
-
-public Action Timer_Countdown(Handle timer, DataPack pack)
-{
-    pack.Reset();
-    int seconds = ReadPackCell(pack);
-    int client = GetClientOfUserId(ReadPackCell(pack));
-    delete pack;
-    
-    if (LR_IsClientValid(client) && LR_IsClientValid(Player[client].Target))
-    {
-        LR_LoopClients(i)
-        {
-            if (seconds == 1)
-            {
-                PrintToChat(i, "Last request started in %d second ( Game: %s, Player: %N, Opponent: %N)", seconds, Player[client].Game.Name, client, Player[client].Target); // TODO: Add translation
-            }
-            else if (seconds == 0)
-            {
-                PrintToChat(i, "Go! ( Game: %s, Player: %N, Opponent: %N)", Player[client].Game.Name, client, Player[client].Target); // TODO: Add translation
-                StartLastRequest(client);
-            }
-            else
-            {
-                PrintToChat(i, "Last request started in %d seconds ( Game: %s, Player: %N, Opponent: %N)", seconds, Player[client].Game.Name, client, Player[client].Target); // TODO: Add translation
-            }
-            
-            if (Config.StartCountdown.BoolValue)
-            {
-                PlayCountdownSounds(seconds);
-            }
-        }
-    }
-    
-    seconds--;
-
-    if (seconds >= 0)
-    {
-        pack = new DataPack();
-        pack.WriteCell(seconds);
-        pack.WriteCell(GetClientUserId(client));
-        CreateTimer(1.0, Timer_Countdown, pack);
-    }
-
-    return Plugin_Stop;
-}
-
 void CheckTeams(bool openMenu = false)
 {
     int iTIndex = -1;
@@ -242,4 +189,72 @@ void PlayAvailableSound()
     IntToString(id, sid, sizeof(sid));
     ReplaceString(sFile, sizeof(sFile), "X", sid, true);
     EmitSoundToAllAny(sFile);
+}
+
+void StartCountdown(int seconds, int client)
+{
+    DataPack pack = new DataPack();
+    pack.WriteCell(seconds);
+    pack.WriteCell(GetClientUserId(client));
+    CreateTimer(0.0, Timer_Countdown, pack);
+}
+
+public Action Timer_Countdown(Handle timer, DataPack pack)
+{
+    pack.Reset();
+    int seconds = ReadPackCell(pack);
+    int client = GetClientOfUserId(ReadPackCell(pack));
+    delete pack;
+    
+    if (LR_IsClientValid(client) && LR_IsClientValid(Player[client].Target))
+    {
+        LR_LoopClients(i)
+        {
+            if (seconds == 1)
+            {
+                PrintToChat(i, "Last request started in %d second ( Game: %s, Player: %N, Opponent: %N)", seconds, Player[client].Game.Name, client, Player[client].Target); // TODO: Add translation
+            }
+            else if (seconds == 0)
+            {
+                PrintToChat(i, "Go! ( Game: %s, Player: %N, Opponent: %N)", Player[client].Game.Name, client, Player[client].Target); // TODO: Add translation
+                StartLastRequest(client);
+            }
+            else
+            {
+                PrintToChat(i, "Last request started in %d seconds ( Game: %s, Player: %N, Opponent: %N)", seconds, Player[client].Game.Name, client, Player[client].Target); // TODO: Add translation
+            }
+            
+            if (Config.StartCountdown.BoolValue)
+            {
+                PlayCountdownSounds(seconds);
+            }
+        }
+    }
+    
+    seconds--;
+
+    if (seconds >= 0)
+    {
+        pack = new DataPack();
+        pack.WriteCell(seconds);
+        pack.WriteCell(GetClientUserId(client));
+        CreateTimer(1.0, Timer_Countdown, pack);
+    }
+
+    return Plugin_Stop;
+}
+
+public Action Timer_CheckTeams(Handle timer)
+{
+    if (!Core.RunningLR && !Core.CustomStart && !Core.Confirmation)
+    {
+        CheckTeams();
+    }
+    else if (Core.RunningLR || Core.CustomStart || Core.Confirmation)
+    {
+        if (GetTeamCountAmount(CS_TEAM_T) == 0 || GetTeamCountAmount(CS_TEAM_CT) == 0)
+        {
+            LR_StopLastRequest(Server);
+        }
+    }
 }

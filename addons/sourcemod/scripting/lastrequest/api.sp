@@ -1,3 +1,20 @@
+void InitAPI()
+{
+    CreateNative("LR_RegisterGame", Native_RegisterLRGame);
+    CreateNative("LR_IsLastRequestAvailable", Native_IsLastRequestAvailable);
+    CreateNative("LR_IsClientInLastRequest", Native_IsClientInLastRequest);
+    CreateNative("LR_GetClientOpponent", Native_GetClientOpponent);
+    CreateNative("LR_StopLastRequest", Native_StopLastRequest);
+    CreateNative("LR_StartLastRequest", Native_StartLastRequest);
+    CreateNative("LR_GetMenuTime", Native_GetMenuTime);
+    CreateNative("LR_MenuTimeout", Native_MenuTimeout);
+    
+    Core.OnMenu = new GlobalForward("LR_OnOpenMenu", ET_Ignore, Param_Cell);
+    Core.OnLRAvailable = new GlobalForward("LR_OnLastRequestAvailable", ET_Ignore, Param_Cell);
+
+    RegPluginLibrary("lastrequest");
+}
+
 public int Native_RegisterLRGame(Handle plugin, int numParams)
 {
     char name[LR_MAX_SHORTNAME_LENGTH];
