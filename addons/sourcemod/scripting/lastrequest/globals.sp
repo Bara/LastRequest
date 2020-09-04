@@ -49,11 +49,13 @@ enum struct PlayerData
     bool InLR;
     int Target;
     Games Game;
+    ArrayList Weapons;
 
     void Reset()
     {
         this.InLR = false;
         this.Target = -1;
+        delete this.Weapons;
     }
 }
 

@@ -8,7 +8,6 @@
 
 #define LR_NAME "Shot 4 Shot" // TODO: Replace this with a string buffer
 #define LR_SHORT  "shot4shot"
-#define PLUGIN_NAME "Last Request - " ... LR_NAME
 
 enum struct General
 {
@@ -38,7 +37,7 @@ StringMap g_smWeapons = null;
 
 public Plugin myinfo =
 {
-    name = PLUGIN_NAME,
+    name = LR_PLUGIN_NAME ... LR_NAME,
     author = "Bara",
     description = "",
     version = "1.0.0",

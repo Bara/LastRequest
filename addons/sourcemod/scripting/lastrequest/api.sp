@@ -37,7 +37,7 @@ public int Native_RegisterLRGame(Handle plugin, int numParams)
 
         if (Config.Debug.BoolValue)
         {
-            LogMessage("[%s] Name: %s, FullName: %s", PLUGIN_NAME, game.Name, game.FullName);
+            LogMessage("[%s] Name: %s, FullName: %s", LR_BASE_NAME, game.Name, game.FullName);
         }
 
         return g_smGames.SetArray(game.Name, game, sizeof(Games));
@@ -116,11 +116,13 @@ public int Native_StopLastRequest(Handle plugin, int numParams)
     
     if (winner > 1)
     {
+        // TODO: Give weapons back, before we delete the weapon arraylist
         Player[winner].Reset();
     }
 
     if (loser > 1)
     {
+        // TODO: Give weapons back, before we delete the weapon arraylist
         Player[loser].Reset();
     }
 

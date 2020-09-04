@@ -6,13 +6,12 @@
 
 #include <lastrequest>
 
-#define LR_SHORTNAME "test"
-#define LR_FULLNAME "test"
-#define PLUGIN_NAME "Last Request - " ... LR_SHORTNAME
+#define LR_NAME "Test"
+#define LR_SHORT "test"
 
 public Plugin myinfo =
 {
-    name = PLUGIN_NAME,
+    name = LR_PLUGIN_NAME ... LR_NAME,
     author = "Bara",
     description = "",
     version = "1.0.0",
@@ -21,9 +20,9 @@ public Plugin myinfo =
 
 public void OnConfigsExecuted()
 {
-    if (!LR_RegisterGame(LR_SHORTNAME, LR_FULLNAME, OnGamePreStart, OnGameStart, OnGameEnd))
+    if (!LR_RegisterGame(LR_SHORT, LR_NAME, OnGamePreStart, OnGameStart, OnGameEnd))
     {
-        SetFailState("Can't register last request: %s", LR_SHORTNAME);
+        SetFailState("Can't register last request: %s", LR_SHORT);
     }
 }
 
@@ -31,7 +30,7 @@ public void LR_OnOpenMenu(Menu menu)
 {
     PrintToChatAll("(LR_OnOpenMenu) called!");
     
-    menu.AddItem(LR_SHORTNAME, "Test");
+    menu.AddItem(LR_SHORT, "Test");
 }
 
 public bool Hosties_OnLastRequestAvailable(int client)

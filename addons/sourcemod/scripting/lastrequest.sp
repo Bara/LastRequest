@@ -7,8 +7,6 @@
 #include <emitsoundany>
 #include <autoexecconfig>
 
-#define PLUGIN_NAME "Last Request"
-
 #include "lastrequest/globals.sp"
 #include "lastrequest/api.sp"
 #include "lastrequest/config.sp"
@@ -19,7 +17,7 @@
 
 public Plugin myinfo =
 {
-    name = PLUGIN_NAME,
+    name = LR_PLUGIN_NAME ... "Core",
     author = "Bara",
     description = "",
     version = "1.0.0",

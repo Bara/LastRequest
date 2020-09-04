@@ -8,7 +8,6 @@
 
 #define LR_NAME "Knife Fight" // TODO: Replace this with a string buffer
 #define LR_SHORT  "knifeFight"
-#define PLUGIN_NAME "Last Request - " ... LR_NAME
 
 enum struct Modes
 {
@@ -57,7 +56,7 @@ PlayerData Player[MAXPLAYERS + 1];
 
 public Plugin myinfo =
 {
-    name = PLUGIN_NAME,
+    name = LR_PLUGIN_NAME ... LR_NAME,
     author = "Bara",
     description = "",
     version = "1.0.0",
