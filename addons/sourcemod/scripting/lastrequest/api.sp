@@ -30,9 +30,6 @@ public int Native_RegisterLRGame(Handle plugin, int numParams)
         strcopy(game.Name, sizeof(Games::Name), shortName);
         strcopy(game.FullName, sizeof(Games::FullName), fullname);
 
-        char sFullName[LR_MAX_FULLNAME_LENGTH];
-        strcopy(game.FullName, sizeof(Games::FullName), sFullName);
-
         game.plugin = plugin;
         game.PreStartCB = GetNativeFunction(3);
         game.StartCB = GetNativeFunction(4);
