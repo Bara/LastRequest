@@ -17,23 +17,26 @@ void InitAPI()
 
 public int Native_RegisterLRGame(Handle plugin, int numParams)
 {
-    char name[LR_MAX_SHORTNAME_LENGTH];
+    char shortName[LR_MAX_SHORTNAME_LENGTH];
+    char fullname[LR_MAX_FULLNAME_LENGTH];
     
-    GetNativeString(1, name, sizeof(name));
+    GetNativeString(1, shortName, sizeof(shortName));
+    GetNativeString(2, shortName, sizeof(shortName));
     
-    if (!CheckLRShortName(name))
+    if (!CheckLRShortName(shortName))
     {
         Games game;
 
-        strcopy(game.Name, sizeof(Games::Name), name);
+        strcopy(game.Name, sizeof(Games::Name), shortName);
+        strcopy(game.FullName, sizeof(Games::FullName), fullname);
 
         char sFullName[LR_MAX_FULLNAME_LENGTH];
         strcopy(game.FullName, sizeof(Games::FullName), sFullName);
 
         game.plugin = plugin;
-        game.PreStartCB = GetNativeFunction(2);
-        game.StartCB = GetNativeFunction(3);
-        game.EndCB = GetNativeFunction(4);
+        game.PreStartCB = GetNativeFunction(3);
+        game.StartCB = GetNativeFunction(4);
+        game.EndCB = GetNativeFunction(5);
 
         if (Config.Debug.BoolValue)
         {
@@ -159,7 +162,7 @@ public int Native_GetMenuTime(Handle plugin, int numParams)
 
 public int Native_MenuTimeout(Handle plugin, int numParams)
 {
-    int client = GetNativeCell(0);
+    int client = GetNativeCell(1);
 
     if (Config.Debug.BoolValue)
     {

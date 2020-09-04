@@ -3,6 +3,7 @@ enum struct Variables {
     bool CustomStart;
     bool Confirmation;
     bool RunningLR;
+    
     StringMap Games;
 
     GlobalForward OnMenu;
