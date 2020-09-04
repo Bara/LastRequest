@@ -9,71 +9,8 @@
 
 #define PLUGIN_NAME "Last Request"
 
-enum struct Variables {
-    bool IsAvailable;
-    bool CustomStart;
-    bool Confirmation;
-    bool RunningLR;
-
-    GlobalForward OnMenu;
-    GlobalForward OnLRAvailable;
-
-    void SetState(bool available, bool custom, bool confirmation, bool running) {
-        this.IsAvailable = available;
-        this.CustomStart = custom;
-        this.Confirmation = confirmation;
-        this.RunningLR = running;
-    }
-}
-
-enum struct Configs {
-    ConVar MenuTime;
-    ConVar OpenMenu;
-    ConVar AvailableSounds;
-    ConVar AvailablePath;
-    ConVar StartCountdown;
-    ConVar CountdownPath;
-    ConVar TimeoutPunishment;
-    ConVar AdminFlag;
-    ConVar PlayerCanStop;
-    ConVar Debug;
-}
-
-enum struct Games
-{
-    int Health;
-    int Kevlar;
-    bool Helm;
-
-    char Name[LR_MAX_SHORTNAME_LENGTH];
-    char FullName[LR_MAX_FULLNAME_LENGTH];
-
-    Handle plugin;
-
-    Function PreStartCB;
-    Function StartCB;
-    Function EndCB;
-}
-
-enum struct PlayerData
-{
-    bool InLR;
-    int Target;
-    Games Game;
-
-    void Reset()
-    {
-        this.InLR = false;
-        this.Target = -1;
-    }
-}
-
-StringMap g_smGames = null;
-
-Variables Core;
-Configs Config;
-
-PlayerData Player[MAXPLAYERS + 1];
+#include "lastrequest/globals.sp"
+#include "lastrequest/api.sp"
 
 public Plugin myinfo =
 {
@@ -526,28 +463,6 @@ public int Menu_TMenu(Menu menu, MenuAction action, int client, int param)
     }
 }
 
-public int Native_StartLastRequest(Handle plugin, int numParams)
-{
-    Core.SetState(false, false, true, false);
-
-    int client = GetNativeCell(1);
-
-    char sMode[32];
-    GetNativeString(2, sMode, sizeof(sMode));
-
-    char sWeapon[32];
-    GetNativeString(3, sWeapon, sizeof(sWeapon));
-
-    Player[client].Game.Health = GetNativeCell(4);
-    Player[client].Game.Kevlar = GetNativeCell(5);
-    Player[client].Game.Helm = GetNativeCell(6);
-
-    if (Core.Confirmation && !Core.CustomStart && !Core.RunningLR)
-    {
-        AskForConfirmation(client, sMode, sWeapon);
-    }
-}
-
 void AskForConfirmation(int client, const char[] mode, const char[] weapon)
 {
     int iTarget = LR_GetClientOpponent(client);
@@ -618,107 +533,6 @@ public int Menu_Empty(Menu menu, MenuAction action, int client, int param)
         delete menu;
     }
     return 0;
-}
-
-public int Native_RegisterLRGame(Handle plugin, int numParams)
-{
-    char name[LR_MAX_SHORTNAME_LENGTH];
-    
-    GetNativeString(1, name, sizeof(name));
-    
-    if (!CheckLRShortName(name))
-    {
-        Games game;
-
-        strcopy(game.Name, sizeof(Games::Name), name);
-
-        char sFullName[LR_MAX_FULLNAME_LENGTH];
-        strcopy(game.FullName, sizeof(Games::FullName), sFullName);
-
-        game.plugin = plugin;
-        game.PreStartCB = GetNativeFunction(2);
-        game.StartCB = GetNativeFunction(3);
-        game.EndCB = GetNativeFunction(4);
-
-        if (Config.Debug.BoolValue)
-        {
-            LogMessage("[%s] Name: %s, FullName: %s", PLUGIN_NAME, game.Name, game.FullName);
-        }
-
-        return g_smGames.SetArray(game.Name, game, sizeof(Games));
-    }
-    
-    return false;
-}
-
-public int Native_IsClientInLastRequest(Handle plugin, int numParams)
-{
-    int client = GetNativeCell(1);
-    return Player[client].InLR;
-}
-
-public int Native_StopLastRequest(Handle plugin, int numParams)
-{
-    LR_End_Reason reason = view_as<LR_End_Reason>(GetNativeCell(1));
-    int winner = GetNativeCell(2);
-    int loser = GetNativeCell(3);
-    
-    LR_LoopClients(i)
-    {
-        if (GetClientTeam(i) == CS_TEAM_T && Player[i].InLR && Player[i].Target > 0)
-        {
-            Call_StartFunction(Player[i].Game.plugin, Player[i].Game.EndCB);
-            Call_PushCell(reason);
-            Call_PushCell(winner);
-            Call_PushCell(loser);
-            Call_Finish();
-
-            
-            LR_LoopClients(j)
-            {
-                if (LR_IsClientValid(j))
-                {
-                    if (reason == Normal)
-                    {
-                        PrintToChat(j, "Last request over, Winner of %s is %N!", Player[i].Game.Name, winner); // TODO: Add translation
-                    }
-                    else if (reason == Unknown)
-                    {
-                        // TODO: Unknown?
-                    }
-                    else if (reason == Tie)
-                    {
-                        PrintToChat(j, "Tie, Game has been ended!"); // TODO: Add translation
-                    }
-                    else if (reason == Admin)
-                    {
-                        PrintToChat(j, "Last request cancled by Admin %N!", winner); // TODO: Add translation
-                    }
-                    else if (reason == Server)
-                    {
-                        PrintToChat(j, "Last request cancled by Server!"); // TODO: Add translation
-                    }
-                }
-            }
-        }
-    }
-    
-    if (winner > 1)
-    {
-        Player[winner].Reset();
-    }
-
-    if (loser > 1)
-    {
-        Player[loser].Reset();
-    }
-
-    Core.SetState(false, false, false, false);
-}
-
-public int Native_IsLastRequestAvailable(Handle plugin, int numParams)
-{
-    return Core.IsAvailable;
 }
 
 bool CheckLRShortName(const char[] name)
@@ -883,40 +697,4 @@ bool IsLRReady(int client)
     }
 
     return true;
-}
-
-public int Native_GetClientOpponent(Handle plugin, int numParams)
-{
-    int client = GetNativeCell(1);
-
-    if (Player[client].InLR)
-    {
-        return Player[client].Target;
-    }
-
-    return -1;
-}
-
-public int Native_GetMenuTime(Handle plugin, int numParams)
-{
-    return Config.MenuTime.IntValue;
-}
-
-public int Native_MenuTimeout(Handle plugin, int numParams)
-{
-    int client = GetNativeCell(0);
-
-    if (Config.Debug.BoolValue)
-    {
-        PrintToChatAll("MenuCancel_Timeout %N", client); // TODO: Add message/translation or debug?
-    }
-
-    if (Config.TimeoutPunishment.IntValue == 1)
-    {
-        ForcePlayerSuicide(client);
-    }
-    else if (Config.TimeoutPunishment.IntValue == 2)
-    {
-        KickClient(client, "You was kicked due afk during menu selection."); // TODO: Add translation
-    }
 }
