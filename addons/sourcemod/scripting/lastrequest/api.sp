@@ -21,7 +21,7 @@ public int Native_RegisterLRGame(Handle plugin, int numParams)
     char fullname[LR_MAX_FULLNAME_LENGTH];
     
     GetNativeString(1, shortName, sizeof(shortName));
-    GetNativeString(2, shortName, sizeof(shortName));
+    GetNativeString(2, fullname, sizeof(fullname));
     
     if (!CheckLRShortName(shortName))
     {
