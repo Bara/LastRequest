@@ -274,11 +274,8 @@ public void OnGameStart(int client, int target, const char[] name)
         SetGravity(target, true);
     }
     
-    int iKnife1 = GivePlayerItem(client, "weapon_knife");
-    int iKnife2 = GivePlayerItem(target, "weapon_knife");
-    
-    EquipPlayerWeapon(client, iKnife1);
-    EquipPlayerWeapon(target, iKnife2);
+    LR_GivePlayerItem(client, "weapon_knife");
+    LR_GivePlayerItem(target, "weapon_knife");
 }
 
 public void OnGameEnd(LR_End_Reason reason, int winner, int loser)
