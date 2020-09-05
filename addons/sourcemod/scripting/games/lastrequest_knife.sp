@@ -75,7 +75,7 @@ public void OnPluginStart()
     Config.LowGrav = AutoExecConfig_CreateConVar("knife_lowgrav_mode_enable", "1", "Enable or disable LowGrav mode?", _, true, 0.0, true, 1.0);
     Config.GravValue = AutoExecConfig_CreateConVar("knife_lowgrav_value", "0.6", "Set gravity value for low gravity mode. Default is 0.6 and general default is 1.0", _, true, 0.1, true, 1.0);
     Config.HighSpeed = AutoExecConfig_CreateConVar("knife_highspeed_mode_enable", "1", "Enable or disable HighSpeed mode?", _, true, 0.0, true, 1.0);
-    Config.GravValue = AutoExecConfig_CreateConVar("knife_highspeed_value", "2.2", "Set speed value for high speed mode. Default is 2.2 and general default is 1.0", _, true, 1.1);
+    Config.SpeedValue = AutoExecConfig_CreateConVar("knife_highspeed_value", "2.2", "Set speed value for high speed mode. Default is 2.2 and general default is 1.0", _, true, 1.1);
     Config.Drugs = AutoExecConfig_CreateConVar("knife_drugs_mode_enable", "1", "Enable or disable Drugs mode?", _, true, 0.0, true, 1.0);
     Config.ThirdPerson = AutoExecConfig_CreateConVar("knife_thirdperson_mode_enable", "1", "Enable or disable ThirdPerson mode?", _, true, 0.0, true, 1.0);
     AutoExecConfig_ExecuteFile();
@@ -310,11 +310,7 @@ public Action OnTraceAttack(int victim, int &attacker, int &inflictor, float &da
     
     if ((StrContains(sWeapon, "knife", false) != -1) || (StrContains(sWeapon, "bayonet", false) != -1))
     {
-        if (Mode.Normal || Mode.LowHP)
-        {
-            return Plugin_Continue;
-        }
-        else if (Mode.Backstab)
+        if (Mode.Backstab)
         {
             float fAAngle[3], fVAngle[3], fBAngle[3];
             
@@ -326,6 +322,10 @@ public Action OnTraceAttack(int victim, int &attacker, int &inflictor, float &da
             {
                 return Plugin_Continue;
             }
+        }
+        else
+        {
+            return Plugin_Continue; // TODO: Is this okay?
         }
     }
     

@@ -67,6 +67,8 @@ public void OnPluginStart()
     Core.Unit = AutoExecConfig_CreateConVar("guntoss_unit", "0", "Show throwed distance in 0 - Units, 1 - Meters, 2 - Feet", _, true, 0.0, true, 2.0);
     AutoExecConfig_ExecuteFile();
     AutoExecConfig_CleanFile();
+    
+    AddCommandListener(Command_Drop, "drop");
 }
 
 public void OnConfigsExecuted()
@@ -204,13 +206,17 @@ public void OnGameStart(int client, int target, const char[] name)
 
     GivePlayerWeapon(client, -1, -1);
     GivePlayerWeapon(target, -1, -1);
-
-    SDKHook(client, SDKHook_WeaponDrop, OnWeaponDrop);
-    SDKHook(target, SDKHook_WeaponDrop, OnWeaponDrop);
 }
 
-public Action OnWeaponDrop(int client, int weapon)
+public Action Command_Drop(int client, const char[] command, int args)
 {
+    if (!LR_IsClientInLastRequest(client))
+    {
+        return Plugin_Continue;
+    }
+    
+    int weapon = GetEntPropEnt(client, Prop_Send, "m_hActiveWeapon");
+
     if (weapon != EntRefToEntIndex(Player[client].Weapon))
     {
         return Plugin_Continue;
@@ -312,13 +318,11 @@ public void OnGameEnd(LR_End_Reason reason, int winner, int loser)
     if (winner != -1)
     {
         Player[winner].Reset();
-        SDKUnhook(winner, SDKHook_WeaponDrop, OnWeaponDrop);
     }
 
     if (loser != -1)
     {
         Player[loser].Reset();
-        SDKUnhook(loser, SDKHook_WeaponDrop, OnWeaponDrop);
     }
 }
 

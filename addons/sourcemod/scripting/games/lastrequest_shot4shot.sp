@@ -235,6 +235,10 @@ public void Frame_SetAmmo(int userid)
 
     if (LR_IsClientValid(iTarget) && IsPlayerAlive(iTarget))
     {
+        if (Core.Debug.BoolValue)
+        {
+            PrintToChatAll("%N ammo set to 1", iTarget);
+        }
         SetAmmo(iTarget, 1);
     }
 }
@@ -266,6 +270,11 @@ void GivePlayerWeapon(int client, int clip = 0, int ammo = 0)
 void SetAmmo(int client, int clip, int ammo = 0) // TODO Make it dynamically, when someone adds a primary it doesn't work.
 {
     int iWeapon = GetPlayerWeaponSlot(client, CS_SLOT_SECONDARY);
+
+    if (Core.Debug.BoolValue)
+    {
+        PrintToChatAll("Weapon: %d/%d, Struct: %d/%d (Valid: %d)", iWeapon, EntIndexToEntRef(iWeapon), EntRefToEntIndex(Player[client].Weapon), Player[client].Weapon, IsValidEntity(EntRefToEntIndex(Player[client].Weapon)));
+    }
 
     if (IsValidEntity(EntRefToEntIndex(Player[client].Weapon)) && iWeapon == EntRefToEntIndex(Player[client].Weapon))
     {
