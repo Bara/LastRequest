@@ -189,6 +189,39 @@ stock void LR_SetHealthKevlarHelm(int client, int target, int health, int kevlar
     }
 }
 
+stock int LR_GivePlayerItem(int client, const char[] classname)
+{
+    int iWeapon = GivePlayerItem(client, classname);
+    EquipPlayerWeapon(client, iWeapon);
+    
+    return iWeapon;
+}
+
+stock bool LR_SetWeaponAmmo(int client, int weapon, int clip, int ammo = 0, bool giveWeapon = false) // TODO Make it dynamically, when someone adds a primary it doesn't work.
+{
+    for(int i = 0; i < GetEntPropArraySize(client, Prop_Send, "m_hMyWeapons"); i++)
+    {
+        int iWeapon = GetEntPropEnt(client, Prop_Send, "m_hMyWeapons", i);
+
+        if (IsValidEntity(weapon) && iWeapon == weapon)
+        {
+            if (clip > -1)
+            {
+                SetEntProp(iWeapon, Prop_Send, "m_iClip1", clip);
+            }
+            
+            if (ammo > -1)
+            {
+                SetEntProp(iWeapon, Prop_Send, "m_iPrimaryReserveAmmoCount", ammo);
+            }
+
+            return true;
+        }
+    }
+
+    return false;
+}
+
 public SharedPlugin __pl_lr = 
 {
     name = "lastrequest",

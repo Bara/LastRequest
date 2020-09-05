@@ -101,7 +101,7 @@ public void OnConfigsExecuted()
             {
                 if (Core.Debug.BoolValue)
                 {
-                    LogMessage("[Shot 4 Shot] Adding %s (Class: %s) to weapon stringmap.", sName, sClass);
+                    LogMessage("Adding %s (Class: %s) to weapon stringmap.", sName, sClass);
                 }
 
                 g_smWeapons.SetString(sClass, sName, true);
@@ -186,9 +186,11 @@ public int Menu_WeaponSelection(Menu menu, MenuAction action, int client, int pa
 
 public void OnGameStart(int client, int target, const char[] name)
 {
+    int iWeapon = -1;
+
     if (Core.Knife.BoolValue)
     {
-        int iWeapon = GivePlayerItem(client, "weapon_knife");
+        iWeapon = GivePlayerItem(client, "weapon_knife");
         EquipPlayerWeapon(client, iWeapon);
         iWeapon = GivePlayerItem(target, "weapon_knife");
         EquipPlayerWeapon(target, iWeapon);
@@ -198,8 +200,13 @@ public void OnGameStart(int client, int target, const char[] name)
 
     int iRandom = GetRandomInt(0, 1);
 
-    GivePlayerWeapon(client, iRandom ? 1 : 0);
-    GivePlayerWeapon(target, iRandom ? 0 : 1);
+    iWeapon = LR_GivePlayerItem(client, Core.Weapon);
+    LR_SetWeaponAmmo(client, iWeapon, iRandom ? 1 : 0);
+    Player[client].Weapon = EntIndexToEntRef(iWeapon);
+
+    iWeapon = LR_GivePlayerItem(target, Core.Weapon);
+    LR_SetWeaponAmmo(target, iWeapon, iRandom ? 0 : 1);
+    Player[target].Weapon = EntIndexToEntRef(iWeapon);
 }
 
 public Action Event_WeaponFire(Event event, const char[] name, bool dontBroadcast)
@@ -274,7 +281,7 @@ public void Frame_SetAmmo(int userid)
             PrintToChatAll("%N ammo set to 1", iTarget);
         }
 
-        SetAmmo(iTarget, 1);
+        LR_SetWeaponAmmo(iTarget, EntRefToEntIndex(Player[iTarget].Weapon), 1);
     }
 }
 
@@ -290,41 +297,5 @@ public void OnGameEnd(LR_End_Reason reason, int winner, int loser)
     if (loser > 0)
     {
         Player[loser].Reset();
-    }
-}
-
-void GivePlayerWeapon(int client, int clip = 0, int ammo = 0)
-{
-    int iWeapon = GivePlayerItem(client, Core.Weapon);
-    EquipPlayerWeapon(client, iWeapon);
-    Player[client].Weapon = EntIndexToEntRef(iWeapon);
-
-    SetAmmo(client, clip, ammo);
-}
-
-void SetAmmo(int client, int clip, int ammo = 0) // TODO Make it dynamically, when someone adds a primary it doesn't work.
-{
-    int iWeapon = GetPlayerWeaponSlot(client, CS_SLOT_SECONDARY);
-
-    if (Core.Debug.BoolValue)
-    {
-        PrintToChatAll("Weapon: %d/%d, Struct: %d/%d (Valid: %d)", iWeapon, EntIndexToEntRef(iWeapon), EntRefToEntIndex(Player[client].Weapon), Player[client].Weapon, IsValidEntity(EntRefToEntIndex(Player[client].Weapon)));
-    }
-
-    if (IsValidEntity(EntRefToEntIndex(Player[client].Weapon)) && iWeapon == EntRefToEntIndex(Player[client].Weapon))
-    {
-        if (clip > -1)
-        {
-            SetEntProp(iWeapon, Prop_Send, "m_iClip1", clip);
-        }
-        
-        if (ammo > -1)
-        {
-            SetEntProp(iWeapon, Prop_Send, "m_iPrimaryReserveAmmoCount", ammo);
-        }
-    }
-    else
-    {
-        GivePlayerWeapon(client, clip);
     }
 }

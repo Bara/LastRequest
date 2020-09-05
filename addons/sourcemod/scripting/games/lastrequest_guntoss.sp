@@ -121,7 +121,7 @@ public void OnConfigsExecuted()
             {
                 if (Core.Debug.BoolValue)
                 {
-                    LogMessage("[Gun Toss] Adding %s (Class: %s) to weapon stringmap.", sName, sClass);
+                    LogMessage("Adding %s (Class: %s) to weapon stringmap.", sName, sClass);
                 }
 
                 g_smWeapons.SetString(sClass, sName, true);
@@ -214,8 +214,8 @@ public void OnGameStart(int client, int target, const char[] name)
         EquipPlayerWeapon(target, iWeapon);
     }
 
-    GivePlayerWeapon(client, -1, -1);
-    GivePlayerWeapon(target, -1, -1);
+    LR_GivePlayerItem(client, Core.Weapon);
+    LR_GivePlayerItem(target, Core.Weapon);
 
     Core.Active = true;
 
@@ -348,36 +348,5 @@ public void OnGameEnd(LR_End_Reason reason, int winner, int loser)
     if (loser > 0)
     {
         Player[loser].Reset();
-    }
-}
-
-void GivePlayerWeapon(int client, int clip = 0, int ammo = 0)
-{
-    int iWeapon = GivePlayerItem(client, Core.Weapon);
-    EquipPlayerWeapon(client, iWeapon);
-    Player[client].Weapon = EntIndexToEntRef(iWeapon);
-
-    SetAmmo(client, clip, ammo);
-}
-
-void SetAmmo(int client, int clip, int ammo = 0) // TODO Make it dynamically, when someone adds a primary it doesn't work.
-{
-    int iWeapon = GetPlayerWeaponSlot(client, CS_SLOT_SECONDARY);
-
-    if (IsValidEntity(EntRefToEntIndex(Player[client].Weapon)) && iWeapon == EntRefToEntIndex(Player[client].Weapon))
-    {
-        if (clip > -1)
-        {
-            SetEntProp(iWeapon, Prop_Send, "m_iClip1", clip);
-        }
-        
-        if (ammo > -1)
-        {
-            SetEntProp(iWeapon, Prop_Send, "m_iPrimaryReserveAmmoCount", ammo);
-        }
-    }
-    else
-    {
-        GivePlayerWeapon(client, clip);
     }
 }
