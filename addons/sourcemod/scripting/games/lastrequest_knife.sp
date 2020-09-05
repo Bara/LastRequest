@@ -19,6 +19,7 @@ enum struct Modes
     bool HighSpeed; // TODO Need Test
     bool Drugs; // TODO Need Test
     bool ThirdPerson; // TODO Need Test
+    bool OldTP;
 
     UserMsg Fade;
 
@@ -31,6 +32,7 @@ enum struct Modes
         this.HighSpeed = false;
         this.Drugs = false;
         this.ThirdPerson = false;
+        this.OldTP = false;
     }
 }
 
@@ -46,6 +48,7 @@ enum struct Configs {
     ConVar SpeedValue;
     ConVar Drugs;
     ConVar ThirdPerson;
+    ConVar EnableTP;
 }
 
 enum struct PlayerData {
@@ -100,6 +103,8 @@ public void OnConfigsExecuted()
         SetFailState("Can't register last request: %s", LR_SHORT);
         return;
     }
+
+    Config.EnableTP = FindConVar("sv_allow_thirdperson");
 }
 
 public void LR_OnOpenMenu(Menu menu)
@@ -244,6 +249,9 @@ public void OnGameStart(int client, int target, const char[] name)
 
     if (Mode.ThirdPerson)
     {
+        Mode.OldTP = Config.EnableTP.BoolValue;
+        Config.EnableTP.SetBool(true);
+
         SetThirdPerson(client, true);
         SetThirdPerson(target, true);
     }
@@ -298,6 +306,7 @@ public void OnGameEnd(LR_End_Reason reason, int winner, int loser)
         SetThirdPerson(loser, false);
     }
     
+    Config.EnableTP.SetBool(Mode.OldTP);
     Mode.Reset();
 }
 
@@ -393,21 +402,11 @@ void SetThirdPerson(int client, bool third)
 {
     if (third)
     {
-        SetEntPropEnt(client, Prop_Send, "m_hObserverTarget", 0);
-
-        SetEntProp(client, Prop_Send, "m_iObserverMode", 1);
-        SetEntProp(client, Prop_Send, "m_bDrawViewmodel", 0);
-        SetEntProp(client, Prop_Send, "m_iFOV", 120);
-        SetEntProp(client, Prop_Send, "m_iDefaultFOV", 120);
+        ClientCommand(client, "thirdperson");
     }
     else
     {
-        SetEntPropEnt(client, Prop_Send, "m_hObserverTarget", 1);
-
-        SetEntProp(client, Prop_Send, "m_iObserverMode", 0);
-        SetEntProp(client, Prop_Send, "m_bDrawViewmodel", 1);
-        SetEntProp(client, Prop_Send, "m_iFOV", 90);
-        SetEntProp(client, Prop_Send, "m_iDefaultFOV", 90);
+        ClientCommand(client, "firstperson");
     }
 }
 
