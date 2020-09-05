@@ -37,6 +37,7 @@ enum struct Configs {
     ConVar Backstab;
     ConVar LowHP;
     ConVar Drunk;
+    ConVar DrunkMultiplier;
     ConVar LowGrav;
     ConVar GravValue;
     ConVar HighSpeed;
@@ -72,6 +73,7 @@ public void OnPluginStart()
     Config.Backstab = AutoExecConfig_CreateConVar("knife_backstab_mode_enable", "1", "Enable or disable Backstab mode?", _, true, 0.0, true, 1.0);
     Config.LowHP = AutoExecConfig_CreateConVar("knife_35hp_mode_enable", "1", "Enable or disable 35HP mode?", _, true, 0.0, true, 1.0);
     Config.Drunk = AutoExecConfig_CreateConVar("knife_drunk_mode_enable", "1", "Enable or disable Drunk mode?", _, true, 0.0, true, 1.0);
+    Config.DrunkMultiplier = AutoExecConfig_CreateConVar("knife_drunk_mode_multiplier", "4.0", "The multiplier used for how drunk the player will be during the drunken boxing knife fight.", _, true, 0.0);
     Config.LowGrav = AutoExecConfig_CreateConVar("knife_lowgrav_mode_enable", "1", "Enable or disable LowGrav mode?", _, true, 0.0, true, 1.0);
     Config.GravValue = AutoExecConfig_CreateConVar("knife_lowgrav_value", "0.6", "Set gravity value for low gravity mode. Default is 0.6 and general default is 1.0", _, true, 0.1, true, 1.0);
     Config.HighSpeed = AutoExecConfig_CreateConVar("knife_highspeed_mode_enable", "1", "Enable or disable HighSpeed mode?", _, true, 0.0, true, 1.0);
@@ -224,6 +226,11 @@ public void OnGameStart(int client, int target, const char[] name)
     {
         SetDrunk(client, true);
         SetDrunk(target, true);
+
+        DataPack pack = new DataPack();
+        pack.WriteCell(GetClientUserId(client));
+        pack.WriteCell(GetClientUserId(target));
+        CreateTimer(1.0, Timer_SetDrunk, pack, TIMER_FLAG_NO_MAPCHANGE);
     }
 
     if (Mode.ThirdPerson)
@@ -452,4 +459,53 @@ void SetGravity(int client, bool gravity)
             SetEntityGravity(client, Player[client].Gravity);
         }
     }
+}
+
+public Action Timer_SetDrunk(Handle timer, DataPack pack)
+{
+    pack.Reset();
+    int client = GetClientOfUserId(pack.ReadCell());
+    int target = GetClientOfUserId(pack.ReadCell());
+    delete pack;
+
+    if (Mode.Drunk && LR_IsClientValid(client) && LR_IsClientInLastRequest(client) && LR_IsClientValid(target) && LR_IsClientInLastRequest(target))
+    {
+        float fPunch[3];
+        switch (GetRandomInt(1, 160) % 4)
+        {
+            case 0:
+            {
+                fPunch[0] = Config.DrunkMultiplier.FloatValue * 5.0;
+                fPunch[1] = Config.DrunkMultiplier.FloatValue * 5.0;
+                fPunch[2] = Config.DrunkMultiplier.FloatValue * -5.0;
+            }
+            case 1:
+            {
+                fPunch[0] = Config.DrunkMultiplier.FloatValue * -5.0;
+                fPunch[1] = Config.DrunkMultiplier.FloatValue * -5.0;
+                fPunch[2] = Config.DrunkMultiplier.FloatValue * 5.0;
+            }
+            case 2:
+            {
+                fPunch[0] = Config.DrunkMultiplier.FloatValue * 5.0;
+                fPunch[1] = Config.DrunkMultiplier.FloatValue * -5.0;
+                fPunch[2] = Config.DrunkMultiplier.FloatValue * 5.0;
+            }
+            case 3:
+            {
+                fPunch[0] = Config.DrunkMultiplier.FloatValue * -5.0;
+                fPunch[1] = Config.DrunkMultiplier.FloatValue * 5.0;
+                fPunch[2] = Config.DrunkMultiplier.FloatValue * -5.0;
+            }					
+        }
+        SetEntPropVector(client, Prop_Send, "m_vecPunchAngle", fPunch, 1);	
+        SetEntPropVector(target, Prop_Send, "m_vecPunchAngle", fPunch, 1);
+
+        pack = new DataPack();
+        pack.WriteCell(GetClientUserId(client));
+        pack.WriteCell(GetClientUserId(target));
+        CreateTimer(1.0, Timer_SetDrunk, pack, TIMER_FLAG_NO_MAPCHANGE);
+    }
+
+    return Plugin_Stop;
 }
