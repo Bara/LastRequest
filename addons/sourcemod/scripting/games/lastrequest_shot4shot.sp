@@ -14,6 +14,7 @@ enum struct General
     ConVar Enable;
     ConVar Debug;
     ConVar Knife;
+    ConVar Drop;
 
     char Weapon[32];
 
@@ -55,6 +56,7 @@ public void OnPluginStart()
     AutoExecConfig_SetFile("shot4shot", "lastrequest");
     Core.Enable = AutoExecConfig_CreateConVar("shot4shot_enable", "1", "Enable or disable shot 4 shot?", _, true, 0.0, true, 1.0);
     Core.Knife = AutoExecConfig_CreateConVar("shot4shot_give_knife", "1", "Give players a knife too?", _, true, 0.0, true, 1.0);
+    Core.Drop = AutoExecConfig_CreateConVar("shot4shot_block_drop", "1", "Block weapon drop during active shot4shot?",_, true, 0.0, true, 1.0);
     AutoExecConfig_ExecuteFile();
     AutoExecConfig_CleanFile();
 
@@ -203,6 +205,31 @@ public void OnGameStart(int client, int target, const char[] name)
     iWeapon = LR_GivePlayerItem(target, Core.Weapon);
     LR_SetWeaponAmmo(target, iWeapon, iRandom ? 0 : 1);
     Player[target].Weapon = EntIndexToEntRef(iWeapon);
+
+    SDKHook(client, SDKHook_WeaponDrop, OnWeaponDrop);
+    SDKHook(target, SDKHook_WeaponDrop, OnWeaponDrop);
+}
+
+public Action OnWeaponDrop(int client, int weapon)
+{
+    if (!Core.Active)
+    {
+        return Plugin_Continue;
+    }
+
+    if (!LR_IsClientInLastRequest(client))
+    {
+        return Plugin_Continue;
+    }
+
+    int iWeapon = EntRefToEntIndex(Player[client].Weapon);
+
+    if (weapon == iWeapon)
+    {
+        return Plugin_Handled;
+    }
+
+    return Plugin_Continue;
 }
 
 public Action Event_WeaponFire(Event event, const char[] name, bool dontBroadcast)
@@ -287,11 +314,13 @@ public void OnGameEnd(LR_End_Reason reason, int winner, int loser)
     
     if (winner > 0)
     {
+        SDKHook(winner, SDKHook_WeaponDrop, OnWeaponDrop);
         Player[winner].Reset();
     }
 
     if (loser > 0)
     {
+        SDKHook(loser, SDKHook_WeaponDrop, OnWeaponDrop);
         Player[loser].Reset();
     }
 }
