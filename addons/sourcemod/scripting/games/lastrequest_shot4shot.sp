@@ -101,7 +101,7 @@ public void OnConfigsExecuted()
             {
                 if (Core.Debug.BoolValue)
                 {
-                    LogMessage("[Shot4Shot] Adding %s (Class: %s) to weapon stringmap.", sName, sClass);
+                    LogMessage("[Shot 4 Shot] Adding %s (Class: %s) to weapon stringmap.", sName, sClass);
                 }
 
                 g_smWeapons.SetString(sClass, sName, true);
@@ -112,7 +112,7 @@ public void OnConfigsExecuted()
 
         if (iCount == 0)
         {
-            SetFailState("[Shot4Shot] No weapons found!");
+            SetFailState("[Shot 4 Shot] No weapons found!");
             return;
         }
     }
@@ -273,7 +273,7 @@ public void Frame_SetAmmo(int userid)
         {
             PrintToChatAll("%N ammo set to 1", iTarget);
         }
-        
+
         SetAmmo(iTarget, 1);
     }
 }
