@@ -15,11 +15,16 @@ enum struct General
     ConVar Debug;
     ConVar Knife;
     ConVar Unit;
+    ConVar Interval;
 
     char Weapon[32];
 
+    bool Active;
+
     void Reset() {
         this.Weapon[0] = '\0';
+
+        this.Active = false;
     }
 }
 
@@ -32,6 +37,8 @@ enum struct PlayerData {
 
     float Distance;
 
+    bool Dropped;
+
     void Reset() {
         this.Weapon = -1;
 
@@ -40,6 +47,8 @@ enum struct PlayerData {
         this.FinalEnd = NULL_VECTOR;
 
         this.Distance = 0.0;
+
+        this.Dropped = false;
     }
 }
 
@@ -65,6 +74,7 @@ public void OnPluginStart()
     Core.Enable = AutoExecConfig_CreateConVar("guntoss_enable", "1", "Enable or disable gun toss?", _, true, 0.0, true, 1.0);
     Core.Knife = AutoExecConfig_CreateConVar("guntoss_give_knife", "1", "Give players a knife too?", _, true, 0.0, true, 1.0);
     Core.Unit = AutoExecConfig_CreateConVar("guntoss_unit", "0", "Show throwed distance in 0 - Units, 1 - Meters, 2 - Feet", _, true, 0.0, true, 2.0);
+    Core.Interval = AutoExecConfig_CreateConVar("guntoss_interval", "5", "Check interval after weapon drop. (Default: 3)", _, true, 1.0);
     AutoExecConfig_ExecuteFile();
     AutoExecConfig_CleanFile();
     
@@ -206,11 +216,15 @@ public void OnGameStart(int client, int target, const char[] name)
 
     GivePlayerWeapon(client, -1, -1);
     GivePlayerWeapon(target, -1, -1);
+
+    Core.Active = true;
+
+    SDKHook(client, SDKHook_WeaponCanUse, OnWeaponCanUse);
 }
 
 public Action Command_Drop(int client, const char[] command, int args)
 {
-    if (!LR_IsClientInLastRequest(client))
+    if (!Core.Active && !LR_IsClientInLastRequest(client))
     {
         return Plugin_Continue;
     }
@@ -223,8 +237,19 @@ public Action Command_Drop(int client, const char[] command, int args)
     }
 
     GetClientAbsOrigin(client, Player[client].Start);
+    Player[client].Dropped = true;
 
-    CreateTimer(0.5, Timer_CheckPosition, GetClientUserId(client), TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+    CreateTimer(Core.Interval.FloatValue, Timer_CheckPosition, GetClientUserId(client), TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+
+    return Plugin_Continue;
+}
+
+public Action OnWeaponCanUse(int client, int weapon)
+{
+    if (Core.Active && LR_IsClientInLastRequest(client) && Player[client].Dropped)
+    {
+        return Plugin_Handled;
+    }
 
     return Plugin_Continue;
 }
@@ -315,12 +340,12 @@ public void OnGameEnd(LR_End_Reason reason, int winner, int loser)
 {
     Core.Reset();
     
-    if (winner != -1)
+    if (winner > 0)
     {
         Player[winner].Reset();
     }
 
-    if (loser != -1)
+    if (loser > 0)
     {
         Player[loser].Reset();
     }
