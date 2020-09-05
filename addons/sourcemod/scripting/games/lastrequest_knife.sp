@@ -20,6 +20,8 @@ enum struct Modes
     bool Drugs; // TODO Need Test
     bool ThirdPerson; // TODO Need Test
 
+    UserMsg Fade;
+
     void Reset() {
         this.Normal = false;
         this.Backstab = false;
@@ -82,6 +84,8 @@ public void OnPluginStart()
     Config.ThirdPerson = AutoExecConfig_CreateConVar("knife_thirdperson_mode_enable", "1", "Enable or disable ThirdPerson mode?", _, true, 0.0, true, 1.0);
     AutoExecConfig_ExecuteFile();
     AutoExecConfig_CleanFile();
+
+    Mode.Fade = GetUserMessageId("Fade");
 }
 
 public void OnConfigsExecuted()
@@ -241,8 +245,10 @@ public void OnGameStart(int client, int target, const char[] name)
 
     if (Mode.Drugs)
     {
-        SetDrugs(client, true);
-        SetDrugs(target, true);
+        DataPack pack = new DataPack();
+        pack.WriteCell(GetClientUserId(client));
+        pack.WriteCell(GetClientUserId(target));
+        CreateTimer(1.0, Timer_SetDrugs, pack, TIMER_FLAG_NO_MAPCHANGE);
     }
 
     if (Mode.HighSpeed)
@@ -279,7 +285,6 @@ public void OnGameEnd(LR_End_Reason reason, int winner, int loser)
 
         SetDrunk(winner, false);
         SetThirdPerson(winner, false);
-        SetDrugs(winner, false);
     }
 
     if (loser != -1)
@@ -289,7 +294,6 @@ public void OnGameEnd(LR_End_Reason reason, int winner, int loser)
 
         SetDrunk(loser, false);
         SetThirdPerson(loser, false);
-        SetDrugs(loser, false);
     }
     
     Mode.Reset();
@@ -356,11 +360,6 @@ public void OnThink(int client)
         SetThirdPerson(client, true);
     }
 
-    if (Mode.Drugs)
-    {
-        SetDrugs(client, true);
-    }
-
     if (Mode.HighSpeed)
     {
         SetSpeed(client, true);
@@ -407,18 +406,6 @@ void SetThirdPerson(int client, bool third)
         SetEntProp(client, Prop_Send, "m_bDrawViewmodel", 1);
         SetEntProp(client, Prop_Send, "m_iFOV", 90);
         SetEntProp(client, Prop_Send, "m_iDefaultFOV", 90);
-    }
-}
-
-void SetDrugs(int client, bool drugs)
-{
-    if (drugs)
-    {
-        ServerCommand("sm_drug #%d 1", GetClientUserId(client));
-    }
-    else
-    {
-        ServerCommand("sm_drug #%d 0", GetClientUserId(client));
     }
 }
 
@@ -505,6 +492,84 @@ public Action Timer_SetDrunk(Handle timer, DataPack pack)
         pack.WriteCell(GetClientUserId(client));
         pack.WriteCell(GetClientUserId(target));
         CreateTimer(1.0, Timer_SetDrunk, pack, TIMER_FLAG_NO_MAPCHANGE);
+    }
+
+    return Plugin_Stop;
+}
+
+public Action Timer_SetDrugs(Handle timer, DataPack pack)
+{
+    pack.Reset();
+    int client = GetClientOfUserId(pack.ReadCell());
+    int target = GetClientOfUserId(pack.ReadCell());
+    delete pack;
+
+    if (Mode.Drugs && LR_IsClientValid(client) && LR_IsClientInLastRequest(client) && LR_IsClientValid(target) && LR_IsClientInLastRequest(target))
+    {
+        float fAngle1[3];
+        float fAngle2[3];
+        GetClientEyeAngles(client, fAngle1);
+        GetClientEyeAngles(target, fAngle2);
+        
+        fAngle1[2] = GetRandomFloat(-25.0, 25.0);
+        fAngle2[2] = GetRandomFloat(-25.0, 25.0);
+        
+        TeleportEntity(client, NULL_VECTOR, fAngle1, NULL_VECTOR);
+        TeleportEntity(target, NULL_VECTOR, fAngle2, NULL_VECTOR);
+        
+        int clients[3];
+        clients[0] = client;
+        clients[1] = target;
+        
+        int duration = 255;
+        int holdtime = 255;
+        int flags = 0x0002;
+        int color[4] = { 0, 0, 0, 128 };
+        color[0] = GetRandomInt(0,255);
+        color[1] = GetRandomInt(0,255);
+        color[2] = GetRandomInt(0,255);
+
+        Handle message = StartMessageEx(Mode.Fade, clients, 1);
+        Protobuf pb = UserMessageToProtobuf(message);
+        pb.SetInt("duration", duration);
+        pb.SetInt("hold_time", holdtime);
+        pb.SetInt("flags", flags);
+        pb.SetColor("clr", color);
+        EndMessage();
+
+        pack = new DataPack();
+        pack.WriteCell(GetClientUserId(client));
+        pack.WriteCell(GetClientUserId(target));
+        CreateTimer(1.0, Timer_SetDrugs, pack, TIMER_FLAG_NO_MAPCHANGE);
+    }
+    else
+    {
+        float fAngle1[3], fAngle2[3];
+        GetClientEyeAngles(client, fAngle1);
+        GetClientEyeAngles(target, fAngle2);
+
+        fAngle1[2] = 0.0;
+        fAngle2[2] = 0.0;
+
+        TeleportEntity(client, NULL_VECTOR, fAngle1, NULL_VECTOR);
+        TeleportEntity(target, NULL_VECTOR, fAngle2, NULL_VECTOR);
+
+        int iClients[3];
+        iClients[0] = client;
+        iClients[0] = target;
+
+        int duration = 1536;
+        int holdtime = 1536;
+        int flags = (0x0001 | 0x0010);
+        int color[4] = { 0, 0, 0, 0 };
+
+        Handle message = StartMessageEx(Mode.Fade, iClients, 1);
+        Protobuf pb = UserMessageToProtobuf(message);
+        pb.SetInt("duration", duration);
+        pb.SetInt("hold_time", holdtime);
+        pb.SetInt("flags", flags);
+        pb.SetColor("clr", color);
+        EndMessage();
     }
 
     return Plugin_Stop;
