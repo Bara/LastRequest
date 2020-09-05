@@ -114,13 +114,13 @@ public int Native_StopLastRequest(Handle plugin, int numParams)
         }
     }
     
-    if (winner > 1)
+    if (winner > 0)
     {
         // TODO: Give weapons back, before we delete the weapon arraylist
         Player[winner].Reset();
     }
 
-    if (loser > 1)
+    if (loser > 0)
     {
         // TODO: Give weapons back, before we delete the weapon arraylist
         Player[loser].Reset();
