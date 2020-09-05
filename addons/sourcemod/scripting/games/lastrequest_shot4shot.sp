@@ -17,8 +17,12 @@ enum struct General
 
     char Weapon[32];
 
+    bool Active;
+
     void Reset() {
         this.Weapon[0] = '\0';
+
+        this.Active = false;
     }
 }
 
@@ -190,6 +194,8 @@ public void OnGameStart(int client, int target, const char[] name)
         EquipPlayerWeapon(target, iWeapon);
     }
 
+    Core.Active = true;
+
     int iRandom = GetRandomInt(0, 1);
 
     GivePlayerWeapon(client, iRandom ? 1 : 0);
@@ -198,6 +204,11 @@ public void OnGameStart(int client, int target, const char[] name)
 
 public Action Event_WeaponFire(Event event, const char[] name, bool dontBroadcast)
 {
+    if (!Core.Active)
+    {
+        return;
+    }
+    
     if (Core.Debug.BoolValue)
     {
         PrintToChatAll("Event_WeaponFire 1");
