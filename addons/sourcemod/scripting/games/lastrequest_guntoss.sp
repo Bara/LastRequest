@@ -21,6 +21,8 @@ enum struct General
 
     bool Active;
 
+    StringMap Weapons;
+
     void Reset() {
         this.Weapon[0] = '\0';
 
@@ -54,8 +56,6 @@ enum struct PlayerData {
 
 General Core;
 PlayerData Player[MAXPLAYERS + 1];
-
-StringMap g_smWeapons = null;
 
 public Plugin myinfo =
 {
@@ -102,8 +102,8 @@ public void OnConfigsExecuted()
 
     Core.Debug = FindConVar("lastrequest_debug");
 
-    delete g_smWeapons;
-    g_smWeapons = new StringMap();
+    delete Core.Weapons;
+    Core.Weapons = new StringMap();
 
     if (kvConfig.GotoFirstSubKey(false))
     {
@@ -124,7 +124,7 @@ public void OnConfigsExecuted()
                     LogMessage("Adding %s (Class: %s) to weapon stringmap.", sName, sClass);
                 }
 
-                g_smWeapons.SetString(sClass, sName, true);
+                Core.Weapons.SetString(sClass, sName, true);
                 iCount++;
             }
         }
@@ -161,14 +161,14 @@ public Action OnGamePreStart(int requester, int opponent, const char[] shortname
 
     if (Core.Enable.BoolValue)
     {
-        StringMapSnapshot snap = g_smWeapons.Snapshot();
+        StringMapSnapshot snap = Core.Weapons.Snapshot();
 
         char sName[32], sClass[32];
 
         for (int i = 0; i < snap.Length; i++)
         {
             snap.GetKey(i, sClass, sizeof(sClass));
-            g_smWeapons.GetString(sClass, sName, sizeof(sName));
+            Core.Weapons.GetString(sClass, sName, sizeof(sName));
             menu.AddItem(sClass, sName);
         }
 
