@@ -292,8 +292,8 @@ public void OnGameStart(int client, int target, const char[] name)
         SetGravity(target, true);
     }
     
-    LR_GivePlayerItem(client, "weapon_knife");
-    LR_GivePlayerItem(target, "weapon_knife");
+    GivePlayerItem(client, "weapon_knife");
+    GivePlayerItem(target, "weapon_knife");
 }
 
 public void OnGameEnd(LR_End_Reason reason, int winner, int loser)
@@ -498,8 +498,8 @@ public Action Timer_SetDrunk(Handle timer, DataPack pack)
                 fPunch[2] = Config.DrunkMultiplier.FloatValue * -5.0;
             }					
         }
-        SetEntPropVector(client, Prop_Send, "m_aimPunchAngle", fPunch, 1);	
-        SetEntPropVector(target, Prop_Send, "m_aimPunchAngle", fPunch, 1);
+        SetEntPropVector(client, Prop_Send, "m_aimPunchAngle", fPunch);	
+        SetEntPropVector(target, Prop_Send, "m_aimPunchAngle", fPunch);
 
         pack = new DataPack();
         pack.WriteCell(GetClientUserId(client));
