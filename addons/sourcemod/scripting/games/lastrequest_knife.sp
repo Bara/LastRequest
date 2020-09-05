@@ -51,6 +51,11 @@ enum struct Configs {
 enum struct PlayerData {
     float Speed;
     float Gravity;
+
+    void Reset() {
+        this.Speed = 0.0;
+        this.Gravity = 0.0;
+    }
 }
 
 Modes Mode;
@@ -104,8 +109,8 @@ public void LR_OnOpenMenu(Menu menu)
 
 public Action OnGamePreStart(int requester, int opponent, const char[] shortname)
 {
-    Player[requester].Speed = 0.0;
-    Player[opponent].Gravity = 0.0;
+    Player[requester].Reset();
+    Player[opponent].Reset();
 
     Menu menu = new Menu(Menu_ModeSelection);
     menu.SetTitle("Select knife mode"); // TODO: Add translation
@@ -278,7 +283,7 @@ public void OnGameStart(int client, int target, const char[] name)
 
 public void OnGameEnd(LR_End_Reason reason, int winner, int loser)
 {
-    if (winner != -1)
+    if (winner > 0)
     {
         SDKUnhook(winner, SDKHook_TraceAttack, OnTraceAttack);
         SDKUnhook(winner, SDKHook_Think, OnThink);
@@ -287,7 +292,7 @@ public void OnGameEnd(LR_End_Reason reason, int winner, int loser)
         SetThirdPerson(winner, false);
     }
 
-    if (loser != -1)
+    if (loser > 0)
     {
         SDKUnhook(loser, SDKHook_TraceAttack, OnTraceAttack);
         SDKUnhook(loser, SDKHook_Think, OnThink);
@@ -485,8 +490,8 @@ public Action Timer_SetDrunk(Handle timer, DataPack pack)
                 fPunch[2] = Config.DrunkMultiplier.FloatValue * -5.0;
             }					
         }
-        SetEntPropVector(client, Prop_Send, "m_vecPunchAngle", fPunch, 1);	
-        SetEntPropVector(target, Prop_Send, "m_vecPunchAngle", fPunch, 1);
+        SetEntPropVector(client, Prop_Send, "m_aimPunchAngle", fPunch, 1);	
+        SetEntPropVector(target, Prop_Send, "m_aimPunchAngle", fPunch, 1);
 
         pack = new DataPack();
         pack.WriteCell(GetClientUserId(client));

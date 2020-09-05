@@ -273,6 +273,7 @@ public void Frame_SetAmmo(int userid)
         {
             PrintToChatAll("%N ammo set to 1", iTarget);
         }
+        
         SetAmmo(iTarget, 1);
     }
 }
@@ -281,12 +282,12 @@ public void OnGameEnd(LR_End_Reason reason, int winner, int loser)
 {
     Core.Reset();
     
-    if (winner != -1)
+    if (winner > 0)
     {
         Player[winner].Reset();
     }
 
-    if (loser != -1)
+    if (loser > 0)
     {
         Player[loser].Reset();
     }
