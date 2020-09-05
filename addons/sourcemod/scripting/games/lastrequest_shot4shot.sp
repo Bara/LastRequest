@@ -198,12 +198,7 @@ public void OnGameStart(int client, int target, const char[] name)
 
 public Action Event_WeaponFire(Event event, const char[] name, bool dontBroadcast)
 {
-    if (!LR_IsLastRequestAvailable())
-    {
-        return;
-    }
-
-    if (strlen(Core.Weapon) < 4)
+    if (strlen(Core.Weapon) < 2)
     {
         return;
     }
