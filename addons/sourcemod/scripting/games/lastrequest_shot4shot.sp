@@ -54,7 +54,7 @@ public void OnPluginStart()
     AutoExecConfig_ExecuteFile();
     AutoExecConfig_CleanFile();
 
-    HookEvent("weapon_fire", Event_WeaponFire, EventHookMode_Post);
+    HookEvent("weapon_fire", Event_WeaponFire);
 }
 
 public void OnConfigsExecuted()
@@ -198,10 +198,21 @@ public void OnGameStart(int client, int target, const char[] name)
 
 public Action Event_WeaponFire(Event event, const char[] name, bool dontBroadcast)
 {
+    if (Core.Debug.BoolValue)
+    {
+        PrintToChatAll("Event_WeaponFire 1");
+    }
+    
     if (strlen(Core.Weapon) < 2)
     {
         return;
     }
+
+    if (Core.Debug.BoolValue)
+    {
+        PrintToChatAll("Event_WeaponFire 2");
+    }
+    
 
     int client = GetClientUserId(event.GetInt("userid"));
 
@@ -210,16 +221,33 @@ public Action Event_WeaponFire(Event event, const char[] name, bool dontBroadcas
         return;
     }
 
+    if (Core.Debug.BoolValue)
+    {
+        PrintToChatAll("Event_WeaponFire 3");
+    }
+    
+
     if (!LR_IsClientInLastRequest(client))
     {
         return;
     }
+
+    if (Core.Debug.BoolValue)
+    {
+        PrintToChatAll("Event_WeaponFire 4");
+    }
+    
 
     char sWeapon[32];
     event.GetString("weapon", sWeapon, sizeof(sWeapon));
 
     if (StrContains(Core.Weapon, sWeapon, false) != -1)
     {
+        if (Core.Debug.BoolValue)
+        {
+            PrintToChatAll("Event_WeaponFire 5");
+        }
+    
         RequestFrame(Frame_SetAmmo, GetClientUserId(LR_GetClientOpponent(client)));
     }
 }
