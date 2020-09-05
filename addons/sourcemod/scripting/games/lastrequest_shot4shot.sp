@@ -214,7 +214,7 @@ public Action Event_WeaponFire(Event event, const char[] name, bool dontBroadcas
     }
     
 
-    int client = GetClientUserId(event.GetInt("userid"));
+    int client = GetClientOfUserId(event.GetInt("userid"));
 
     if (!LR_IsClientValid(client))
     {
