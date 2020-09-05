@@ -215,7 +215,7 @@ public void OnGameStart(int client, int target, const char[] name)
     int iWeapon = LR_GivePlayerItem(client, Core.Weapon);
     Player[client].Weapon = EntIndexToEntRef(iWeapon);
 
-    LR_GivePlayerItem(target, Core.Weapon);
+    iWeapon = LR_GivePlayerItem(target, Core.Weapon);
     Player[target].Weapon = EntIndexToEntRef(iWeapon);
 
     Core.Active = true;
@@ -257,6 +257,11 @@ public Action OnWeaponCanUse(int client, int weapon)
 
 public Action Timer_CheckPosition(Handle timer, int userid)
 {
+    if (!Core.Active)
+    {
+        return Plugin_Stop;
+    }
+
     int client = GetClientOfUserId(userid);
 
     if (!LR_IsClientValid(client))
