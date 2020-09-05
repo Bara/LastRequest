@@ -214,7 +214,7 @@ public Action Command_Drop(int client, const char[] command, int args)
     {
         return Plugin_Continue;
     }
-    
+
     int weapon = GetEntPropEnt(client, Prop_Send, "m_hActiveWeapon");
 
     if (weapon != EntRefToEntIndex(Player[client].Weapon))
@@ -249,7 +249,7 @@ public Action Timer_CheckPosition(Handle timer, int userid)
 
     GetEntPropVector(iWeapon, Prop_Send, "m_vecOrigin", Player[client].FinalEnd);
 
-    if (!IsNullVector(Player[client].End) && GetVectorDistance(Player[client].End, Player[client].FinalEnd) < 3.0)
+    if (!IsNullVector(Player[client].End) && GetVectorDistance(Player[client].End, Player[client].FinalEnd) > 3.0)
     {
         Player[client].Distance = GetVectorDistance(Player[client].End, Player[client].FinalEnd);
 
