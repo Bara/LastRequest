@@ -13,6 +13,7 @@ void InitConfig()
     Config.TimeoutPunishment = AutoExecConfig_CreateConVar("lastrequest_timeout_punishment", "0", "How punish the player who didn't response to the menu? (0 - Nothing, 1 - Slay, 2 - Kick)", _, true, 0.0, true, 2.0);
     Config.AdminFlag = AutoExecConfig_CreateConVar("lastrequest_admin_flag", "b", "Admin flag to cancel/stop active last requests.");
     Config.PlayerCanStop = AutoExecConfig_CreateConVar("lastrequest_player_can_stop_lr", "1", "The player, which is in a active last request, can stop the last request with the agreement of the opponent.", _, true, 0.0, true, 1.0);
+    Config.KillLoser = AutoExecConfig_CreateConVar("lastrequest_kill_loser", "1", "Kill the loser after games end?", _, true, 0.0, true, 1.0);
     AutoExecConfig_ExecuteFile();
     AutoExecConfig_CleanFile();
 }

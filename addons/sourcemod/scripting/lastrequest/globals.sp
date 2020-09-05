@@ -28,6 +28,7 @@ enum struct Configs {
     ConVar AdminFlag;
     ConVar PlayerCanStop;
     ConVar Debug;
+    ConVar KillLoser;
 }
 
 enum struct Games

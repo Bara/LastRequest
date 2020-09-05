@@ -122,8 +122,14 @@ public int Native_StopLastRequest(Handle plugin, int numParams)
 
     if (loser > 0)
     {
-        // TODO: Give weapons back, before we delete the weapon arraylist
         Player[loser].Reset();
+        
+        if (Config.KillLoser.BoolValue && IsPlayerAlive(loser))
+        {
+            ForcePlayerSuicide(loser);
+        }
+        else
+        {}// TODO: Give weapons back, before we delete the weapon arraylist
     }
 
     Core.SetState(false, false, false, false);
