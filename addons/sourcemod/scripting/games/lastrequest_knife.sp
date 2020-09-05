@@ -96,6 +96,13 @@ public void OnPluginStart()
     Mode.Fade = GetUserMessageId("Fade");
 }
 
+public void OnMapStart()
+{
+    AddFileToDownloadsTable("materials/effects/strider_pinch_dudv.vtf");
+    AddFileToDownloadsTable("materials/effects/strider_pinch_dudv.vmt");
+    AddFileToDownloadsTable("materials/effects/strider_pinch_dudv_dx60.vmt");
+}
+
 public void OnConfigsExecuted()
 {
     if (!LR_RegisterGame(LR_SHORT, LR_NAME, OnGamePreStart, OnGameStart, OnGameEnd))
@@ -386,8 +393,8 @@ void SetDrunk(int client, bool drunk)
 {
     if (drunk)
     {
-        SetEntProp(client, Prop_Send, "m_iFOV", 105);
-        SetEntProp(client, Prop_Send, "m_iDefaultFOV", 105);
+        SetEntProp(client, Prop_Send, "m_iFOV", 110);
+        SetEntProp(client, Prop_Send, "m_iDefaultFOV", 110);
 
         ClientCommand(client, "r_screenoverlay \"effects/strider_pinch_dudv\"");
     }
@@ -395,6 +402,8 @@ void SetDrunk(int client, bool drunk)
     {
         SetEntProp(client, Prop_Send, "m_iFOV", 90);
         SetEntProp(client, Prop_Send, "m_iDefaultFOV", 90);
+
+        ClientCommand(client, "r_screenoverlay \"\"");
     }
 }
 
