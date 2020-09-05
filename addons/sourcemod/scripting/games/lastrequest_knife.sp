@@ -241,7 +241,7 @@ public void OnGameStart(int client, int target, const char[] name)
     if (Mode.HighSpeed)
     {
         Player[client].Speed = GetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue");
-        Player[target].Speed = GetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue");
+        Player[target].Speed = GetEntPropFloat(target, Prop_Data, "m_flLaggedMovementValue");
 
         SetSpeed(client, true);
         SetSpeed(target, true);
@@ -250,7 +250,7 @@ public void OnGameStart(int client, int target, const char[] name)
     if (Mode.LowGrav)
     {
         Player[client].Gravity = GetEntityGravity(client);
-        Player[target].Gravity = GetEntityGravity(client);
+        Player[target].Gravity = GetEntityGravity(target);
 
         SetGravity(client, true);
         SetGravity(target, true);
