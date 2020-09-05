@@ -101,6 +101,9 @@ public void OnMapStart()
     AddFileToDownloadsTable("materials/effects/strider_pinch_dudv.vtf");
     AddFileToDownloadsTable("materials/effects/strider_pinch_dudv.vmt");
     AddFileToDownloadsTable("materials/effects/strider_pinch_dudv_dx60.vmt");
+    AddFileToDownloadsTable("materials/effects/strider_bulge_dudv_dx60.vmt");
+    AddFileToDownloadsTable("materials/effects/strider_pinch_dx70.vtf");
+    AddFileToDownloadsTable("materials/effects/strider_pinch_normal.vtf");
 }
 
 public void OnConfigsExecuted()
