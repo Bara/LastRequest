@@ -199,15 +199,48 @@ public void OnGameStart(int client, int target, const char[] name)
     int iRandom = GetRandomInt(0, 1);
 
     int iWeapon = LR_GivePlayerItem(client, Core.Weapon);
-    LR_SetWeaponAmmo(client, iWeapon, iRandom ? 1 : 0);
     Player[client].Weapon = EntIndexToEntRef(iWeapon);
 
+    DataPack pack1 = new DataPack();
+    pack1.WriteCell(GetClientUserId(client));
+    pack1.WriteCell(EntIndexToEntRef(iWeapon));
+    pack1.WriteCell(iRandom);
+    RequestFrame(Frame_SetAmmoStart, pack1);
+
     iWeapon = LR_GivePlayerItem(target, Core.Weapon);
-    LR_SetWeaponAmmo(target, iWeapon, iRandom ? 0 : 1);
     Player[target].Weapon = EntIndexToEntRef(iWeapon);
+    
+    DataPack pack2 = new DataPack();
+    pack2.WriteCell(GetClientUserId(target));
+    pack2.WriteCell(EntIndexToEntRef(iWeapon));
+    pack1.WriteCell(iRandom);
+    RequestFrame(Frame_SetAmmoStart, pack2);
 
     SDKHook(client, SDKHook_WeaponDrop, OnWeaponDrop);
     SDKHook(target, SDKHook_WeaponDrop, OnWeaponDrop);
+}
+
+public void Frame_SetAmmoStart(DataPack pack)
+{
+    pack.Reset();
+    int client = GetClientOfUserId(pack.ReadCell());
+    int weapon = EntRefToEntIndex(pack.ReadCell());
+    int random = pack.ReadCell();
+    delete pack;
+
+    if (!LR_IsClientValid(client))
+    {
+        LR_StopLastRequest(Server);
+        return;
+    }
+
+    if (!IsValidEntity(weapon))
+    {
+        LR_StopLastRequest(Server);
+        return;
+    }
+
+    LR_SetWeaponAmmo(client, weapon, random ? 1 : 0);
 }
 
 public Action OnWeaponDrop(int client, int weapon)
