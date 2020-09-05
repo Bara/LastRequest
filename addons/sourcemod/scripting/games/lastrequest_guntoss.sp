@@ -224,7 +224,7 @@ public Action Command_Drop(int client, const char[] command, int args)
 
     GetClientAbsOrigin(client, Player[client].Start);
 
-    CreateTimer(0.1, Timer_CheckPosition, GetClientUserId(client), TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+    CreateTimer(0.5, Timer_CheckPosition, GetClientUserId(client), TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
 
     return Plugin_Continue;
 }
