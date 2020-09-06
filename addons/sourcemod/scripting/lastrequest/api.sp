@@ -8,6 +8,7 @@ void InitAPI()
     CreateNative("LR_StartLastRequest", Native_StartLastRequest);
     CreateNative("LR_GetMenuTime", Native_GetMenuTime);
     CreateNative("LR_MenuTimeout", Native_MenuTimeout);
+    CreateNative("LR_RemovePlayerWeapon", Native_RemovePlayerWeapon);
     
     Core.OnMenu = new GlobalForward("LR_OnOpenMenu", ET_Ignore, Param_Cell);
     Core.OnLRAvailable = new GlobalForward("LR_OnLastRequestAvailable", ET_Ignore, Param_Cell);
@@ -116,7 +117,16 @@ public int Native_StopLastRequest(Handle plugin, int numParams)
     
     if (reason != Admin && winner > 0)
     {
-        // TODO: Give weapons back, before we delete the weapon arraylist
+        if (Config.WinnerWeaponsBack.BoolValue && Player[winner].Weapons.Length > 0)
+        {
+            for (int i = 0; i < Player[winner].Weapons.Length; i++)
+            {
+                char sClass[32];
+                Player[winner].Weapons.GetString(i, sClass, sizeof(sClass));
+                LR_GivePlayerItem(winner, sClass);
+            }
+        }
+
         Player[winner].Reset();
     }
 
@@ -124,12 +134,19 @@ public int Native_StopLastRequest(Handle plugin, int numParams)
     {
         Player[loser].Reset();
         
-        if (Config.KillLoser.BoolValue && IsPlayerAlive(loser))
+        if (IsPlayerAlive(loser) && Config.KillLoser.BoolValue)
         {
             ForcePlayerSuicide(loser);
         }
-        else
-        {}// TODO: Give weapons back, before we delete the weapon arraylist
+        else if (IsPlayerAlive(loser) && !Config.KillLoser.BoolValue && Config.LoserWeaponsBack.BoolValue && Player[loser].Weapons.Length > 0)
+        {
+            for (int i = 0; i < Player[loser].Weapons.Length; i++)
+            {
+                char sClass[32];
+                Player[loser].Weapons.GetString(i, sClass, sizeof(sClass));
+                LR_GivePlayerItem(loser, sClass);
+            }
+        }
     }
 
     Core.SetState(false, false, false, false);
@@ -180,4 +197,32 @@ public int Native_MenuTimeout(Handle plugin, int numParams)
     {
         KickClient(client, "You was kicked due afk during menu selection."); // TODO: Add translation
     }
+}
+
+public int Native_RemovePlayerWeapon(Handle plugin, int numParams)
+{
+    int client = GetNativeCell(1);
+    int weapon = GetNativeCell(2);
+    bool bClear = view_as<bool>(GetNativeCell(3));
+    bool bAdd = view_as<bool>(GetNativeCell(4));
+
+    if (bClear)
+    {
+        delete Player[client].Weapons;
+    }
+
+    if (bAdd)
+    {
+        if (Player[client].Weapons == null)
+        {
+            Player[client].Weapons = new ArrayList(ByteCountToCells(32));
+        }
+
+        char sClass[32];
+        GetEntityClassname(weapon, sClass, sizeof(sClass));
+        Player[client].Weapons.PushString(sClass);
+    }
+
+    CS_DropWeapon(client, weapon, false);
+    return AcceptEntityInput(weapon, "Kill");
 }

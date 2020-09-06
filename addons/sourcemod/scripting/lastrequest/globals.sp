@@ -29,6 +29,8 @@ enum struct Configs {
     ConVar PlayerCanStop;
     ConVar Debug;
     ConVar KillLoser;
+    ConVar WinnerWeaponsBack;
+    ConVar LoserWeaponsBack;
 }
 
 enum struct Games
@@ -45,13 +47,6 @@ enum struct Games
     Function PreStartCB;
     Function StartCB;
     Function EndCB;
-}
-
-enum struct Weapon
-{
-    char Class[32];
-    int Clip;
-    int Ammo;
 }
 
 enum struct PlayerData

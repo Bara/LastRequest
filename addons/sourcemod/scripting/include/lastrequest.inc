@@ -92,6 +92,7 @@ native void LR_StartLastRequest(int requester, char[] mode, char[] weapon, int h
 
 native int LR_GetMenuTime();
 native void LR_MenuTimeout(int client);
+native bool LR_RemovePlayerWeapon(int client, int weapon, bool clearArray = false, bool safeToArray = false);
 
 stock bool IsLastRequestAvailable()
 {
@@ -111,68 +112,6 @@ stock bool LR_IsClientValid(int client)
         }
     }
     return false;
-}
-
-stock void LR_StripClientWeapons(int client, int target = -1)
-{
-    for(int i = 0; i < GetEntPropArraySize(client, Prop_Send, "m_hMyWeapons"); i++)
-    {
-        int weapon = GetEntPropEnt(client, Prop_Send, "m_hMyWeapons", i);
-
-        LR_SafeRemoveWeapon(client, weapon);
-    }
-
-    if (target > 0)
-    {
-        for(int i = 0; i < GetEntPropArraySize(target, Prop_Send, "m_hMyWeapons"); i++)
-        {
-            int weapon = GetEntPropEnt(target, Prop_Send, "m_hMyWeapons", i);
-
-            LR_SafeRemoveWeapon(target, weapon);
-        }
-    }
-}
-
-stock bool LR_SafeRemoveWeapon(int client, int weapon)
-{
-    if (!IsValidEntity(weapon) || !IsValidEdict(weapon))
-    {
-        return false;
-    }
-    
-    if (!HasEntProp(weapon, Prop_Send, "m_hOwnerEntity"))
-    {
-        return false;
-    }
-    
-    int iOwner = GetEntPropEnt(weapon, Prop_Send, "m_hOwnerEntity");
-    
-    if (iOwner != client)
-    {
-        SetEntPropEnt(weapon, Prop_Send, "m_hOwnerEntity", client);
-    }
-    
-    CS_DropWeapon(client, weapon, false);
-    
-    if (HasEntProp(weapon, Prop_Send, "m_hWeaponWorldModel"))
-    {
-        int iWorldModel = GetEntPropEnt(weapon, Prop_Send, "m_hWeaponWorldModel");
-        
-        if (IsValidEdict(iWorldModel) && IsValidEntity(iWorldModel))
-        {
-            if (!AcceptEntityInput(iWorldModel, "Kill"))
-            {
-                return false;
-            }
-        }
-    }
-    
-    if (!AcceptEntityInput(weapon, "Kill"))
-    {
-        return false;
-    }
-    
-    return true;
 }
 
 stock void LR_SetHealthKevlarHelm(int client, int target, int health, int kevlar, bool helm)

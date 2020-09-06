@@ -14,6 +14,8 @@ void InitConfig()
     Config.AdminFlag = AutoExecConfig_CreateConVar("lastrequest_admin_flag", "b", "Admin flag to cancel/stop active last requests.");
     Config.PlayerCanStop = AutoExecConfig_CreateConVar("lastrequest_player_can_stop_lr", "1", "The player, which is in a active last request, can stop the last request with the agreement of the opponent.", _, true, 0.0, true, 1.0);
     Config.KillLoser = AutoExecConfig_CreateConVar("lastrequest_kill_loser", "1", "Kill the loser after games end?", _, true, 0.0, true, 1.0);
+    Config.WinnerWeaponsBack = AutoExecConfig_CreateConVar("lastrequest_give_winner_weapons_back", "1", "Give winner weapons back on game end?", _, true, 0.0, true, 1.0);
+    Config.LoserWeaponsBack = AutoExecConfig_CreateConVar("lastrequest_give_loser_weapons_back", "1", "Give loser weapons back on game end? Doesn't work when lastrequest_kill_loser is 1", _, true, 0.0, true, 1.0);
     AutoExecConfig_ExecuteFile();
     AutoExecConfig_CleanFile();
 }

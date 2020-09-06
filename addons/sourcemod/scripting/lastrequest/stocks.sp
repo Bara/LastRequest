@@ -33,7 +33,8 @@ void StartLastRequest(int client)
         }
     }
 
-    LR_StripClientWeapons(client, Player[client].Target);
+    RemoveWeapons(client);
+    RemoveWeapons(Player[client].Target);
     LR_SetHealthKevlarHelm(client, Player[client].Target, Player[client].Game.Health, Player[client].Game.Kevlar, Player[client].Game.Helm);
     
     Call_StartFunction(Player[client].Game.plugin, Player[client].Game.StartCB);
@@ -256,5 +257,15 @@ public Action Timer_CheckTeams(Handle timer)
         {
             LR_StopLastRequest(Server);
         }
+    }
+}
+
+void RemoveWeapons(int client)
+{
+    for(int i = 0; i < GetEntPropArraySize(client, Prop_Send, "m_hMyWeapons"); i++)
+    {
+        int iWeapon = GetEntPropEnt(client, Prop_Send, "m_hMyWeapons", i);
+
+        LR_RemovePlayerWeapon(client, iWeapon, true, true);
     }
 }

@@ -208,8 +208,8 @@ public void OnGameStart(int client, int target, const char[] name)
 {
     if (Core.Knife.BoolValue)
     {
-        GivePlayerItem(client, "weapon_knife");
-        GivePlayerItem(target, "weapon_knife");
+        LR_GivePlayerItem(client, "weapon_knife");
+        LR_GivePlayerItem(target, "weapon_knife");
     }
 
     int iWeapon = LR_GivePlayerItem(client, Core.Weapon);
