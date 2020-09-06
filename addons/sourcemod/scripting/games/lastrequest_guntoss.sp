@@ -12,7 +12,6 @@
 enum struct General
 {
     ConVar Enable;
-    ConVar Debug;
     ConVar Knife;
     ConVar Unit;
     ConVar Interval;
@@ -100,8 +99,6 @@ public void OnConfigsExecuted()
         return;
     }
 
-    Core.Debug = FindConVar("lastrequest_debug");
-
     delete Core.Weapons;
     Core.Weapons = new StringMap();
 
@@ -119,7 +116,7 @@ public void OnConfigsExecuted()
 
             if (strlen(sClass) > 1 && strlen(sName) > 1)
             {
-                if (Core.Debug.BoolValue)
+                if (LR_IsDebugActive())
                 {
                     LogMessage("Adding %s (Class: %s) to weapon stringmap.", sName, sClass);
                 }

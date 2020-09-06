@@ -12,7 +12,6 @@
 enum struct General
 {
     ConVar Enable;
-    ConVar Debug;
     ConVar Knife;
     ConVar Drop;
 
@@ -82,8 +81,6 @@ public void OnConfigsExecuted()
         return;
     }
 
-    Core.Debug = FindConVar("lastrequest_debug");
-
     delete Core.Weapons;
     Core.Weapons = new StringMap();
 
@@ -101,7 +98,7 @@ public void OnConfigsExecuted()
 
             if (strlen(sClass) > 1 && strlen(sName) > 1)
             {
-                if (Core.Debug.BoolValue)
+                if (LR_IsDebugActive())
                 {
                     LogMessage("Adding %s (Class: %s) to weapon stringmap.", sName, sClass);
                 }
@@ -239,7 +236,7 @@ public Action Event_WeaponFire(Event event, const char[] name, bool dontBroadcas
         return;
     }
     
-    if (Core.Debug.BoolValue)
+    if (LR_IsDebugActive())
     {
         PrintToChatAll("Event_WeaponFire 1");
     }
@@ -249,7 +246,7 @@ public Action Event_WeaponFire(Event event, const char[] name, bool dontBroadcas
         return;
     }
 
-    if (Core.Debug.BoolValue)
+    if (LR_IsDebugActive())
     {
         PrintToChatAll("Event_WeaponFire 2");
     }
@@ -262,7 +259,7 @@ public Action Event_WeaponFire(Event event, const char[] name, bool dontBroadcas
         return;
     }
 
-    if (Core.Debug.BoolValue)
+    if (LR_IsDebugActive())
     {
         PrintToChatAll("Event_WeaponFire 3");
     }
@@ -273,7 +270,7 @@ public Action Event_WeaponFire(Event event, const char[] name, bool dontBroadcas
         return;
     }
 
-    if (Core.Debug.BoolValue)
+    if (LR_IsDebugActive())
     {
         PrintToChatAll("Event_WeaponFire 4");
     }
@@ -284,7 +281,7 @@ public Action Event_WeaponFire(Event event, const char[] name, bool dontBroadcas
 
     if (StrContains(Core.Weapon, sWeapon, false) != -1)
     {
-        if (Core.Debug.BoolValue)
+        if (LR_IsDebugActive())
         {
             PrintToChatAll("Event_WeaponFire 5");
         }
@@ -299,7 +296,7 @@ public void Frame_SetAmmo(int userid)
 
     if (LR_IsClientValid(iTarget) && IsPlayerAlive(iTarget))
     {
-        if (Core.Debug.BoolValue)
+        if (LR_IsDebugActive())
         {
             PrintToChatAll("%N ammo set to 1", iTarget);
         }

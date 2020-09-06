@@ -7,6 +7,7 @@ void InitAPI()
     CreateNative("LR_StopLastRequest", Native_StopLastRequest);
     CreateNative("LR_StartLastRequest", Native_StartLastRequest);
     CreateNative("LR_GetMenuTime", Native_GetMenuTime);
+    CreateNative("LR_IsDebugActive", Native_IsDebugActive);
     CreateNative("LR_MenuTimeout", Native_MenuTimeout);
     CreateNative("LR_RemovePlayerWeapon", Native_RemovePlayerWeapon);
     
@@ -182,6 +183,11 @@ public int Native_GetClientOpponent(Handle plugin, int numParams)
 public int Native_GetMenuTime(Handle plugin, int numParams)
 {
     return Config.MenuTime.IntValue;
+}
+
+public int Native_IsDebugActive(Handle plugin, int numParams)
+{
+    return Config.Debug.BoolValue;
 }
 
 public int Native_MenuTimeout(Handle plugin, int numParams)

@@ -91,6 +91,7 @@ native void LR_StopLastRequest(LR_End_Reason reason, int winner = -1, int loser 
 native void LR_StartLastRequest(int requester, char[] mode, char[] weapon, int health = 100, int armor = 0, bool helm = false);
 
 native int LR_GetMenuTime();
+native bool LR_IsDebugActive();
 native void LR_MenuTimeout(int client);
 native bool LR_RemovePlayerWeapon(int client, int weapon, bool clearArray = false, bool safeToArray = false);
 
