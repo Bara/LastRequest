@@ -91,7 +91,7 @@ public int Native_StopLastRequest(Handle plugin, int numParams)
                 {
                     if (reason == Normal)
                     {
-                        PrintToChat(j, "Last request over, Winner of %s is %N!", Player[i].Game.Name, winner); // TODO: Add translation
+                        PrintToChat(j, "Last request over, Winner of %s is %N!", Player[i].Game.FullName, winner); // TODO: Add translation
                     }
                     else if (reason == Unknown)
                     {
@@ -114,13 +114,13 @@ public int Native_StopLastRequest(Handle plugin, int numParams)
         }
     }
     
-    if (winner > 0)
+    if (reason != Admin && winner > 0)
     {
         // TODO: Give weapons back, before we delete the weapon arraylist
         Player[winner].Reset();
     }
 
-    if (loser > 0)
+    if (reason != Admin && loser > 0)
     {
         Player[loser].Reset();
         
