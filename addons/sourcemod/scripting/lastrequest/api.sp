@@ -132,8 +132,6 @@ public int Native_StopLastRequest(Handle plugin, int numParams)
 
     if (reason != Admin && loser > 0)
     {
-        Player[loser].Reset();
-        
         if (IsPlayerAlive(loser) && Config.KillLoser.BoolValue)
         {
             ForcePlayerSuicide(loser);
@@ -147,6 +145,8 @@ public int Native_StopLastRequest(Handle plugin, int numParams)
                 LR_GivePlayerItem(loser, sClass);
             }
         }
+
+        Player[loser].Reset();
     }
 
     Core.SetState(false, false, false, false);
