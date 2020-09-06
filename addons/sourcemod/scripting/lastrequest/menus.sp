@@ -118,6 +118,8 @@ public int Menu_TMenu(Menu menu, MenuAction action, int client, int param)
         else
         {
             PrintToChat(client, "Can not set game."); // TODO: Add message/translation or debug?
+            LR_StopLastRequest(Server);
+            return;
         }
         
         PrintToChat(client, "LR: %s - Opponent: %N", Player[client].Game.Name, Player[client].Target); // TODO: Add message/translation or debug?
@@ -157,8 +159,11 @@ void AskForConfirmation(int client, const char[] mode, const char[] weapon)
     if (!LR_IsClientValid(iTarget))
     {
         // TODO: Add message/translation or debug?
+        LR_StopLastRequest(Server);
         return;
     }
+
+    PrintToChat(client, "Request to %N has been sended.", iTarget); // TODO: Add translation
 
     Menu menu = new Menu(Menu_AskForConfirmation);
     menu.SetTitle("%N wants to play against you!\n \nLast Request: %s\nMode: %s\nWeapons: %s\nHealth: %d\nKevlar: %d\nHelm: %s\n \nDo you accept this setting?\n ",
@@ -182,6 +187,7 @@ public int Menu_AskForConfirmation(Menu menu, MenuAction action, int target, int
         if (!LR_IsClientValid(client))
         {
             // TODO: Add message/translation or debug?
+            LR_StopLastRequest(Server);
             return;
         }
 
@@ -219,7 +225,8 @@ void AskOpponentToStop(int client)
 
     if (!LR_IsClientValid(iTarget))
     {
-         // TODO: Add message/translation or debug?
+        // TODO: Add message/translation or debug?
+        LR_StopLastRequest(Server);
         return;
     }
 
@@ -243,7 +250,8 @@ public int Menu_AskToStop(Menu menu, MenuAction action, int target, int param)
 
         if (!LR_IsClientValid(client))
         {
-             // TODO: Add message/translation or debug?
+            // TODO: Add message/translation or debug?
+            LR_StopLastRequest(Server);
             return;
         }
 
