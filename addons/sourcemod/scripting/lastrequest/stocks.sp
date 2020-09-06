@@ -260,12 +260,12 @@ public Action Timer_CheckTeams(Handle timer)
     }
 }
 
-void RemoveWeapons(int client)
+void RemoveWeapons(int client, bool clearArray = true, bool addToArray = true)
 {
     for(int i = 0; i < GetEntPropArraySize(client, Prop_Send, "m_hMyWeapons"); i++)
     {
         int iWeapon = GetEntPropEnt(client, Prop_Send, "m_hMyWeapons", i);
 
-        LR_RemovePlayerWeapon(client, iWeapon, true, true);
+        LR_RemovePlayerWeapon(client, iWeapon, clearArray, addToArray);
     }
 }

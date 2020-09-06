@@ -119,6 +119,8 @@ public int Native_StopLastRequest(Handle plugin, int numParams)
     {
         if (Config.WinnerWeaponsBack.BoolValue && Player[winner].Weapons.Length > 0)
         {
+            RemoveWeapons(winner, false, false);
+            
             for (int i = 0; i < Player[winner].Weapons.Length; i++)
             {
                 char sClass[32];
@@ -138,6 +140,8 @@ public int Native_StopLastRequest(Handle plugin, int numParams)
         }
         else if (IsPlayerAlive(loser) && !Config.KillLoser.BoolValue && Config.LoserWeaponsBack.BoolValue && Player[loser].Weapons.Length > 0)
         {
+            RemoveWeapons(loser, false, false);
+            
             for (int i = 0; i < Player[loser].Weapons.Length; i++)
             {
                 char sClass[32];
