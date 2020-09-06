@@ -47,6 +47,13 @@ enum struct Games
     Function EndCB;
 }
 
+enum struct Weapon
+{
+    char Class[32];
+    int Clip;
+    int Ammo;
+}
+
 enum struct PlayerData
 {
     bool InLR;
