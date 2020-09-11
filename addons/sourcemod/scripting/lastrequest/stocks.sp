@@ -33,8 +33,8 @@ void StartLastRequest(int client)
         }
     }
 
-    RemoveWeapons(client);
-    RemoveWeapons(Player[client].Target);
+    RemoveWeapons(client, true);
+    RemoveWeapons(Player[client].Target, true);
     LR_SetHealthKevlarHelm(client, Player[client].Target, Player[client].Game.Health, Player[client].Game.Kevlar, Player[client].Game.Helm);
     
     Call_StartFunction(Player[client].Game.plugin, Player[client].Game.StartCB);
@@ -260,34 +260,23 @@ public Action Timer_CheckTeams(Handle timer)
     }
 }
 
-void RemoveWeapons(int client, bool clearArray = true, bool addToArray = true)
+void RemoveWeapons(int client, bool addToArray)
 {
-    if (clearArray)
-    {
-        if (Config.Debug.BoolValue)
-        {
-            PrintToChat(client, "clearArray");
-        }
-
-        delete Player[client].Weapons;
-    }
-
     if (addToArray)
     {
         if (Config.Debug.BoolValue)
         {
-            PrintToChat(client, "addToArray");
+            PrintToChat(client, "deleteArray");
         }
 
-        if (Player[client].Weapons == null)
+        delete Player[client].Weapons;
+        
+        if (Config.Debug.BoolValue)
         {
-            if (Config.Debug.BoolValue)
-            {
-                PrintToChat(client, "new ArrayList");
-            }
-
-            Player[client].Weapons = new ArrayList(32);
+            PrintToChat(client, "initArray");
         }
+
+        Player[client].Weapons = new ArrayList(32);
     }
 
     char sClass[32];
@@ -298,10 +287,10 @@ void RemoveWeapons(int client, bool clearArray = true, bool addToArray = true)
 
         if (IsValidEntity(iWeapon))
         {
-            GetEntityClassname(iWeapon, sClass, sizeof(sClass));
-
             if (addToArray)
             {
+                GetEntityClassname(iWeapon, sClass, sizeof(sClass));
+                
                 if (Config.Debug.BoolValue)
                 {
                     PrintToChat(client, "Add %s to ArrayList", sClass);
