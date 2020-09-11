@@ -152,7 +152,7 @@ public int Menu_TMenu(Menu menu, MenuAction action, int client, int param)
     }
 }
 
-void AskForConfirmation(int client, const char[] mode, const char[] weapon)
+void AskForConfirmation(int client, const char[] weapon)
 {
     int iTarget = LR_GetClientOpponent(client);
 
@@ -167,7 +167,7 @@ void AskForConfirmation(int client, const char[] mode, const char[] weapon)
 
     Menu menu = new Menu(Menu_AskForConfirmation);
     menu.SetTitle("%N wants to play against you!\n \nLast Request: %s\nMode: %s\nWeapons: %s\nHealth: %d\nKevlar: %d\nHelm: %s\n \nDo you accept this setting?\n ",
-                    client, Player[client].Game.FullName, mode, weapon, Player[client].Game.Health, Player[client].Game.Kevlar, Player[client].Game.Helm ? "Yes" : "No"); // TODO: Add translation
+                    client, Player[client].Game.FullName, Player[client].Game.Mode, weapon, Player[client].Game.Health, Player[client].Game.Kevlar, Player[client].Game.Helm ? "Yes" : "No"); // TODO: Add translation
     menu.AddItem("yes", "Yes, I accept!"); // TODO: Add translation
     menu.AddItem("no", "No, please..."); // TODO: Add translation
     menu.ExitBackButton = false;

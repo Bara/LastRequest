@@ -8,6 +8,7 @@
 
 #define LR_MAX_SHORTNAME_LENGTH 32
 #define LR_MAX_FULLNAME_LENGTH 64
+#define LR_MAX_MODENAME_LENGTH 32
 #define LR_LoopClients(%1) for(int %1 = 1; %1 <= MaxClients; %1++) if(LR_IsClientValid(%1))
 #define LR_BASE_NAME "Last Request"
 #define LR_PLUGIN_NAME "Last Request - "

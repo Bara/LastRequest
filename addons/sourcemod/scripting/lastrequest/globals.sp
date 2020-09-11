@@ -41,6 +41,7 @@ enum struct Games
 
     char Name[LR_MAX_SHORTNAME_LENGTH];
     char FullName[LR_MAX_FULLNAME_LENGTH];
+    char Mode[LR_MAX_MODENAME_LENGTH];
 
     Handle plugin;
 

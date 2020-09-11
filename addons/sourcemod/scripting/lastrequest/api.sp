@@ -54,8 +54,7 @@ public int Native_StartLastRequest(Handle plugin, int numParams)
 
     int client = GetNativeCell(1);
 
-    char sMode[32];
-    GetNativeString(2, sMode, sizeof(sMode));
+    GetNativeString(2, Player[client].Game.Mode, sizeof(Games::Mode));
 
     char sWeapon[32];
     GetNativeString(3, sWeapon, sizeof(sWeapon));
@@ -66,7 +65,7 @@ public int Native_StartLastRequest(Handle plugin, int numParams)
 
     if (Core.Confirmation && !Core.CustomStart && !Core.RunningLR)
     {
-        AskForConfirmation(client, sMode, sWeapon);
+        AskForConfirmation(client, sWeapon);
     }
 }
 
@@ -78,7 +77,7 @@ public int Native_StopLastRequest(Handle plugin, int numParams)
     
     LR_LoopClients(i)
     {
-        if (GetClientTeam(i) == CS_TEAM_T && Player[i].InLR && Player[i].Target > 0)
+        if ((i == winner || i == loser) && GetClientTeam(i) == CS_TEAM_T && Player[i].InLR && Player[i].Target > 0)
         {
             Call_StartFunction(Player[i].Game.plugin, Player[i].Game.EndCB);
             Call_PushCell(reason);
@@ -93,7 +92,7 @@ public int Native_StopLastRequest(Handle plugin, int numParams)
                 {
                     if (reason == Normal)
                     {
-                        PrintToChat(j, "Last request over, Winner of %s is %N!", Player[i].Game.FullName, winner); // TODO: Add translation
+                        PrintToChat(j, "Last request over, Winner of %s (Mode: %s) is %N!", Player[i].Game.FullName, Player[i].Game.Mode, winner); // TODO: Add translation
                     }
                     else if (reason == Unknown)
                     {
@@ -105,11 +104,11 @@ public int Native_StopLastRequest(Handle plugin, int numParams)
                     }
                     else if (reason == Admin)
                     {
-                        PrintToChat(j, "Last request cancled by Admin %N!", winner); // TODO: Add translation
+                        PrintToChat(j, "Last request canceled by Admin %N!", winner); // TODO: Add translation
                     }
                     else if (reason == Server)
                     {
-                        PrintToChat(j, "Last request cancled by Server!"); // TODO: Add translation
+                        PrintToChat(j, "Last request canceled by Server!"); // TODO: Add translation
                     }
                 }
             }
@@ -214,6 +213,37 @@ public int Native_RemovePlayerWeapon(Handle plugin, int numParams)
     int client = GetNativeCell(1);
     int weapon = GetNativeCell(2);
 
+    if (!IsValidEntity(weapon))
+    {
+        return false;
+    }
+    
+    if (!HasEntProp(weapon, Prop_Send, "m_hOwnerEntity"))
+    {
+        return false;
+    }
+    
+    int iOwner = GetEntPropEnt(weapon, Prop_Send, "m_hOwnerEntity");
+    
+    if (iOwner != client)
+    {
+        SetEntPropEnt(weapon, Prop_Send, "m_hOwnerEntity", client);
+    }
+
     CS_DropWeapon(client, weapon, false);
+
+    if (HasEntProp(weapon, Prop_Send, "m_hWeaponWorldModel"))
+    {
+        int iWorldModel = GetEntPropEnt(weapon, Prop_Send, "m_hWeaponWorldModel");
+        
+        if (IsValidEdict(iWorldModel) && IsValidEntity(iWorldModel))
+        {
+            if (!AcceptEntityInput(iWorldModel, "Kill"))
+            {
+                return false;
+            }
+        }
+    }
+
     return AcceptEntityInput(weapon, "Kill");
 }
