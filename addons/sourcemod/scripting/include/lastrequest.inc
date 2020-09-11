@@ -133,9 +133,37 @@ stock int LR_GivePlayerItem(int client, const char[] classname)
 {
     int iWeapon = GivePlayerItem(client, classname);
     EquipPlayerWeapon(client, iWeapon);
+
+    RequestFrame(Frame_RefreshVM, GetClientUserId(client));
     
     return iWeapon;
 }
+
+public void Frame_RefreshVM(int userid)
+{
+    int client = GetClientOfUserId(userid);
+
+    if (!LR_IsClientValid(client))
+    {
+        return;
+    }
+
+    if (!IsPlayerAlive(client))
+    {
+        return;
+    }
+
+    Event eEvent = CreateEvent("player_spawn", true);
+
+    if (eEvent == null)
+    {
+        return;
+    }
+
+    eEvent.SetInt("userid", GetClientUserId(client));
+    eEvent.FireToClient(client);
+    eEvent.Cancel();
+} 
 
 stock bool LR_SetWeaponAmmo(int client, int weapon, int clip, int ammo = 0, bool giveWeapon = false) // TODO Make it dynamically, when someone adds a primary it doesn't work.
 {
