@@ -206,6 +206,8 @@ public Action Timer_Countdown(Handle timer, DataPack pack)
     int seconds = ReadPackCell(pack);
     int client = GetClientOfUserId(ReadPackCell(pack));
     delete pack;
+
+    seconds--;
     
     if (LR_IsClientValid(client) && LR_IsClientValid(Player[client].Target))
     {
@@ -233,8 +235,6 @@ public Action Timer_Countdown(Handle timer, DataPack pack)
             }
         }
     }
-    
-    seconds--;
 
     if (seconds > 0)
     {

@@ -8,7 +8,7 @@ void InitConfig()
     Config.OpenMenu = AutoExecConfig_CreateConVar("lastrequest_open_menu", "0", "Open last request menu (on player death only) for the last player?", _, true, 0.0, true, 1.0);
     Config.AvailableSounds = AutoExecConfig_CreateConVar("lastrequest_available_sounds", "0", "How many last request available to you have? 0 to disable it");
     Config.AvailablePath = AutoExecConfig_CreateConVar("lastrequet_available_path", "lastrequest/availableX.mp3", "Sounds for available last request");
-    Config.StartCountdown = AutoExecConfig_CreateConVar("lastrequest_start_countdown", "3", "Countdown after accepting game until the game starts", _, true, 3.0);
+    Config.StartCountdown = AutoExecConfig_CreateConVar("lastrequest_start_countdown", "4", "Countdown after accepting game until the game starts", _, true, 3.0);
     Config.CountdownPath = AutoExecConfig_CreateConVar("lastrequest_countdown_path", "lastrequest/countdownX.mp3", "Sounds for 3...2...1...Go ( Go = 0 )");
     Config.TimeoutPunishment = AutoExecConfig_CreateConVar("lastrequest_timeout_punishment", "0", "How punish the player who didn't response to the menu? (0 - Nothing, 1 - Slay, 2 - Kick)", _, true, 0.0, true, 2.0);
     Config.AdminFlag = AutoExecConfig_CreateConVar("lastrequest_admin_flag", "b", "Admin flag to cancel/stop active last requests.");
