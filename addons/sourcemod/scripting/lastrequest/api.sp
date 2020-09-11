@@ -213,25 +213,6 @@ public int Native_RemovePlayerWeapon(Handle plugin, int numParams)
 {
     int client = GetNativeCell(1);
     int weapon = GetNativeCell(2);
-    bool bClear = view_as<bool>(GetNativeCell(3));
-    bool bAdd = view_as<bool>(GetNativeCell(4));
-
-    if (bClear)
-    {
-        delete Player[client].Weapons;
-    }
-
-    if (bAdd)
-    {
-        if (Player[client].Weapons == null)
-        {
-            Player[client].Weapons = new ArrayList(ByteCountToCells(32));
-        }
-
-        char sClass[32];
-        GetEntityClassname(weapon, sClass, sizeof(sClass));
-        Player[client].Weapons.PushString(sClass);
-    }
 
     CS_DropWeapon(client, weapon, false);
     return AcceptEntityInput(weapon, "Kill");

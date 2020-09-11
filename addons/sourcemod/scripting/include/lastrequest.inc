@@ -93,7 +93,7 @@ native void LR_StartLastRequest(int requester, char[] mode, char[] weapon, int h
 native int LR_GetMenuTime();
 native bool LR_IsDebugActive();
 native void LR_MenuTimeout(int client);
-native bool LR_RemovePlayerWeapon(int client, int weapon, bool clearArray = false, bool safeToArray = false);
+native bool LR_RemovePlayerWeapon(int client, int weapon);
 
 stock bool IsLastRequestAvailable()
 {

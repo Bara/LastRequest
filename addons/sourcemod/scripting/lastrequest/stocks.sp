@@ -262,10 +262,31 @@ public Action Timer_CheckTeams(Handle timer)
 
 void RemoveWeapons(int client, bool clearArray = true, bool addToArray = true)
 {
+    if (clearArray)
+    {
+        delete Player[client].Weapons;
+    }
+
+    if (addToArray)
+    {
+        if (Player[client].Weapons == null)
+        {
+            Player[client].Weapons = new ArrayList(ByteCountToCells(32));
+        }
+    }
+
+    char sClass[32];
+    
     for(int i = 0; i < GetEntPropArraySize(client, Prop_Send, "m_hMyWeapons"); i++)
     {
         int iWeapon = GetEntPropEnt(client, Prop_Send, "m_hMyWeapons", i);
 
-        LR_RemovePlayerWeapon(client, iWeapon, clearArray, addToArray);
+        if (IsValidEntity(iWeapon))
+        {
+            GetEntityClassname(iWeapon, sClass, sizeof(sClass));
+            Player[client].Weapons.PushString(sClass);
+
+            LR_RemovePlayerWeapon(client, iWeapon);
+        }
     }
 }
