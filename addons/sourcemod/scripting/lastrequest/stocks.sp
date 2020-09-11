@@ -219,6 +219,8 @@ public Action Timer_Countdown(Handle timer, DataPack pack)
             {
                 PrintToChat(i, "Go! ( Game: %s, Player: %N, Opponent: %N)", Player[client].Game.Name, client, Player[client].Target); // TODO: Add translation
                 StartLastRequest(client);
+				
+                return Plugin_Stop;
             }
             else
             {
@@ -234,7 +236,7 @@ public Action Timer_Countdown(Handle timer, DataPack pack)
     
     seconds--;
 
-    if (seconds >= 0)
+    if (seconds > 0)
     {
         pack = new DataPack();
         pack.WriteCell(seconds);
