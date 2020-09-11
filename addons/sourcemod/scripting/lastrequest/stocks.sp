@@ -264,14 +264,29 @@ void RemoveWeapons(int client, bool clearArray = true, bool addToArray = true)
 {
     if (clearArray)
     {
+        if (Config.Debug.BoolValue)
+        {
+            PrintToChat(client, "clearArray");
+        }
+
         delete Player[client].Weapons;
     }
 
     if (addToArray)
     {
+        if (Config.Debug.BoolValue)
+        {
+            PrintToChat(client, "addToArray");
+        }
+
         if (Player[client].Weapons == null)
         {
-            Player[client].Weapons = new ArrayList(ByteCountToCells(32));
+            if (Config.Debug.BoolValue)
+            {
+                PrintToChat(client, "new ArrayList");
+            }
+
+            Player[client].Weapons = new ArrayList(32);
         }
     }
 
@@ -284,7 +299,16 @@ void RemoveWeapons(int client, bool clearArray = true, bool addToArray = true)
         if (IsValidEntity(iWeapon))
         {
             GetEntityClassname(iWeapon, sClass, sizeof(sClass));
-            Player[client].Weapons.PushString(sClass);
+
+            if (addToArray)
+            {
+                if (Config.Debug.BoolValue)
+                {
+                    PrintToChat(client, "Add %s to ArrayList", sClass);
+                }
+
+                Player[client].Weapons.PushString(sClass);
+            }
 
             LR_RemovePlayerWeapon(client, iWeapon);
         }

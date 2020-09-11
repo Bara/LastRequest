@@ -120,11 +120,22 @@ public int Native_StopLastRequest(Handle plugin, int numParams)
         if (Config.WinnerWeaponsBack.BoolValue && Player[winner].Weapons.Length > 0)
         {
             RemoveWeapons(winner, false, false);
+
+            if (Config.Debug.BoolValue)
+            {
+                PrintToChat(winner, "Remove weapons");
+            }
             
             for (int i = 0; i < Player[winner].Weapons.Length; i++)
             {
                 char sClass[32];
                 Player[winner].Weapons.GetString(i, sClass, sizeof(sClass));
+
+                if (Config.Debug.BoolValue)
+                {
+                    PrintToChat(winner, "Adding %s back...", sClass);
+                }
+
                 LR_GivePlayerItem(winner, sClass);
             }
         }
@@ -141,11 +152,22 @@ public int Native_StopLastRequest(Handle plugin, int numParams)
         else if (IsPlayerAlive(loser) && !Config.KillLoser.BoolValue && Config.LoserWeaponsBack.BoolValue && Player[loser].Weapons.Length > 0)
         {
             RemoveWeapons(loser, false, false);
+
+            if (Config.Debug.BoolValue)
+            {
+                PrintToChat(loser, "Remove weapons");
+            }
             
             for (int i = 0; i < Player[loser].Weapons.Length; i++)
             {
                 char sClass[32];
                 Player[loser].Weapons.GetString(i, sClass, sizeof(sClass));
+
+                if (Config.Debug.BoolValue)
+                {
+                    PrintToChat(loser, "Adding %s back...", sClass);
+                }
+
                 LR_GivePlayerItem(loser, sClass);
             }
         }
