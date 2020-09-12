@@ -95,6 +95,7 @@ native int LR_GetMenuTime();
 native bool LR_IsDebugActive();
 native void LR_MenuTimeout(int client);
 native bool LR_RemovePlayerWeapon(int client, int weapon);
+native void LR_ResetClient(int client);
 
 stock bool IsLastRequestAvailable()
 {

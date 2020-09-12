@@ -10,6 +10,7 @@ void InitAPI()
     CreateNative("LR_IsDebugActive", Native_IsDebugActive);
     CreateNative("LR_MenuTimeout", Native_MenuTimeout);
     CreateNative("LR_RemovePlayerWeapon", Native_RemovePlayerWeapon);
+    CreateNative("LR_ResetClient", Native_ResetClient);
     
     Core.OnMenu = new GlobalForward("LR_OnOpenMenu", ET_Ignore, Param_Cell);
     Core.OnLRAvailable = new GlobalForward("LR_OnLastRequestAvailable", ET_Ignore, Param_Cell);
@@ -225,6 +226,13 @@ public int Native_MenuTimeout(Handle plugin, int numParams)
         PrintToChatAll("MenuCancel_Timeout %N", client); // TODO: Add message/translation or debug?
     }
 
+    int target = LR_GetClientOpponent(client);
+
+    if (LR_IsClientValid(target))
+    {
+        LR_StopLastRequest(Unknown, target, client);
+    }
+
     if (Config.TimeoutPunishment.IntValue == 1)
     {
         ForcePlayerSuicide(client);
@@ -273,4 +281,11 @@ public int Native_RemovePlayerWeapon(Handle plugin, int numParams)
     }
 
     return AcceptEntityInput(weapon, "Kill");
+}
+
+public int Native_ResetClient(Handle plugin, int numParams)
+{
+    int client = GetNativeCell(1);
+
+    Player[client].Reset();
 }
