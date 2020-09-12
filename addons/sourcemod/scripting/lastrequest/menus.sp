@@ -17,7 +17,6 @@ public int Menu_Empty(Menu menu, MenuAction action, int client, int param)
     {
         delete menu;
     }
-    return 0;
 }
 
 void ShowPlayerList(int client)
@@ -163,16 +162,30 @@ void AskForConfirmation(int client, const char[] weapon)
         return;
     }
 
-    PrintToChat(client, "Request to %N has been sended.", iTarget); // TODO: Add translation
+    if (Config.ForceAccept.BoolValue)
+    {
+        Menu menu = new Menu(Menu_Empty);
+        menu.SetTitle("%N plays against you!\n \nLast Request: %s\nMode: %s\nWeapons: %s\nHealth: %d\nKevlar: %d\nHelm: %s",
+                        client, Player[client].Game.FullName, Player[client].Game.Mode, weapon, Player[client].Game.Health, Player[client].Game.Kevlar, Player[client].Game.Helm ? "Yes" : "No"); // TODO: Add translation
+        menu.ExitBackButton = false;
+        menu.ExitButton = true;
+        menu.Display(iTarget, Config.MenuTime.IntValue);
 
-    Menu menu = new Menu(Menu_AskForConfirmation);
-    menu.SetTitle("%N wants to play against you!\n \nLast Request: %s\nMode: %s\nWeapons: %s\nHealth: %d\nKevlar: %d\nHelm: %s\n \nDo you accept this setting?\n ",
-                    client, Player[client].Game.FullName, Player[client].Game.Mode, weapon, Player[client].Game.Health, Player[client].Game.Kevlar, Player[client].Game.Helm ? "Yes" : "No"); // TODO: Add translation
-    menu.AddItem("yes", "Yes, I accept!"); // TODO: Add translation
-    menu.AddItem("no", "No, please..."); // TODO: Add translation
-    menu.ExitBackButton = false;
-    menu.ExitButton = false;
-    menu.Display(iTarget, Config.MenuTime.IntValue);
+        StartCountdown(Config.StartCountdown.IntValue, client);
+    }
+    else
+    {
+        PrintToChat(client, "Request to %N has been sended.", iTarget); // TODO: Add translation
+
+        Menu menu = new Menu(Menu_AskForConfirmation);
+        menu.SetTitle("%N wants to play against you!\n \nLast Request: %s\nMode: %s\nWeapons: %s\nHealth: %d\nKevlar: %d\nHelm: %s\n \nDo you accept this setting?\n ",
+                        client, Player[client].Game.FullName, Player[client].Game.Mode, weapon, Player[client].Game.Health, Player[client].Game.Kevlar, Player[client].Game.Helm ? "Yes" : "No"); // TODO: Add translation
+        menu.AddItem("yes", "Yes, I accept!"); // TODO: Add translation
+        menu.AddItem("no", "No, please..."); // TODO: Add translation
+        menu.ExitBackButton = false;
+        menu.ExitButton = false;
+        menu.Display(iTarget, Config.MenuTime.IntValue);
+    }
 }
 
 public int Menu_AskForConfirmation(Menu menu, MenuAction action, int target, int param)
