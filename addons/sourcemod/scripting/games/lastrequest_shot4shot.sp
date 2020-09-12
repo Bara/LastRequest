@@ -185,11 +185,11 @@ public int Menu_WeaponSelection(Menu menu, MenuAction action, int client, int pa
 
 public void OnGameStart(int client, int target, const char[] name)
 {
-    int iWeapon = LR_GivePlayerItem(client, Core.Weapon);
-    Player[client].Weapon = EntIndexToEntRef(iWeapon);
+    int iWeapon1 = LR_GivePlayerItem(client, Core.Weapon);
+    Player[client].Weapon = EntIndexToEntRef(iWeapon1);
 
-    iWeapon = LR_GivePlayerItem(target, Core.Weapon);
-    Player[target].Weapon = EntIndexToEntRef(iWeapon);
+    int iWeapon2 = LR_GivePlayerItem(target, Core.Weapon);
+    Player[target].Weapon = EntIndexToEntRef(iWeapon2);
 
     if (Core.Knife.BoolValue)
     {
@@ -198,8 +198,8 @@ public void OnGameStart(int client, int target, const char[] name)
     }
 
     int iRandom = GetRandomInt(0, 1);
-    LR_SetWeaponAmmo(client, iWeapon, iRandom ? 1 : 0);
-    LR_SetWeaponAmmo(target, iWeapon, iRandom ? 0 : 1);
+    LR_SetWeaponAmmo(client, iWeapon1, iRandom ? 1 : 0);
+    LR_SetWeaponAmmo(target, iWeapon2, iRandom ? 0 : 1);
 
     Core.Active = true;
 
