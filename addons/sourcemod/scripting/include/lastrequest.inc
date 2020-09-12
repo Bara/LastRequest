@@ -84,7 +84,7 @@ native bool LR_IsLastRequestAvailable();
 /*
  * Stops the active LR immediately.
  */
-native void LR_StopLastRequest(LR_End_Reason reason, int winner = -1, int loser = -1);
+native void LR_StopLastRequest(LR_End_Reason reason, int winner = -1, int loser = -1, bool blockSlay = false);
 
 /*
  * Firing last restart start

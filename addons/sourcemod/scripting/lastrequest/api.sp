@@ -75,6 +75,7 @@ public int Native_StopLastRequest(Handle plugin, int numParams)
     LR_End_Reason reason = view_as<LR_End_Reason>(GetNativeCell(1));
     int winner = GetNativeCell(2);
     int loser = GetNativeCell(3);
+    bool blockSlay = view_as<bool>(GetNativeCell(4));
     
     LR_LoopClients(i)
     {
@@ -150,7 +151,7 @@ public int Native_StopLastRequest(Handle plugin, int numParams)
 
     if (reason != Admin && loser > 0)
     {
-        if (IsPlayerAlive(loser) && Config.KillLoser.BoolValue)
+        if (IsPlayerAlive(loser) && Config.KillLoser.BoolValue && !blockSlay)
         {
             ForcePlayerSuicide(loser);
         }
@@ -228,9 +229,11 @@ public int Native_MenuTimeout(Handle plugin, int numParams)
 
     int target = LR_GetClientOpponent(client);
 
+    bool blockSlay = (Config.TimeoutPunishment.IntValue == 0);
+
     if (LR_IsClientValid(target))
     {
-        LR_StopLastRequest(Unknown, target, client);
+        LR_StopLastRequest(Unknown, target, client, blockSlay);
     }
 
     if (Config.TimeoutPunishment.IntValue == 1)
