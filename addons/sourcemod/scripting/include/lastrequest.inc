@@ -138,7 +138,7 @@ stock int LR_GivePlayerItem(int client, const char[] classname)
     return iWeapon;
 }
 
-stock bool LR_SetWeaponAmmo(int client, int weapon, int clip, int ammo = 0) // TODO Make it dynamically, when someone adds a primary it doesn't work.
+stock bool LR_SetWeaponAmmo(int client, int weapon, int clipAmmo, int reserveAmmo = 0) // TODO Make it dynamically, when someone adds a primary it doesn't work.
 {
     for (int i = 0; i < GetEntPropArraySize(client, Prop_Send, "m_hMyWeapons"); i++)
     {
@@ -146,14 +146,14 @@ stock bool LR_SetWeaponAmmo(int client, int weapon, int clip, int ammo = 0) // T
 
         if (IsValidEntity(weapon) && iWeapon == weapon)
         {
-            if (clip > -1)
+            if (clipAmmo > -1)
             {
-                SetEntProp(iWeapon, Prop_Send, "m_iClip1", clip);
+                SetEntProp(iWeapon, Prop_Send, "m_iClip1", clipAmmo);
             }
             
-            if (ammo > -1)
+            if (reserveAmmo > -1)
             {
-                SetEntProp(iWeapon, Prop_Send, "m_iPrimaryReserveAmmoCount", ammo);
+                SetEntProp(iWeapon, Prop_Send, "m_iPrimaryReserveAmmoCount", reserveAmmo);
             }
 
             return true;
