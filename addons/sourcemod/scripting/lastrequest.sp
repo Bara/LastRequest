@@ -36,6 +36,8 @@ public void OnPluginStart()
     InitConfig();
     InitEvents();
     InitCommands();
+
+    LoadTranslations("core.phrases");
 }
 
 public void OnMapStart()

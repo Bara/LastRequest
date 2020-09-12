@@ -167,8 +167,12 @@ void AskForConfirmation(int client, const char[] weapon)
         Menu menu = new Menu(Menu_Empty);
         menu.SetTitle("%N plays against you!\n \nLast Request: %s\nMode: %s\nWeapons: %s\nHealth: %d\nKevlar: %d\nHelm: %s",
                         client, Player[client].Game.FullName, Player[client].Game.Mode, weapon, Player[client].Game.Health, Player[client].Game.Kevlar, Player[client].Game.Helm ? "Yes" : "No"); // TODO: Add translation
+        
+        char sBuffer[32];
+        Format(sBuffer, sizeof(sBuffer), "%T", "Exit", iTarget);
+        menu.AddItem("exit", sBuffer);
         menu.ExitBackButton = false;
-        menu.ExitButton = true;
+        menu.ExitButton = false;
         menu.Display(iTarget, Config.MenuTime.IntValue);
 
         StartCountdown(Config.StartCountdown.IntValue, client);
