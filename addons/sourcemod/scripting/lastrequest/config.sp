@@ -16,7 +16,7 @@ void InitConfig()
     Config.KillLoser = AutoExecConfig_CreateConVar("lastrequest_kill_loser", "1", "Kill the loser after games end?", _, true, 0.0, true, 1.0);
     Config.WinnerWeaponsBack = AutoExecConfig_CreateConVar("lastrequest_give_winner_weapons_back", "1", "Give winner weapons back on game end?", _, true, 0.0, true, 1.0);
     Config.LoserWeaponsBack = AutoExecConfig_CreateConVar("lastrequest_give_loser_weapons_back", "1", "Give loser weapons back on game end? Doesn't work when lastrequest_kill_loser is 1", _, true, 0.0, true, 1.0);
-    Config.ForceAccept = AutoExecConfig_CreateConVar("lastrequest_force_accept", "0", "Force accept lr games?", _, true, 0.0, true, 1.0);
+    Config.ForceAccept = AutoExecConfig_CreateConVar("lastrequest_force_accept", "1", "Should requested LR Games automatically accepted?", _, true, 0.0, true, 1.0);
     AutoExecConfig_ExecuteFile();
     AutoExecConfig_CleanFile();
 }
