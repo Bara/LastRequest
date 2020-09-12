@@ -203,17 +203,17 @@ public int Menu_WeaponSelection(Menu menu, MenuAction action, int client, int pa
 
 public void OnGameStart(int client, int target, const char[] name)
 {
-    if (Core.Knife.BoolValue)
-    {
-        LR_GivePlayerItem(client, "weapon_knife");
-        LR_GivePlayerItem(target, "weapon_knife");
-    }
-
     int iWeapon = LR_GivePlayerItem(client, Core.Weapon);
     Player[client].Weapon = EntIndexToEntRef(iWeapon);
 
     iWeapon = LR_GivePlayerItem(target, Core.Weapon);
     Player[target].Weapon = EntIndexToEntRef(iWeapon);
+
+    if (Core.Knife.BoolValue)
+    {
+        GivePlayerItem(client, "weapon_knife");
+        GivePlayerItem(target, "weapon_knife");
+    }
 
     Core.Active = true;
 
