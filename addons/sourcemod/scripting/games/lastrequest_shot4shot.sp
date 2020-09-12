@@ -185,8 +185,6 @@ public int Menu_WeaponSelection(Menu menu, MenuAction action, int client, int pa
 
 public void OnGameStart(int client, int target, const char[] name)
 {
-    int iRandom = GetRandomInt(0, 1);
-
     int iWeapon = LR_GivePlayerItem(client, Core.Weapon);
     Player[client].Weapon = EntIndexToEntRef(iWeapon);
 
@@ -199,6 +197,7 @@ public void OnGameStart(int client, int target, const char[] name)
         GivePlayerItem(target, "weapon_knife");
     }
 
+    int iRandom = GetRandomInt(0, 1);
     LR_SetWeaponAmmo(client, iWeapon, iRandom ? 1 : 0);
     LR_SetWeaponAmmo(target, iWeapon, iRandom ? 0 : 1);
 

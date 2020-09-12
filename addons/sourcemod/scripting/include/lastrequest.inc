@@ -138,9 +138,9 @@ stock int LR_GivePlayerItem(int client, const char[] classname)
     return iWeapon;
 }
 
-stock bool LR_SetWeaponAmmo(int client, int weapon, int clip, int ammo = 0, bool giveWeapon = false) // TODO Make it dynamically, when someone adds a primary it doesn't work.
+stock bool LR_SetWeaponAmmo(int client, int weapon, int clip, int ammo = 0) // TODO Make it dynamically, when someone adds a primary it doesn't work.
 {
-    for(int i = 0; i < GetEntPropArraySize(client, Prop_Send, "m_hMyWeapons"); i++)
+    for (int i = 0; i < GetEntPropArraySize(client, Prop_Send, "m_hMyWeapons"); i++)
     {
         int iWeapon = GetEntPropEnt(client, Prop_Send, "m_hMyWeapons", i);
 
