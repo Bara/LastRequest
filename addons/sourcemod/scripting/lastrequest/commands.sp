@@ -1,8 +1,9 @@
 void InitCommands()
 {
     RegConsoleCmd("sm_lr", Command_LastRequest);
-    RegConsoleCmd("sm_lrlist", Command_LastRequestList);
+    RegConsoleCmd("sm_activelr", Command_ActiveLastRequests);
     RegConsoleCmd("sm_stoplr", Command_StopLR);
+    RegConsoleCmd("sm_lrlist", Command_LastRequestList);
 }
 
 public Action Command_LastRequestList(int client, int args)
@@ -45,4 +46,16 @@ public Action Command_StopLR(int client, int args)
         AskOpponentToStop(client);
         return;
     }
+}
+
+public Action Command_ActiveLastRequests(int client, int args)
+{
+    if (!LR_IsClientValid(client))
+    {
+        return Plugin_Handled;
+    }
+    
+    ShowActiveLastRequests(client);
+    
+    return Plugin_Continue;
 }

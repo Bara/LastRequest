@@ -297,3 +297,63 @@ public int Menu_AskToStop(Menu menu, MenuAction action, int target, int param)
         delete menu;
     }
 }
+
+void ShowActiveLastRequests(int client)
+{
+    StringMap smList = new StringMap();
+    char sClient[12], sTarget[12], sBuffer[12], sText[128];
+
+    LR_LoopClients(i)
+    {
+        if (LR_IsClientInLastRequest(i))
+        {
+            IntToString(i, sClient, sizeof(sClient));
+            IntToString(LR_GetClientOpponent(i), sTarget, sizeof(sTarget));
+
+            if (!smList.GetString(sTarget, sBuffer, sizeof(sBuffer)))
+            {
+                smList.SetString(sClient, sTarget);
+            }
+        }
+    }
+
+    if (smList.Size < 1)
+    {
+        delete smList;
+        PrintToChat(client, "No running last requests found...");
+        return;
+    }
+
+    Menu menu = new Menu(Menu_Empty);
+    menu.SetTitle("Running last requests:\n ");
+
+    StringMapSnapshot snap = smList.Snapshot();
+    for (int i = 0; i < snap.Length; i++)
+    {
+        snap.GetKey(i, sClient, sizeof(sClient));
+        smList.GetString(sClient, sTarget, sizeof(sTarget));
+
+        int iT, iCT;
+
+        if (GetClientTeam(StringToInt(sClient)) == CS_TEAM_T)
+        {
+            iT = StringToInt(sClient);
+            iCT = StringToInt(sTarget);
+        }
+        else
+        {
+            iT = StringToInt(sTarget);
+            iCT = StringToInt(sClient);
+        }
+        
+        Format(sText, sizeof(sText), "%N vs. %N\nGame: %s, Mode: %s", iT, iCT, Player[iT].Game.FullName, Player[iT].Game.Mode);
+        menu.AddItem("", sText);
+    }
+
+    menu.ExitBackButton = false;
+    menu.ExitButton = true;
+    menu.Display(client, Config.MenuTime.IntValue);
+
+    delete smList;
+    delete snap;
+}

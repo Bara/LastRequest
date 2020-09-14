@@ -33,14 +33,14 @@ public void LR_OnOpenMenu(Menu menu)
     menu.AddItem(LR_SHORT, "Test");
 }
 
-public bool Hosties_OnLastRequestAvailable(int client)
+public bool LR_OnLastRequestAvailable(int client)
 {
     if(LR_IsLastRequestAvailable())
     {
         PrintToChatAll("Last request is now available!");
         PrintToChatAll("Last T is: %N", client);
     }
-    PrintToChatAll("(Hosties_OnLastRequestAvailable) called!");
+    PrintToChatAll("(LR_OnLastRequestAvailable) called!");
 }
 
 public Action OnGamePreStart(int requester, int opponent, const char[] shortname)
