@@ -75,7 +75,15 @@ bool CheckClientStatus(int client)
         return false;
     }
     
-    PrintToChat(client, "Core.Available: %d, Player.InLR: %d", Core.Available, Player[client].InLR);
+    int iCount = GetLastRequestCount();
+    
+    PrintToChat(client, "GetLastRequestCount: %d, Core.Available: %d, Player.InLR: %d", iCount, Core.Available, Player[client].InLR);
+
+    if (iCount >= Config.MaxActive.IntValue)
+    {
+        ReplyToCommand(client, "No empty last request slot available (%d/%d)", iCount, Config.MaxActive.IntValue); // TODO: Add translation
+        return false;
+    }
     
     if (!Core.Available)
     {
@@ -292,4 +300,34 @@ void RemoveWeapons(int client, bool addToArray)
             LR_RemovePlayerWeapon(client, iWeapon);
         }
     }
+}
+
+int GetLastRequestCount()
+{
+    StringMap smList = new StringMap();
+    char sClient[12], sTarget[12], sBuffer[12];
+
+    int iCount = 0;
+
+    LR_LoopClients(i)
+    {
+        if (!LR_IsClientInLastRequest(i))
+        {
+            continue;
+        }
+        
+        IntToString(i, sClient, sizeof(sClient));
+        IntToString(LR_GetClientOpponent(i), sTarget, sizeof(sTarget));
+
+        if (!smList.GetString(sTarget, sBuffer, sizeof(sBuffer)))
+        {
+            smList.SetString(sClient, sTarget);
+
+            iCount++;
+        }
+    }
+
+    delete smList;
+
+    return iCount;
 }

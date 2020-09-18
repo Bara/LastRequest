@@ -26,6 +26,7 @@ enum struct Configs {
     ConVar WinnerWeaponsBack;
     ConVar LoserWeaponsBack;
     ConVar ForceAccept;
+    ConVar MaxActive;
 }
 
 enum struct Games

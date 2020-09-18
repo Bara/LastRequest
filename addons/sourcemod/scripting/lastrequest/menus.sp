@@ -312,15 +312,17 @@ void ShowActiveLastRequests(int client)
 
     LR_LoopClients(i)
     {
-        if (LR_IsClientInLastRequest(i))
+        if (!LR_IsClientInLastRequest(i))
         {
-            IntToString(i, sClient, sizeof(sClient));
-            IntToString(LR_GetClientOpponent(i), sTarget, sizeof(sTarget));
+            continue;
+        }
+        
+        IntToString(i, sClient, sizeof(sClient));
+        IntToString(LR_GetClientOpponent(i), sTarget, sizeof(sTarget));
 
-            if (!smList.GetString(sTarget, sBuffer, sizeof(sBuffer)))
-            {
-                smList.SetString(sClient, sTarget);
-            }
+        if (!smList.GetString(sTarget, sBuffer, sizeof(sBuffer)))
+        {
+            smList.SetString(sClient, sTarget);
         }
     }
 
