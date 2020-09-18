@@ -20,10 +20,10 @@ public Action Event_PlayerDeath(Event event, const char[] name, bool dontBroadca
 
 public Action Event_RoundPreStart(Event event, const char[] name, bool dontBroadcast)
 {
-    Core.SetState(false, false, false, false);
+    delete Core.Players;
 
     LR_LoopClients(i)
     {
-        Player[i].Reset();
+        Player[i].Reset(i);
     }
 }

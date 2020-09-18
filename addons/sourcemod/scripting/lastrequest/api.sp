@@ -51,8 +51,6 @@ public int Native_RegisterLRGame(Handle plugin, int numParams)
 
 public int Native_StartLastRequest(Handle plugin, int numParams)
 {
-    Core.SetState(false, false, true, false);
-
     int client = GetNativeCell(1);
 
     GetNativeString(2, Player[client].Game.Mode, sizeof(Games::Mode));
@@ -64,10 +62,7 @@ public int Native_StartLastRequest(Handle plugin, int numParams)
     Player[client].Game.Kevlar = GetNativeCell(5);
     Player[client].Game.Helm = GetNativeCell(6);
 
-    if (Core.Confirmation && !Core.CustomStart && !Core.RunningLR)
-    {
-        AskForConfirmation(client, sWeapon);
-    }
+    AskForConfirmation(client, sWeapon);
 }
 
 public int Native_StopLastRequest(Handle plugin, int numParams)
@@ -146,7 +141,7 @@ public int Native_StopLastRequest(Handle plugin, int numParams)
             }
         }
 
-        Player[winner].Reset();
+        Player[winner].Reset(winner);
     }
 
     if (reason != Admin && loser > 0)
@@ -179,15 +174,13 @@ public int Native_StopLastRequest(Handle plugin, int numParams)
             }
         }
 
-        Player[loser].Reset();
+        Player[loser].Reset(loser);
     }
-
-    Core.SetState(false, false, false, false);
 }
 
 public int Native_IsLastRequestAvailable(Handle plugin, int numParams)
 {
-    return Core.IsAvailable;
+    return (Core.Players != null);
 }
 
 public int Native_IsClientInLastRequest(Handle plugin, int numParams)
@@ -290,5 +283,5 @@ public int Native_ResetClient(Handle plugin, int numParams)
 {
     int client = GetNativeCell(1);
 
-    Player[client].Reset();
+    Player[client].Reset(client);
 }

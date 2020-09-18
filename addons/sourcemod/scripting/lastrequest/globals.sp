@@ -41,6 +41,9 @@ enum struct Games
     Function EndCB;
 }
 
+Variables Core;
+Configs Config;
+
 enum struct PlayerData
 {
     bool InLR;
@@ -51,16 +54,20 @@ enum struct PlayerData
 
     ArrayList Weapons;
 
-    void Reset()
+    void Reset(int client)
     {
         this.InLR = false;
         this.Target = -1;
 
         delete this.Weapons;
+
+        int index = Core.Players.FindValue(client);
+
+        if (index != -1)
+        {
+            Core.Players.Erase(index);
+        }
     }
 }
-
-Variables Core;
-Configs Config;
 
 PlayerData Player[MAXPLAYERS + 1];

@@ -43,9 +43,9 @@ public void OnPluginStart()
 public void OnMapStart()
 {
     delete Core.Games;
-    Core.Games = new StringMap();
+    delete Core.Players;
 
-    Core.SetState(false, false, false, false);
+    Core.Games = new StringMap();
 
     CreateTimer(3.0, Timer_CheckTeams, _, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
 }
@@ -58,7 +58,7 @@ public void OnConfigsExecuted()
 
 public void OnClientPutInServer(int client)
 {
-    Player[client].Reset();
+    Player[client].Reset(client);
 }
 
 public void OnClientDisconnect(int client)
@@ -68,5 +68,5 @@ public void OnClientDisconnect(int client)
         LR_StopLastRequest(Unknown, Player[client].Target, client);
     }
 
-    Player[client].Reset();
+    Player[client].Reset(client);
 }

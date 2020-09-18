@@ -75,23 +75,11 @@ bool IsLRReady(int client)
         return false;
     }
     
-    PrintToChat(client, "Core.IsAvailable: %d, Core.RunningLR: %d, Core.CustomStart: %d, Core.Confirmation: %d, Core.InLR: %d", Core.IsAvailable, Core.RunningLR, Core.CustomStart, Core.Confirmation, Player[client].InLR);
+    PrintToChat(client, "Core.Players: %d (Players: %d), Player.InLR: %d", (Core.Players != null), Core.Players.Length, Player[client].InLR);
     
-    if (Core.RunningLR)
+    if (Core.Players == null)
     {
-        ReplyToCommand(client, "Last Request is already running..."); // TODO: Add translation
-        return false;
-    }
-    
-    if (Core.CustomStart)
-    {
-        ReplyToCommand(client, "Last Request is awaiting on plugin start..."); // TODO: Add translation
-        return false;
-    }
-
-    if (!Core.IsAvailable)
-    {
-        ReplyToCommand(client, "Last Request is not available..."); // TODO: Add translation
+        ReplyToCommand(client, "Something went wrong with players array..."); // TODO: Add translation
         return false;
     }
     
@@ -134,10 +122,10 @@ void CheckTeams(bool openMenu = false)
 
     if (Config.Debug.BoolValue)
     {
-        PrintToChatAll("T: %d, CT: %d, Running: %d, CustomStart: %d, Confirmation: %d, Available: %d", iT, iCT, Core.RunningLR, Core.CustomStart, Core.Confirmation, Core.IsAvailable);
+        PrintToChatAll("T: %d, CT: %d, Core.Players: %d (Players: %d)", iT, iCT, (Core.Players != null), Core.Players.Length);
     }
 
-    if (iT == 1 && iCT > 0 && !Core.RunningLR && !Core.CustomStart && !Core.Confirmation && !Core.IsAvailable)
+    if (iT == 1 && iCT > 0 && Core.Players == null)
     {
         int client = iTIndex;
         
@@ -151,7 +139,8 @@ void CheckTeams(bool openMenu = false)
             ShowPlayerList(client);
         }
 
-        Core.SetState(true, false, false, false);
+        delete Core.Players;
+        Core.Players = new ArrayList();
         
         Call_StartForward(Core.OnLRAvailable);
         Call_PushCell(client);
@@ -249,11 +238,11 @@ public Action Timer_Countdown(Handle timer, DataPack pack)
 
 public Action Timer_CheckTeams(Handle timer)
 {
-    if (!Core.RunningLR && !Core.CustomStart && !Core.Confirmation)
+    if (Core.Players == null)
     {
         CheckTeams();
     }
-    else if (Core.RunningLR || Core.CustomStart || Core.Confirmation)
+    else if (Core.Players != null && Core.Players.Length > 0)
     {
         if (GetTeamCountAmount(CS_TEAM_T) == 0 || GetTeamCountAmount(CS_TEAM_CT) == 0)
         {

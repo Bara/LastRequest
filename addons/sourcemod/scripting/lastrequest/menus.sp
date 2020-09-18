@@ -88,7 +88,7 @@ public int Menu_LastRequest(Menu menu, MenuAction action, int client, int param)
         }
         else if (param == MenuCancel_Exit)
         {
-            Player[client].Reset();
+            Player[client].Reset(client);
         }
     }		
     else if (action == MenuAction_End)
@@ -122,8 +122,6 @@ public int Menu_TMenu(Menu menu, MenuAction action, int client, int param)
         }
         
         PrintToChat(client, "LR: %s - Opponent: %N", Player[client].Game.Name, Player[client].Target); // TODO: Add message/translation or debug?
-
-        Core.SetState(false, true, false, false);
         
         Player[client].InLR = true;
         Player[Player[client].Target].InLR = true;
@@ -142,7 +140,7 @@ public int Menu_TMenu(Menu menu, MenuAction action, int client, int param)
         }
         else if (param == MenuCancel_Exit)
         {
-            Player[client].Reset();
+            Player[client].Reset(client);
         }
     }		
     else if (action == MenuAction_End)
@@ -208,7 +206,8 @@ public int Menu_AskForConfirmation(Menu menu, MenuAction action, int target, int
             return;
         }
 
-        Core.SetState(false, false, false, true);
+        Core.Players.Push(client);
+        Core.Players.Push(target);
 
         if (StrEqual(sParam, "yes", false))
         {
@@ -302,6 +301,7 @@ void ShowActiveLastRequests(int client)
 {
     StringMap smList = new StringMap();
     char sClient[12], sTarget[12], sBuffer[12], sText[128];
+    int iT, iCT;
 
     LR_LoopClients(i)
     {
@@ -332,8 +332,6 @@ void ShowActiveLastRequests(int client)
     {
         snap.GetKey(i, sClient, sizeof(sClient));
         smList.GetString(sClient, sTarget, sizeof(sTarget));
-
-        int iT, iCT;
 
         if (GetClientTeam(StringToInt(sClient)) == CS_TEAM_T)
         {
