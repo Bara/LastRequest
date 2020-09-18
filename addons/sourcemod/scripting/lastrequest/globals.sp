@@ -1,20 +1,10 @@
 enum struct Variables {
-    bool IsAvailable;
-    bool CustomStart;
-    bool Confirmation;
-    bool RunningLR;
+    ArrayList Players;
     
     StringMap Games;
 
     GlobalForward OnMenu;
     GlobalForward OnLRAvailable;
-
-    void SetState(bool available, bool custom, bool confirmation, bool running) {
-        this.IsAvailable = available;
-        this.CustomStart = custom;
-        this.Confirmation = confirmation;
-        this.RunningLR = running;
-    }
 }
 
 enum struct Configs {
