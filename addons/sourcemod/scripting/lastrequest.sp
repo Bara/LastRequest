@@ -43,7 +43,7 @@ public void OnPluginStart()
 public void OnMapStart()
 {
     delete Core.Games;
-    delete Core.Players;
+    Core.Status(false);
 
     Core.Games = new StringMap();
 
@@ -58,7 +58,7 @@ public void OnConfigsExecuted()
 
 public void OnClientPutInServer(int client)
 {
-    Player[client].Reset(client);
+    Player[client].Reset();
 }
 
 public void OnClientDisconnect(int client)
@@ -68,5 +68,5 @@ public void OnClientDisconnect(int client)
         LR_StopLastRequest(Unknown, Player[client].Target, client);
     }
 
-    Player[client].Reset(client);
+    Player[client].Reset();
 }

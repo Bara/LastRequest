@@ -75,9 +75,9 @@ bool IsLRReady(int client)
         return false;
     }
     
-    PrintToChat(client, "Core.Players: %d (Players: %d), Player.InLR: %d", (Core.Players != null), Core.Players.Length, Player[client].InLR);
+    PrintToChat(client, "Core.Available: %d, Player.InLR: %d", Core.Available, Player[client].InLR);
     
-    if (Core.Players == null)
+    if (!Core.Available)
     {
         ReplyToCommand(client, "Something went wrong with players array..."); // TODO: Add translation
         return false;
@@ -122,10 +122,10 @@ void CheckTeams(bool openMenu = false)
 
     if (Config.Debug.BoolValue)
     {
-        PrintToChatAll("T: %d, CT: %d, Core.Players: %d (Players: %d)", iT, iCT, (Core.Players != null), Core.Players.Length);
+        PrintToChatAll("T: %d, CT: %d, Core.Available: %d", iT, iCT, Core.Available);
     }
 
-    if (iT == 1 && iCT > 0 && Core.Players == null)
+    if (iT == 1 && iCT > 0 && !Core.Available)
     {
         int client = iTIndex;
         
@@ -139,8 +139,7 @@ void CheckTeams(bool openMenu = false)
             ShowPlayerList(client);
         }
 
-        delete Core.Players;
-        Core.Players = new ArrayList();
+        Core.Status(true);
         
         Call_StartForward(Core.OnLRAvailable);
         Call_PushCell(client);
@@ -238,11 +237,11 @@ public Action Timer_Countdown(Handle timer, DataPack pack)
 
 public Action Timer_CheckTeams(Handle timer)
 {
-    if (Core.Players == null)
+    if (!Core.Available)
     {
         CheckTeams();
     }
-    else if (Core.Players != null && Core.Players.Length > 0)
+    else
     {
         if (GetTeamCountAmount(CS_TEAM_T) == 0 || GetTeamCountAmount(CS_TEAM_CT) == 0)
         {

@@ -141,7 +141,7 @@ public int Native_StopLastRequest(Handle plugin, int numParams)
             }
         }
 
-        Player[winner].Reset(winner);
+        Player[winner].Reset();
     }
 
     if (reason != Admin && loser > 0)
@@ -174,13 +174,13 @@ public int Native_StopLastRequest(Handle plugin, int numParams)
             }
         }
 
-        Player[loser].Reset(loser);
+        Player[loser].Reset();
     }
 }
 
 public int Native_IsLastRequestAvailable(Handle plugin, int numParams)
 {
-    return (Core.Players != null);
+    return Core.Available;
 }
 
 public int Native_IsClientInLastRequest(Handle plugin, int numParams)
@@ -283,5 +283,5 @@ public int Native_ResetClient(Handle plugin, int numParams)
 {
     int client = GetNativeCell(1);
 
-    Player[client].Reset(client);
+    Player[client].Reset();
 }

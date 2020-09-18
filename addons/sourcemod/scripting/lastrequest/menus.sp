@@ -88,7 +88,7 @@ public int Menu_LastRequest(Menu menu, MenuAction action, int client, int param)
         }
         else if (param == MenuCancel_Exit)
         {
-            Player[client].Reset(client);
+            Player[client].Reset();
         }
     }		
     else if (action == MenuAction_End)
@@ -140,7 +140,7 @@ public int Menu_TMenu(Menu menu, MenuAction action, int client, int param)
         }
         else if (param == MenuCancel_Exit)
         {
-            Player[client].Reset(client);
+            Player[client].Reset();
         }
     }		
     else if (action == MenuAction_End)
@@ -205,9 +205,6 @@ public int Menu_AskForConfirmation(Menu menu, MenuAction action, int target, int
             LR_StopLastRequest(Server);
             return;
         }
-
-        Core.Players.Push(client);
-        Core.Players.Push(target);
 
         if (StrEqual(sParam, "yes", false))
         {

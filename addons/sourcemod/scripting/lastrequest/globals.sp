@@ -1,10 +1,14 @@
 enum struct Variables {
-    ArrayList Players;
+    bool Available;
     
     StringMap Games;
 
     GlobalForward OnMenu;
     GlobalForward OnLRAvailable;
+
+    void Status(bool status) {
+        this.Available = status;
+    }
 }
 
 enum struct Configs {
@@ -54,19 +58,10 @@ enum struct PlayerData
 
     ArrayList Weapons;
 
-    void Reset(int client)
+    void Reset()
     {
         this.InLR = false;
         this.Target = -1;
-
-        delete this.Weapons;
-
-        int index = Core.Players.FindValue(client);
-
-        if (index != -1)
-        {
-            Core.Players.Erase(index);
-        }
     }
 }
 
