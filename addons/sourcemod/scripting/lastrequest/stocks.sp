@@ -62,7 +62,7 @@ int GetTeamCountAmount(int team)
     return iCount;
 }
 
-bool IsLRReady(int client)
+bool CheckClientStatus(int client)
 {
     if (!LR_IsClientValid(client))
     {

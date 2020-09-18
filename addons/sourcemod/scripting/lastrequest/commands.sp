@@ -20,7 +20,7 @@ public Action Command_LastRequestList(int client, int args)
 
 public Action Command_LastRequest(int client, int args)
 {
-    if (!IsLRReady(client))
+    if (!CheckClientStatus(client))
     {
         return Plugin_Handled;
     }

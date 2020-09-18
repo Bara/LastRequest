@@ -55,7 +55,7 @@ public int Menu_LastRequest(Menu menu, MenuAction action, int client, int param)
 {
     if (action == MenuAction_Select)
     {
-        if (!IsLRReady(client))
+        if (!CheckClientStatus(client))
         {
             return;
         }
@@ -64,6 +64,16 @@ public int Menu_LastRequest(Menu menu, MenuAction action, int client, int param)
         menu.GetItem(param, sParam, sizeof(sParam));
 
         int target = StringToInt(sParam);
+
+        if (!CheckClientStatus(target))
+        {
+            PrintToChat(client, "Target is no longer valid!");
+
+            Player[client].Reset();
+
+            return;
+        }
+
         Player[client].Target = target;
         Player[target].Target = client;
         
@@ -101,7 +111,7 @@ public int Menu_TMenu(Menu menu, MenuAction action, int client, int param)
 {
     if (action == MenuAction_Select)
     {
-        if (!IsLRReady(client))
+        if (!CheckClientStatus(client))
         {
             return;
         }
