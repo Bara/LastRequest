@@ -179,6 +179,7 @@ public int Menu_WeaponSelection(Menu menu, MenuAction action, int client, int pa
         menu.GetItem(param, sClass, sizeof(sClass), _, sDisplay, sizeof(sDisplay));
 
         strcopy(Player[client].Class, sizeof(PlayerData::Class), sClass);
+        strcopy(Player[LR_GetClientOpponent(client)].Class, sizeof(PlayerData::Class), sClass);
 
         LR_StartLastRequest(client, "Normal", sDisplay); // TODO: Add translation
     }
@@ -200,7 +201,7 @@ public void OnGameStart(int client, int target, const char[] name)
     int iWeapon = LR_GivePlayerItem(client, Player[client].Class);
     Player[client].Weapon = EntIndexToEntRef(iWeapon);
 
-    iWeapon = LR_GivePlayerItem(target, Player[client].Class);
+    iWeapon = LR_GivePlayerItem(target, Player[target].Class);
     Player[target].Weapon = EntIndexToEntRef(iWeapon);
 
     if (Core.Knife.BoolValue)
