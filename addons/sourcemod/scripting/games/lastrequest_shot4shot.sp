@@ -180,7 +180,7 @@ public void OnGameStart(int client, int target, const char[] name)
     int iWeapon1 = LR_GivePlayerItem(client, Player[client].Class);
     Player[client].Weapon = EntIndexToEntRef(iWeapon1);
 
-    int iWeapon2 = LR_GivePlayerItem(target, Player[client].Class);
+    int iWeapon2 = LR_GivePlayerItem(target, Player[target].Class);
     Player[target].Weapon = EntIndexToEntRef(iWeapon2);
 
     if (Core.Knife.BoolValue)
@@ -315,17 +315,17 @@ public void OnGameEnd(LR_End_Reason reason, int winner, int loser)
 {
     if (winner > 0)
     {
-        SDKHook(winner, SDKHook_WeaponDrop, OnWeaponDrop);
-        SDKHook(winner, SDKHook_TraceAttack, OnTraceAttack);
+        SDKUnhook(winner, SDKHook_WeaponDrop, OnWeaponDrop);
+        SDKUnhook(winner, SDKHook_TraceAttack, OnTraceAttack);
 
         Player[winner].Reset();
     }
 
     if (loser > 0)
     {
-        SDKHook(loser, SDKHook_WeaponDrop, OnWeaponDrop);
-        SDKHook(loser, SDKHook_TraceAttack, OnTraceAttack);
-        
+        SDKUnhook(loser, SDKHook_WeaponDrop, OnWeaponDrop);
+        SDKUnhook(loser, SDKHook_TraceAttack, OnTraceAttack);
+
         Player[loser].Reset();
     }
 }
