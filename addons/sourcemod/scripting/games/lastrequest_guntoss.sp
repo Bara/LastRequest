@@ -29,6 +29,7 @@ enum struct PlayerData {
     float Distance;
 
     bool Dropped;
+    bool Active;
 
     char Class[32];
 
@@ -42,6 +43,7 @@ enum struct PlayerData {
         this.Distance = 0.0;
 
         this.Dropped = false;
+        this.Active = false;
 
         this.Class[0] = '\0';
     }
@@ -212,11 +214,19 @@ public void OnGameStart(int client, int target, const char[] name)
 
     SDKHook(client, SDKHook_WeaponCanUse, OnWeaponCanUse);
     SDKHook(target, SDKHook_WeaponCanUse, OnWeaponCanUse);
+
+    Player[client].Active = true;
+    Player[target].Active = true;
 }
 
 public Action Command_Drop(int client, const char[] command, int args)
 {
     if (!LR_IsClientInLastRequest(client))
+    {
+        return Plugin_Continue;
+    }
+
+    if (!Player[client].Active)
     {
         return Plugin_Continue;
     }
@@ -333,12 +343,14 @@ public void OnGameEnd(LR_End_Reason reason, int winner, int loser)
     if (winner > 0)
     {
         Player[winner].Reset();
+
         SDKUnhook(winner, SDKHook_WeaponCanUse, OnWeaponCanUse);
     }
 
     if (loser > 0)
     {
         Player[loser].Reset();
+        
         SDKUnhook(loser, SDKHook_WeaponCanUse, OnWeaponCanUse);
     }
 }

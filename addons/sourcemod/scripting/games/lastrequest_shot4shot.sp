@@ -20,11 +20,15 @@ enum struct General
 
 enum struct PlayerData {
     int Weapon;
+
     char Class[32];
+
+    bool Active;
 
     void Reset() {
         this.Weapon = -1;
         this.Class[0] = '\0';
+        this.Active = false;
     }
 }
 
@@ -198,6 +202,9 @@ public void OnGameStart(int client, int target, const char[] name)
     SDKHook(target, SDKHook_WeaponDrop, OnWeaponDrop);
     SDKHook(client, SDKHook_TraceAttack, OnTraceAttack);
     SDKHook(target, SDKHook_TraceAttack, OnTraceAttack);
+
+    Player[client].Active = true;
+    Player[target].Active = true;
 }
 
 public Action OnTraceAttack(int victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &ammotype, int hitbox, int hitgroup)
@@ -213,6 +220,11 @@ public Action OnTraceAttack(int victim, int &attacker, int &inflictor, float &da
     }
     
     if (!LR_IsClientInLastRequest(attacker) || !LR_IsClientInLastRequest(victim))
+    {
+        return Plugin_Handled;
+    }
+
+    if (!Player[attacker].Active || !Player[victim].Active)
     {
         return Plugin_Handled;
     }
@@ -277,6 +289,7 @@ public Action Event_WeaponFire(Event event, const char[] name, bool dontBroadcas
     {
         return;
     }
+
     if (LR_IsDebugActive())
     {
         PrintToChatAll("Event_WeaponFire 4");

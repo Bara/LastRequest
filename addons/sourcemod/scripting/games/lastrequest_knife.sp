@@ -52,11 +52,15 @@ enum struct Variables {
 }
 
 enum struct PlayerData {
+    bool Active;
+
     float Speed;
     float Gravity;
+
     Modes Mode;
 
     void Reset() {
+        this.Active = false;
         this.Speed = 0.0;
         this.Gravity = 0.0;
     }
@@ -296,6 +300,9 @@ public void OnGameStart(int client, int target, const char[] name)
     
     LR_GivePlayerItem(client, "weapon_knife");
     LR_GivePlayerItem(target, "weapon_knife");
+
+    Player[client].Active = true;
+    Player[target].Active = true;
 }
 
 public void OnGameEnd(LR_End_Reason reason, int winner, int loser)
@@ -320,8 +327,8 @@ public void OnGameEnd(LR_End_Reason reason, int winner, int loser)
 
         SetDrunk(loser, false);
         SetThirdPerson(loser, false);
-        SetSpeed(winner, false);
-        SetGravity(winner, false);
+        SetSpeed(loser, false);
+        SetGravity(loser, false);
 
         Player[loser].Mode.Reset();
     }
@@ -342,6 +349,11 @@ public Action OnTraceAttack(int victim, int &attacker, int &inflictor, float &da
     }
     
     if (!LR_IsClientInLastRequest(attacker) || !LR_IsClientInLastRequest(victim))
+    {
+        return Plugin_Handled;
+    }
+
+    if (!Player[attacker].Active || !Player[victim].Active)
     {
         return Plugin_Handled;
     }
