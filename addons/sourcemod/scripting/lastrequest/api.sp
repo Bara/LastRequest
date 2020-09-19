@@ -114,7 +114,7 @@ public int Native_StopLastRequest(Handle plugin, int numParams)
     
     if (reason != Admin && winner > 0)
     {
-        if (Config.WinnerWeaponsBack.BoolValue && (Player[winner].Weapons != null && Player[winner].Weapons.Length > 0))
+        if (reason == Normal && Config.WinnerWeaponsBack.BoolValue && (Player[winner].Weapons != null && Player[winner].Weapons.Length > 0))
         {
             RemoveWeapons(winner, false);
 
@@ -146,7 +146,7 @@ public int Native_StopLastRequest(Handle plugin, int numParams)
 
     if (reason != Admin && loser > 0)
     {
-        if (IsPlayerAlive(loser) && Config.KillLoser.BoolValue && !blockSlay)
+        if (reason == Normal && IsPlayerAlive(loser) && Config.KillLoser.BoolValue && !blockSlay)
         {
             ForcePlayerSuicide(loser);
         }
