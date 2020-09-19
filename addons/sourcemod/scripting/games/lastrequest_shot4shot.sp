@@ -15,24 +15,16 @@ enum struct General
     ConVar Knife;
     ConVar Drop;
 
-    char Weapon[32];
-
-    bool Active;
-
     StringMap Weapons;
-
-    void Reset() {
-        this.Weapon[0] = '\0';
-
-        this.Active = false;
-    }
 }
 
 enum struct PlayerData {
     int Weapon;
+    char Class[32];
 
     void Reset() {
         this.Weapon = -1;
+        this.Class[0] = '\0';
     }
 }
 
@@ -166,7 +158,7 @@ public int Menu_WeaponSelection(Menu menu, MenuAction action, int client, int pa
         char sClass[32], sDisplay[32];
         menu.GetItem(param, sClass, sizeof(sClass), _, sDisplay, sizeof(sDisplay));
 
-        strcopy(Core.Weapon, sizeof(General::Weapon), sClass);
+        strcopy(Player[client].Class, sizeof(PlayerData::Class), sClass);
 
         LR_StartLastRequest(client, "Normal", sDisplay); // TODO: Add translation
     }
@@ -185,10 +177,10 @@ public int Menu_WeaponSelection(Menu menu, MenuAction action, int client, int pa
 
 public void OnGameStart(int client, int target, const char[] name)
 {
-    int iWeapon1 = LR_GivePlayerItem(client, Core.Weapon);
+    int iWeapon1 = LR_GivePlayerItem(client, Player[client].Class);
     Player[client].Weapon = EntIndexToEntRef(iWeapon1);
 
-    int iWeapon2 = LR_GivePlayerItem(target, Core.Weapon);
+    int iWeapon2 = LR_GivePlayerItem(target, Player[client].Class);
     Player[target].Weapon = EntIndexToEntRef(iWeapon2);
 
     if (Core.Knife.BoolValue)
@@ -200,8 +192,6 @@ public void OnGameStart(int client, int target, const char[] name)
     int iRandom = GetRandomInt(0, 1);
     LR_SetWeaponAmmo(client, iWeapon1, iRandom ? 1 : 0);
     LR_SetWeaponAmmo(target, iWeapon2, iRandom ? 0 : 1);
-
-    Core.Active = true;
 
     SDKHook(client, SDKHook_WeaponDrop, OnWeaponDrop);
     SDKHook(target, SDKHook_WeaponDrop, OnWeaponDrop);
@@ -236,11 +226,6 @@ public Action OnTraceAttack(int victim, int &attacker, int &inflictor, float &da
 
 public Action OnWeaponDrop(int client, int weapon)
 {
-    if (!Core.Active)
-    {
-        return Plugin_Continue;
-    }
-
     if (!LR_IsClientInLastRequest(client))
     {
         return Plugin_Continue;
@@ -258,19 +243,9 @@ public Action OnWeaponDrop(int client, int weapon)
 
 public Action Event_WeaponFire(Event event, const char[] name, bool dontBroadcast)
 {
-    if (!Core.Active)
-    {
-        return;
-    }
-    
     if (LR_IsDebugActive())
     {
         PrintToChatAll("Event_WeaponFire 1");
-    }
-    
-    if (strlen(Core.Weapon) < 2)
-    {
-        return;
     }
 
     if (LR_IsDebugActive())
@@ -297,6 +272,10 @@ public Action Event_WeaponFire(Event event, const char[] name, bool dontBroadcas
         return;
     }
 
+    if (strlen(Player[client].Class) < 2)
+    {
+        return;
+    }
     if (LR_IsDebugActive())
     {
         PrintToChatAll("Event_WeaponFire 4");
@@ -306,7 +285,7 @@ public Action Event_WeaponFire(Event event, const char[] name, bool dontBroadcas
     char sWeapon[32];
     event.GetString("weapon", sWeapon, sizeof(sWeapon));
 
-    if (StrContains(Core.Weapon, sWeapon, false) != -1)
+    if (StrContains(Player[client].Class, sWeapon, false) != -1)
     {
         if (LR_IsDebugActive())
         {
@@ -334,12 +313,11 @@ public void Frame_SetAmmo(int userid)
 
 public void OnGameEnd(LR_End_Reason reason, int winner, int loser)
 {
-    Core.Reset();
-    
     if (winner > 0)
     {
         SDKHook(winner, SDKHook_WeaponDrop, OnWeaponDrop);
         SDKHook(winner, SDKHook_TraceAttack, OnTraceAttack);
+
         Player[winner].Reset();
     }
 
@@ -347,6 +325,7 @@ public void OnGameEnd(LR_End_Reason reason, int winner, int loser)
     {
         SDKHook(loser, SDKHook_WeaponDrop, OnWeaponDrop);
         SDKHook(loser, SDKHook_TraceAttack, OnTraceAttack);
+        
         Player[loser].Reset();
     }
 }
