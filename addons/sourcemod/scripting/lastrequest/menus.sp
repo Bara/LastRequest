@@ -353,7 +353,7 @@ void ShowActiveLastRequests(int client)
             iCT = StringToInt(sClient);
         }
         
-        Format(sText, sizeof(sText), "%N vs. %N\nGame: %s, Mode: %s", iT, iCT, Player[iT].Game.FullName, Player[iT].Game.Mode);
+        Format(sText, sizeof(sText), "%N vs. %N\nGame: %s, Mode: %s\n \n ", iT, iCT, Player[iT].Game.FullName, Player[iT].Game.Mode);
         menu.AddItem("", sText);
     }
 
