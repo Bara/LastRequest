@@ -65,7 +65,7 @@ public int Menu_LastRequest(Menu menu, MenuAction action, int client, int param)
 
         int target = StringToInt(sParam);
 
-        if (!CheckClientStatus(target))
+        if (!CheckTargetStatus(client, target))
         {
             PrintToChat(client, "Target is no longer valid!");
 

@@ -43,8 +43,8 @@ public void OnPluginStart()
 public void OnMapStart()
 {
     delete Core.Games;
+    
     Core.Status(false);
-
     Core.Games = new StringMap();
 
     CreateTimer(3.0, Timer_CheckTeams, _, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);

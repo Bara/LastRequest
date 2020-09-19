@@ -100,6 +100,44 @@ bool CheckClientStatus(int client)
     return true;
 }
 
+bool CheckTargetStatus(int client, int target)
+{
+    if (!LR_IsClientValid(target))
+    {
+        return false;
+    }
+    
+    if (GetClientTeam(target) != CS_TEAM_CT)
+    {
+        PrintToChat(client, "You must be a Terrorist to use last request!"); // TODO: Add translation
+        return false;
+    }
+    
+    int iCount = GetLastRequestCount();
+    
+    PrintToChat(target, "GetLastRequestCount: %d, Core.Available: %d, Player.InLR: %d", iCount, Core.Available, Player[target].InLR);
+
+    if (iCount >= Config.MaxActive.IntValue)
+    {
+        PrintToChat(client, "No empty last request slot available (%d/%d)", iCount, Config.MaxActive.IntValue); // TODO: Add translation
+        return false;
+    }
+    
+    if (!Core.Available)
+    {
+        PrintToChat(client, "Something went wrong with players array..."); // TODO: Add translation
+        return false;
+    }
+    
+    if (Player[target].InLR)
+    {
+        PrintToChat(client, "You are already in a last request!"); // TODO: Add translation
+        return false;
+    }
+
+    return true;
+}
+
 bool CheckLRShortName(const char[] name)
 {
     Games game;
