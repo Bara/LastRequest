@@ -251,18 +251,18 @@ public Action Timer_Countdown(Handle timer, DataPack pack)
         {
             if (seconds == 1)
             {
-                PrintToChat(i, "Last request started in %d second ( Game: %s, Player: %N, Opponent: %N)", seconds, Player[client].Game.Name, client, Player[client].Target); // TODO: Add translation
+                PrintToChat(i, "Last request started in %d second ( Game: %s, Mode: %s, Player: %N, Opponent: %N)", seconds, Player[client].Game.FullName, Player[client].Game.Mode, client, Player[client].Target); // TODO: Add translation
             }
             else if (seconds == 0)
             {
-                PrintToChat(i, "Go! ( Game: %s, Player: %N, Opponent: %N)", Player[client].Game.Name, client, Player[client].Target); // TODO: Add translation
+                PrintToChat(i, "Go! ( Game: %s, Mode: %s, Player: %N, Opponent: %N)", Player[client].Game.FullName, Player[client].Game.Mode, client, Player[client].Target); // TODO: Add translation
                 StartLastRequest(client);
 				
                 return Plugin_Stop;
             }
             else
             {
-                PrintToChat(i, "Last request started in %d seconds ( Game: %s, Player: %N, Opponent: %N)", seconds, Player[client].Game.Name, client, Player[client].Target); // TODO: Add translation
+                PrintToChat(i, "Last request started in %d seconds ( Game: %s, Mode: %s, Player: %N, Opponent: %N)", seconds, Player[client].Game.FullName, Player[client].Game.Mode, client, Player[client].Target); // TODO: Add translation
             }
             
             if (Config.StartCountdown.BoolValue)
