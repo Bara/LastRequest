@@ -16,17 +16,7 @@ enum struct General
     ConVar Unit;
     ConVar Interval;
 
-    char Weapon[32];
-
-    bool Active;
-
     StringMap Weapons;
-
-    void Reset() {
-        this.Weapon[0] = '\0';
-
-        this.Active = false;
-    }
 }
 
 enum struct PlayerData {
@@ -40,6 +30,8 @@ enum struct PlayerData {
 
     bool Dropped;
 
+    char Class[32];
+
     void Reset() {
         this.Weapon = -1;
 
@@ -50,6 +42,8 @@ enum struct PlayerData {
         this.Distance = 0.0;
 
         this.Dropped = false;
+
+        this.Class[0] = '\0';
     }
 }
 
@@ -184,7 +178,7 @@ public int Menu_WeaponSelection(Menu menu, MenuAction action, int client, int pa
         char sClass[32], sDisplay[32];
         menu.GetItem(param, sClass, sizeof(sClass), _, sDisplay, sizeof(sDisplay));
 
-        strcopy(Core.Weapon, sizeof(General::Weapon), sClass);
+        strcopy(Player[client].Class, sizeof(PlayerData::Class), sClass);
 
         LR_StartLastRequest(client, "Normal", sDisplay); // TODO: Add translation
     }
@@ -203,10 +197,10 @@ public int Menu_WeaponSelection(Menu menu, MenuAction action, int client, int pa
 
 public void OnGameStart(int client, int target, const char[] name)
 {
-    int iWeapon = LR_GivePlayerItem(client, Core.Weapon);
+    int iWeapon = LR_GivePlayerItem(client, Player[client].Class);
     Player[client].Weapon = EntIndexToEntRef(iWeapon);
 
-    iWeapon = LR_GivePlayerItem(target, Core.Weapon);
+    iWeapon = LR_GivePlayerItem(target, Player[target].Class);
     Player[target].Weapon = EntIndexToEntRef(iWeapon);
 
     if (Core.Knife.BoolValue)
@@ -215,14 +209,13 @@ public void OnGameStart(int client, int target, const char[] name)
         GivePlayerItem(target, "weapon_knife");
     }
 
-    Core.Active = true;
-
     SDKHook(client, SDKHook_WeaponCanUse, OnWeaponCanUse);
+    SDKHook(target, SDKHook_WeaponCanUse, OnWeaponCanUse);
 }
 
 public Action Command_Drop(int client, const char[] command, int args)
 {
-    if (!Core.Active && !LR_IsClientInLastRequest(client))
+    if (!LR_IsClientInLastRequest(client))
     {
         return Plugin_Continue;
     }
@@ -244,7 +237,7 @@ public Action Command_Drop(int client, const char[] command, int args)
 
 public Action OnWeaponCanUse(int client, int weapon)
 {
-    if (Core.Active && LR_IsClientInLastRequest(client) && Player[client].Dropped)
+    if (LR_IsClientInLastRequest(client) && Player[client].Dropped)
     {
         return Plugin_Handled;
     }
@@ -254,16 +247,11 @@ public Action OnWeaponCanUse(int client, int weapon)
 
 public Action Timer_CheckPosition(Handle timer, int userid)
 {
-    if (!Core.Active)
-    {
-        return Plugin_Stop;
-    }
-
     int client = GetClientOfUserId(userid);
 
     if (!LR_IsClientValid(client))
     {
-        LR_StopLastRequest(Server);
+        LR_StopLastRequest(Server, client, LR_GetClientOpponent(client));
         return Plugin_Stop;
     }
 
@@ -271,7 +259,7 @@ public Action Timer_CheckPosition(Handle timer, int userid)
 
     if (!IsValidEntity(iWeapon))
     {
-        LR_StopLastRequest(Server);
+        LR_StopLastRequest(Server, client, LR_GetClientOpponent(client));
         return Plugin_Stop;
     }
 
@@ -335,21 +323,21 @@ void CheckPlayers(int client)
     }
     else
     {
-        LR_StopLastRequest(Tie);
+        LR_StopLastRequest(Tie, client, target);
     }
 }
 
 public void OnGameEnd(LR_End_Reason reason, int winner, int loser)
 {
-    Core.Reset();
-    
     if (winner > 0)
     {
         Player[winner].Reset();
+        SDKUnhook(winner, SDKHook_WeaponCanUse, OnWeaponCanUse);
     }
 
     if (loser > 0)
     {
         Player[loser].Reset();
+        SDKUnhook(loser, SDKHook_WeaponCanUse, OnWeaponCanUse);
     }
 }
