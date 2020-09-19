@@ -336,6 +336,11 @@ public Action OnTraceAttack(int victim, int &attacker, int &inflictor, float &da
     {
         return Plugin_Handled;
     }
+
+    if (attacker != LR_GetClientOpponent(victim))
+    {
+        return Plugin_Handled;
+    }
     
     char sWeapon[32];
     GetClientWeapon(attacker, sWeapon, sizeof(sWeapon));

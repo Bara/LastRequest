@@ -205,6 +205,33 @@ public void OnGameStart(int client, int target, const char[] name)
 
     SDKHook(client, SDKHook_WeaponDrop, OnWeaponDrop);
     SDKHook(target, SDKHook_WeaponDrop, OnWeaponDrop);
+    SDKHook(client, SDKHook_TraceAttack, OnTraceAttack);
+    SDKHook(target, SDKHook_TraceAttack, OnTraceAttack);
+}
+
+public Action OnTraceAttack(int victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &ammotype, int hitbox, int hitgroup)
+{
+    if (damagetype == DMG_FALL || attacker == 0)
+    {
+        return Plugin_Continue;
+    }
+    
+    if (!LR_IsClientValid(attacker) || !LR_IsClientValid(victim))
+    {
+        return Plugin_Handled;
+    }
+    
+    if (!LR_IsClientInLastRequest(attacker) || !LR_IsClientInLastRequest(victim))
+    {
+        return Plugin_Handled;
+    }
+
+    if (attacker != LR_GetClientOpponent(victim))
+    {
+        return Plugin_Handled;
+    }
+
+    return Plugin_Continue;
 }
 
 public Action OnWeaponDrop(int client, int weapon)
@@ -312,12 +339,14 @@ public void OnGameEnd(LR_End_Reason reason, int winner, int loser)
     if (winner > 0)
     {
         SDKHook(winner, SDKHook_WeaponDrop, OnWeaponDrop);
+        SDKHook(winner, SDKHook_TraceAttack, OnTraceAttack);
         Player[winner].Reset();
     }
 
     if (loser > 0)
     {
         SDKHook(loser, SDKHook_WeaponDrop, OnWeaponDrop);
+        SDKHook(loser, SDKHook_TraceAttack, OnTraceAttack);
         Player[loser].Reset();
     }
 }
