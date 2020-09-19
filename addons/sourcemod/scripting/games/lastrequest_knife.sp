@@ -307,6 +307,8 @@ public void OnGameEnd(LR_End_Reason reason, int winner, int loser)
 
         SetDrunk(winner, false);
         SetThirdPerson(winner, false);
+        SetSpeed(winner, false);
+        SetGravity(winner, false);
 
         Player[winner].Mode.Reset();
     }
@@ -318,6 +320,8 @@ public void OnGameEnd(LR_End_Reason reason, int winner, int loser)
 
         SetDrunk(loser, false);
         SetThirdPerson(loser, false);
+        SetSpeed(winner, false);
+        SetGravity(winner, false);
 
         Player[loser].Mode.Reset();
     }
