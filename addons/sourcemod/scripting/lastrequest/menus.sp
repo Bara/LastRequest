@@ -283,7 +283,7 @@ public int Menu_AskToStop(Menu menu, MenuAction action, int target, int param)
             PrintToChat(target, "You accepted the request from %N to stop this LR.", client); // TODO: Add translation
             PrintToChat(client, "%N has accepted your request to stop this LR.", target); // TODO: Add translation
 
-            LR_StopLastRequest(Unknown, target, client);
+            LR_StopLastRequest(Normal, target, client);
         }
         else
         {
