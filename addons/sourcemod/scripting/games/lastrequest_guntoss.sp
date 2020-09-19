@@ -200,7 +200,7 @@ public void OnGameStart(int client, int target, const char[] name)
     int iWeapon = LR_GivePlayerItem(client, Player[client].Class);
     Player[client].Weapon = EntIndexToEntRef(iWeapon);
 
-    iWeapon = LR_GivePlayerItem(target, Player[target].Class);
+    iWeapon = LR_GivePlayerItem(target, Player[client].Class);
     Player[target].Weapon = EntIndexToEntRef(iWeapon);
 
     if (Core.Knife.BoolValue)

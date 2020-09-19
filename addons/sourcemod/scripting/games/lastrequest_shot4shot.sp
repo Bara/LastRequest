@@ -180,7 +180,7 @@ public void OnGameStart(int client, int target, const char[] name)
     int iWeapon1 = LR_GivePlayerItem(client, Player[client].Class);
     Player[client].Weapon = EntIndexToEntRef(iWeapon1);
 
-    int iWeapon2 = LR_GivePlayerItem(target, Player[target].Class);
+    int iWeapon2 = LR_GivePlayerItem(target, Player[client].Class);
     Player[target].Weapon = EntIndexToEntRef(iWeapon2);
 
     if (Core.Knife.BoolValue)
