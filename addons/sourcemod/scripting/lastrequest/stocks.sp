@@ -100,6 +100,7 @@ bool CheckClientStatus(int client)
     return true;
 }
 
+// TODO: Merge it into CheckClientStatus?
 bool CheckTargetStatus(int client, int target)
 {
     if (!LR_IsClientValid(target))
@@ -171,7 +172,7 @@ void CheckTeams(bool openMenu = false)
         PrintToChatAll("T: %d, CT: %d, Core.Available: %d", iT, iCT, Core.Available);
     }
 
-    if (iT == 1 && iCT > 0 && !Core.Available)
+    if (iT <= Config.MaxActive.IntValue && iCT > 0 && !Core.Available)
     {
         int client = iTIndex;
         
@@ -186,6 +187,7 @@ void CheckTeams(bool openMenu = false)
         }
 
         Core.Status(true);
+        PrintToChatAll("T: %d, CT: %d, Core.Available: %d", iT, iCT, Core.Available);
         
         Call_StartForward(Core.OnLRAvailable);
         Call_PushCell(client);
