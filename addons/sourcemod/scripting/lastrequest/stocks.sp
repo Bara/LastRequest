@@ -304,9 +304,7 @@ void RemoveWeapons(int client, bool addToArray)
 
 int GetLastRequestCount()
 {
-    StringMap smList = new StringMap();
-    char sClient[12], sTarget[12], sBuffer[12];
-
+    int[] clients = new int[MaxClients];
     int iCount = 0;
 
     LR_LoopClients(i)
@@ -315,19 +313,15 @@ int GetLastRequestCount()
         {
             continue;
         }
-        
-        IntToString(i, sClient, sizeof(sClient));
-        IntToString(LR_GetClientOpponent(i), sTarget, sizeof(sTarget));
 
-        if (!smList.GetString(sTarget, sBuffer, sizeof(sBuffer)))
+        if (clients[i] != i && clients[i] != LR_GetClientOpponent(i))
         {
-            smList.SetString(sClient, sTarget);
+            clients[i] = LR_GetClientOpponent(i);
+            clients[LR_GetClientOpponent(i)] = i;
 
             iCount++;
         }
     }
-
-    delete smList;
 
     return iCount;
 }
