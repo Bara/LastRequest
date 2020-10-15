@@ -14,13 +14,6 @@ jobs:
     steps:
       - uses: actions/checkout@v1
 
-      - name: Set environment variables
-        run: |
-          SOURCEMOD_PATH=$GITHUB_WORKSPACE/addons/sourcemod
-          echo ::set-env name=SOURCEMOD_PATH::$SOURCEMOD_PATH
-          echo ::set-env name=SCRIPTS_PATH::$SOURCEMOD_PATH/scripting
-          echo ::set-env name=GAMES_PATH::$SOURCEMOD_PATH/scripting/games
-
       - name: Setup SourcePawn Compiler ${{ matrix.SM_VERSION }}
         uses: rumblefrog/setup-sp@master
         with:
